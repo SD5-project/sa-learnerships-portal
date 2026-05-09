@@ -6,6 +6,11 @@ const { verifyToken } = require("./auth");
 const { db, admin } = require("./firebaseAdmin");
 const { authorize } = require('./access-logic');
 
+//reminder job
+if (process.env.NODE_ENV !== "test") {
+    require("./reminderJob");
+}
+
 app.use(cors());
 app.use(express.json());
 

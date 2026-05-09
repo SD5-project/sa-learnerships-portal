@@ -8,6 +8,31 @@ const { authorize } = require('./access-logic');
 
 app.use(cors());
 app.use(express.json());
+// Transport Configuration
+require('dotenv').config();
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: 587,                   
+    secure: false,               // Must be false for port 587
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS 
+    },
+    tls: {
+        rejectUnauthorized: false // This helps avoid connection issues on some networks
+    }
+});
+
+//Verify connection on startup
+transporter.verify((error, success) => {
+    if (error) {
+        console.error("❌ Email Transporter Error:", error);
+    } else {
+        console.log("🚀 Email Server is ready to take our messages");
+    }
+});
 
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
@@ -149,22 +174,22 @@ app.post("/api/opportunities/submit", verifyToken, guard('/api/opportunities/sub
     try {
         const opportunityData = req.body;
 
-        // Set mandatory metadata
+        // ✅ IMPORTANT: Attach the UID of the provider creating this
+        opportunityData.providerID = req.user.uid; 
+
         opportunityData.status = "pending-review";
         opportunityData.createdAt = new Date().toISOString();
         opportunityData.updatedAt = new Date().toISOString();
 
-        // Save directly to the "Opportunities" collection in Firestore
         const docRef = await db.collection("Opportunities").add(opportunityData);
 
         res.status(201).json({ 
             message: "Opportunity submitted successfully",
             id: docRef.id
         });
-
     } catch (error) {
-        console.error("Error submitting opportunity:", error);
-        res.status(500).json({ error: "Failed to submit opportunity" });
+        console.error("Error:", error);
+        res.status(500).json({ error: "Failed to submit" });
     }
 });
 
@@ -384,18 +409,70 @@ app.get("/api/applicants", verifyToken, async (req, res) => {
 app.patch("/api/applicants/:applicationID/status", verifyToken, async (req, res) => {
     try {
         const { applicationID } = req.params;
-        const { status }        = req.body;
+        const { status } = req.body;
+        const providerUid = req.user.uid; // From verifyToken middleware
+
         const valid = ["pending", "reviewing", "shortlisted", "accepted", "rejected"];
         if (!valid.includes(status)) return res.status(400).json({ error: "Invalid status" });
 
-        await db.collection("applications").doc(applicationID).update({
+        // DATA ISOLATION (Requirement: Provider cannot modify listings they don't own)
+        const appRef = db.collection("applications").doc(applicationID);
+        const appDoc = await appRef.get();
+        if (!appDoc.exists) return res.status(404).json({ error: "Application not found" });
+
+        const appData = appDoc.data();
+        const listingDoc = await db.collection("Opportunities").doc(appData.listingID).get();
+        
+        // Check if current user is the owner of this opportunity
+        if (listingDoc.data().providerID !== providerUid) {
+            return res.status(403).json({ error: "Forbidden: You do not own this listing." });
+        }
+
+        // INTEGRITY (Requirement: Status transition must be atomic)
+        await appRef.update({
             status,
             updatedAt: new Date().toISOString()
         });
-        res.json({ message: "Status updated", applicationID, status });
+
+        // NOTIFICATION (Requirement: Create in-app notification)
+        const listingTitle = listingDoc.data().title || "Opportunity";
+        await db.collection("notifications").add({
+            recipientId: appData.applicantID,
+            message: `Your application for "${listingTitle}" has been ${status}.`,
+            status: "unread",
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            applicationId: applicationID
+        });
+
+        // EMAIL (Requirement: Catch failure without breaking status update)
+        try {
+            // Get Applicant details
+            const applicantDoc = await db.collection("users").doc(appData.applicantID).get();
+            if (applicantDoc.exists) {
+                const { email, firstname } = applicantDoc.data();
+                
+                // Send the Email
+                await transporter.sendMail({
+                    from: `"SkillsConnect" <skillsconnectsupport@gmail.com>`,
+                    to: email,
+                    subject: `Update: Application for ${listingDoc.data().title}`,
+                    html: `
+                        <p>Hi ${firstname || 'Applicant'},</p>
+                        <p>Your application for <strong>${listingDoc.data().title}</strong> has been updated.</p>
+                        <p>New Status: <strong>${status}</strong></p>
+                        <p>Log in to your dashboard for more details.</p>
+                    `
+                });
+                console.log("Email sent successfully to:", email);
+            }
+        } catch (error) {
+            console.error("Email failed but status was updated:", error);
+        }
+
+        res.json({ message: "Status updated and applicant notified", status });
     } catch (error) {
         console.error("Status update error:", error);
-        res.status(500).json({ error: "Failed to update status" });
+        res.status(500).json({ error: "Internal Server Error" });
     }
 });
 

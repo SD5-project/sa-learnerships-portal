@@ -9,6 +9,8 @@
   },
   "scripts": {
     "start": "node backend/app.js",
+    "dev":      "nodemon backend/app.js",
+    "seed:nqf": "node backend/seedNQF.js",
     "test": "mocha tests/control-access.test.js && jest --testPathPattern=__tests__",
     "test:mocha": "mocha tests/control-access.test.js",
     "test:jest": "jest --testPathPattern=__tests__"
@@ -39,4 +41,5 @@
     "express": "^5.2.1",
     "firebase-admin": "^13.8.0"
   }
+
 }

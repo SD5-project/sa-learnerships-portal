@@ -8,6 +8,31 @@ const { authorize } = require('./access-logic');
 
 app.use(cors());
 app.use(express.json());
+// Transport Configuration
+require('dotenv').config();
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: 587,                   
+    secure: false,               // Must be false for port 587
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS 
+    },
+    tls: {
+        rejectUnauthorized: false // This helps avoid connection issues on some networks
+    }
+});
+
+//Verify connection on startup
+transporter.verify((error, success) => {
+    if (error) {
+        console.error("❌ Email Transporter Error:", error);
+    } else {
+        console.log("🚀 Email Server is ready to take our messages");
+    }
+});
 
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
@@ -153,22 +178,22 @@ app.post("/api/opportunities/submit", verifyToken, guard('/api/opportunities/sub
     try {
         const opportunityData = req.body;
 
-        // Set mandatory metadata
+        // ✅ IMPORTANT: Attach the UID of the provider creating this
+        opportunityData.providerID = req.user.uid; 
+
         opportunityData.status = "pending-review";
         opportunityData.createdAt = new Date().toISOString();
         opportunityData.updatedAt = new Date().toISOString();
 
-        // Save directly to the "Opportunities" collection in Firestore
         const docRef = await db.collection("Opportunities").add(opportunityData);
 
         res.status(201).json({ 
             message: "Opportunity submitted successfully",
             id: docRef.id
         });
-
     } catch (error) {
-        console.error("Error submitting opportunity:", error);
-        res.status(500).json({ error: "Failed to submit opportunity" });
+        console.error("Error:", error);
+        res.status(500).json({ error: "Failed to submit" });
     }
 });
 
@@ -389,39 +414,77 @@ app.patch("/api/applicants/:applicationID/status", verifyToken, async (req, res)
     try {
         const { applicationID } = req.params;
         const { status }        = req.body;
+
+        // ── Validate status value ─────────────────────────────────────────────
         const valid = ["pending", "reviewing", "shortlisted", "accepted", "rejected"];
         if (!valid.includes(status)) return res.status(400).json({ error: "Invalid status" });
+
+        // ── Applicants cannot update status ───────────────────────────────────
+        if (req.user.role === "applicant") {
+            return res.status(403).json({ error: "You are not authorized to update this application" });
+        }
 
         // ── Fetch the application ─────────────────────────────────────────────
         const appDoc = await db.collection("applications").doc(applicationID).get();
         if (!appDoc.exists) return res.status(404).json({ error: "Application not found" });
 
-        const currentStatus = appDoc.data().status;
-        const listingID     = appDoc.data().listingID;
+        const appData       = appDoc.data();
+        const currentStatus = appData.status;
+        const listingID     = appData.listingID;
 
-        // ── AC2: Must be shortlisted before accepting ─────────────────────────
+        // ── Must be shortlisted before accepting ──────────────────────────────
         if (status === "accepted" && currentStatus !== "shortlisted") {
             return res.status(400).json({ error: "Applicant must be shortlisted before accepting" });
         }
 
-        // ── AC4: Applicants cannot update status ──────────────────────────────
-        if (req.user.role === "applicant") {
-            return res.status(403).json({ error: "You are not authorized to update this application" });
-        }
-
-        // ── AC4: Provider must own the listing ────────────────────────────────
+        // ── Provider must own the listing ─────────────────────────────────────
         const listingDoc = await db.collection("Opportunities").doc(listingID).get();
-        if (listingDoc.exists && req.user.role !== "admin" && listingDoc.data().providerID !== req.user.uid) {
+        if (!listingDoc.exists) return res.status(404).json({ error: "Listing not found" });
+
+        if (req.user.role !== "admin" && listingDoc.data().providerID !== req.user.uid) {
             return res.status(403).json({ error: "You are not authorized to update this application" });
         }
 
-        // ── All checks passed — update status ─────────────────────────────────
+        // ── Update status ─────────────────────────────────────────────────────
         await db.collection("applications").doc(applicationID).update({
             status,
             updatedAt: new Date().toISOString()
         });
 
+        // ── Respond immediately — notifications happen after ──────────────────
         res.json({ message: "Status updated", applicationID, status });
+
+        // ── In-app notification ───────────────────────────────────────────────
+        const listingTitle = listingDoc.data().title || "Opportunity";
+        await db.collection("notifications").add({
+            recipientId:   appData.applicantID,
+            message:       `Your application for "${listingTitle}" has been ${status}.`,
+            status:        "unread",
+            timestamp:     admin.firestore.FieldValue.serverTimestamp(),
+            applicationId: applicationID
+        });
+
+        // ── Email notification (failure won't affect status update) ───────────
+        try {
+            const applicantDoc = await db.collection("users").doc(appData.applicantID).get();
+            if (applicantDoc.exists) {
+                const { email, firstname } = applicantDoc.data();
+                await transporter.sendMail({
+                    from:    `"SkillsConnect" <skillsconnectsupport@gmail.com>`,
+                    to:      email,
+                    subject: `Update: Application for ${listingTitle}`,
+                    html: `
+                        <p>Hi ${firstname || "Applicant"},</p>
+                        <p>Your application for <strong>${listingTitle}</strong> has been updated.</p>
+                        <p>New status: <strong>${status}</strong></p>
+                        <p>Log in to your dashboard for more details.</p>
+                    `
+                });
+                console.log("✅ Email sent to:", email);
+            }
+        } catch (emailError) {
+            console.error("Email failed but status was updated:", emailError);
+        }
 
     } catch (error) {
         console.error("Status update error:", error);

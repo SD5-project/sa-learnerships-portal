@@ -41,6 +41,10 @@ app.get('/applicant-home', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'frontend', 'applicant-home.html'));
 });
 
+app.get('/applications-page', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'applications-page.html'));
+});
+
 app.get('/applicants', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'frontend', 'applicants.html'));
 });
@@ -396,6 +400,42 @@ app.patch("/api/applicants/:applicationID/status", verifyToken, async (req, res)
     } catch (error) {
         console.error("Status update error:", error);
         res.status(500).json({ error: "Failed to update status" });
+    }
+});
+
+// GET /api/applications?applicantID=
+app.get("/api/applications", verifyToken, async (req, res) => {
+    try {
+        const applicantID = req.query.applicantID || req.user.uid;
+
+        const snapshot = await db.collection("applications")
+            .where("applicantID", "==", applicantID)
+            .get();
+
+        const applications = [];
+        snapshot.forEach(doc => applications.push({ id: doc.id, ...doc.data() }));
+
+        res.json(applications);
+
+    } catch (error) {
+        console.error("Fetch applications error:", error);
+        res.status(500).json({ error: "Failed to fetch applications" });
+    }
+});
+
+// GET /api/opportunities/:id
+app.get("/api/opportunities/:id", verifyToken, async (req, res) => {
+    try {
+         console.log("Looking for opportunity ID:", req.params.id); 
+        const doc = await db.collection("Opportunities").doc(req.params.id).get();
+
+        if (!doc.exists) return res.status(404).json({ error: "Opportunity not found" });
+
+        res.json({ id: doc.id, ...doc.data() });
+
+    } catch (error) {
+        console.error("Fetch opportunity error:", error);
+        res.status(500).json({ error: "Failed to fetch opportunity" });
     }
 });
 

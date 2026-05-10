@@ -415,3 +415,82 @@ if (applyBtn) {
         applyBtn.remove();
     });
 }
+
+
+
+async function loadApplications(applicantID) {
+    try {
+        const token = await auth.currentUser.getIdToken();
+
+        const appsResponse = await fetch(`/api/applications?applicantID=${applicantID}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const applications = await appsResponse.json();
+        console.log(applications);
+
+        const enriched = await Promise.all(
+            applications.map(async (app) => {
+                 const listingId = app.listingID;
+
+    try {
+        const freshToken = await auth.currentUser.getIdToken();
+        const oppResponse = await fetch(`/api/opportunities/${listingId}`, {
+            headers: { Authorization: `Bearer ${freshToken}` }
+        });
+
+        if (!oppResponse.ok) {
+            // Opportunity was deleted — return what we have from the application
+            return { ...app, title: "Listing no longer available", company: "-" };
+        }
+
+        const opportunity = await oppResponse.json();
+        return { ...app, ...opportunity };
+
+    } catch (error) {
+        return { ...app, title: "Listing no longer available", company: "-" };
+    }
+            })
+        );
+        console.log("enriched:", enriched);
+        displayApplications(enriched);
+
+    } catch (error) {
+        console.error("Failed to load applications:", error);
+    }
+}
+
+// ─── displayApplications ─────────────────────────────────────────────────────
+function displayApplications(applications) {
+    const tbody = document.getElementById('applications-list');
+
+    if (applications.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4">
+                    <div class="empty-state">
+                        <div class="icon">📋</div>
+                        <p>You have not applied to any positions yet.</p>
+                    </div>
+                </td>
+            </tr>`;
+        return;
+    }
+
+    tbody.innerHTML = applications.map(app => `
+        <tr>
+            <td>${app.title || '-'}</td>
+            <td>${app.company || '-'}</td>
+            <td>${app.createdAt ? new Date(app.createdAt).toLocaleDateString('en-ZA') : '-'}</td>
+            <td><span class="status ${app.status || ''}">${app.status || 'unknown'}</span></td>
+        </tr>
+    `).join('');
+}
+
+// ── Auth check ────────────────────────────────────────────────────────────────
+auth.onAuthStateChanged((user) => {
+    if (!user) {
+        window.location.href = '/';
+        return;
+    }
+    loadApplications(user.uid);
+});

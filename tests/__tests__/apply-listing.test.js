@@ -1,46 +1,60 @@
 const request = require("supertest");
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
+// These are declared here so individual tests can override them via mockResolvedValue / mockRejectedValue
 let mockVerifyIdToken;
-let mockUserDoc;
-let mockListingDoc;
-let mockAppDoc;
-let mockSetApp;
 let mockSetCustomClaims;
-let mockDbSet;
+
+// Per-collection doc mocks — app.js calls these in a fixed order per route:
+// POST /applicant/apply  →  users.doc().get(), Opportunities.doc().get(), applications.doc().get(), applications.doc().set()
+let mockUserDocGet;
+let mockListingDocGet;
+let mockAppDocGet;
+let mockAppDocSet;
+
+// where().get() used by /applicant/hasApplied
+let mockWhereGet;
 
 jest.mock("../../backend/firebaseAdmin", () => {
     mockVerifyIdToken   = jest.fn();
-    mockUserDoc         = jest.fn();
-    mockListingDoc      = jest.fn();
-    mockAppDoc          = jest.fn();
-    mockSetApp          = jest.fn().mockResolvedValue();
     mockSetCustomClaims = jest.fn().mockResolvedValue();
-    mockDbSet           = jest.fn().mockResolvedValue();
 
+    mockUserDocGet    = jest.fn();
+    mockListingDocGet = jest.fn();
+    mockAppDocGet     = jest.fn();
+    mockAppDocSet     = jest.fn().mockResolvedValue();
+    mockWhereGet      = jest.fn().mockResolvedValue({ empty: true });
+
+    // app.js calls db.collection(name).doc(id).get() / .set()
+    // The collection name tells us which mock to return
     return {
         admin: {
             auth: () => ({
                 verifyIdToken:       mockVerifyIdToken,
-                setCustomUserClaims: mockSetCustomClaims
-            })
+                setCustomUserClaims: mockSetCustomClaims,
+            }),
         },
         db: {
             collection: (name) => ({
-                doc: (id) => ({
-                    get: async () => {
-                        if (name === "users")         return mockUserDoc();
-                        if (name === "Opportunities") return mockListingDoc();
-                        if (name === "applications")  return mockAppDoc();
+                // doc(id) path — returns the right mock based on collection name
+                doc: (_id) => ({
+                    get: () => {
+                        if (name === "users")         return mockUserDocGet();
+                        if (name === "Opportunities") return mockListingDocGet();
+                        if (name === "applications")  return mockAppDocGet();
                     },
-                    set:    mockSetApp,
-                    update: jest.fn().mockResolvedValue()
+                    set:    mockAppDocSet,
+                    update: jest.fn().mockResolvedValue(),
                 }),
-                where: () => ({ get: jest.fn().mockResolvedValue({ empty: true }) }),
-                get:   jest.fn().mockResolvedValue({ forEach: () => {} }),
-                add:   jest.fn().mockResolvedValue({ id: "new-id" })
-            })
-        }
+                // where() path — used by /applicant/hasApplied
+                where: () => ({
+                    where: () => ({ get: mockWhereGet }),   // chained .where().where().get()
+                    get:   mockWhereGet,
+                }),
+                get:  jest.fn().mockResolvedValue({ forEach: () => {} }),
+                add:  jest.fn().mockResolvedValue({ id: "new-id" }),
+            }),
+        },
     };
 });
 
@@ -54,12 +68,10 @@ beforeEach(() => jest.clearAllMocks());
 describe("US-03: Applicant applies to a listing", () => {
 
     test("✅ Valid applicant can apply to an existing listing", async () => {
-        mockUserDoc.mockResolvedValue({
-            exists: true,
-            data: () => ({ role: "applicant" })
-        });
-        mockListingDoc.mockResolvedValue({ exists: true });
-        mockAppDoc.mockResolvedValue({ exists: false });
+        // users doc exists, listing exists, no duplicate app
+        mockUserDocGet.mockResolvedValue({ exists: true, data: () => ({ role: "applicant" }) });
+        mockListingDocGet.mockResolvedValue({ exists: true });
+        mockAppDocGet.mockResolvedValue({ exists: false });
 
         const res = await request(app)
             .post("/applicant/apply")
@@ -73,6 +85,7 @@ describe("US-03: Applicant applies to a listing", () => {
         const res = await request(app)
             .post("/applicant/apply")
             .send({ listingID: "listing_001" });
+
         expect(res.status).toBe(400);
     });
 
@@ -80,6 +93,7 @@ describe("US-03: Applicant applies to a listing", () => {
         const res = await request(app)
             .post("/applicant/apply")
             .send({ applicantID: "user_001" });
+
         expect(res.status).toBe(400);
     });
 
@@ -87,11 +101,12 @@ describe("US-03: Applicant applies to a listing", () => {
         const res = await request(app)
             .post("/applicant/apply")
             .send({ status: "pending" });
+
         expect(res.status).toBe(400);
     });
 
     test("❌ Non-existent user returns 400", async () => {
-        mockUserDoc.mockResolvedValue({ exists: false });
+        mockUserDocGet.mockResolvedValue({ exists: false });
 
         const res = await request(app)
             .post("/applicant/apply")
@@ -102,8 +117,8 @@ describe("US-03: Applicant applies to a listing", () => {
     });
 
     test("❌ Non-existent listing returns 404", async () => {
-        mockUserDoc.mockResolvedValue({ exists: true, data: () => ({ role: "applicant" }) });
-        mockListingDoc.mockResolvedValue({ exists: false });
+        mockUserDocGet.mockResolvedValue({ exists: true, data: () => ({ role: "applicant" }) });
+        mockListingDocGet.mockResolvedValue({ exists: false });
 
         const res = await request(app)
             .post("/applicant/apply")
@@ -114,9 +129,9 @@ describe("US-03: Applicant applies to a listing", () => {
     });
 
     test("❌ Duplicate application returns 409", async () => {
-        mockUserDoc.mockResolvedValue({ exists: true, data: () => ({ role: "applicant" }) });
-        mockListingDoc.mockResolvedValue({ exists: true });
-        mockAppDoc.mockResolvedValue({ exists: true }); // already applied
+        mockUserDocGet.mockResolvedValue({ exists: true, data: () => ({ role: "applicant" }) });
+        mockListingDocGet.mockResolvedValue({ exists: true });
+        mockAppDocGet.mockResolvedValue({ exists: true }); // already applied
 
         const res = await request(app)
             .post("/applicant/apply")
@@ -127,10 +142,10 @@ describe("US-03: Applicant applies to a listing", () => {
     });
 
     test("❌ Firestore write failure returns 500", async () => {
-        mockUserDoc.mockResolvedValue({ exists: true, data: () => ({ role: "applicant" }) });
-        mockListingDoc.mockResolvedValue({ exists: true });
-        mockAppDoc.mockResolvedValue({ exists: false });
-        mockSetApp.mockRejectedValue(new Error("Firestore write failed"));
+        mockUserDocGet.mockResolvedValue({ exists: true, data: () => ({ role: "applicant" }) });
+        mockListingDocGet.mockResolvedValue({ exists: true });
+        mockAppDocGet.mockResolvedValue({ exists: false });
+        mockAppDocSet.mockRejectedValue(new Error("Firestore write failed"));
 
         const res = await request(app)
             .post("/applicant/apply")
@@ -142,7 +157,7 @@ describe("US-03: Applicant applies to a listing", () => {
 });
 
 // =============================================================================
-// User Story 4: Role-based access control (matches control-access.test.js spec)
+// User Story 4: Role-based access control — tests the authorize() function directly
 // =============================================================================
 describe("US-04: Role-based access control (access-logic)", () => {
     const { authorize } = require("../../backend/access-logic");
@@ -228,17 +243,28 @@ describe("US-04: Role-based access control (access-logic)", () => {
 });
 
 // =============================================================================
-// Check application status endpoint
+// hasApplied endpoint
 // =============================================================================
 describe("hasApplied endpoint", () => {
 
-    test("✅ Returns hasApplied: true when snapshot is non-empty (mock returns empty:true)", async () => {
+    test("✅ Returns hasApplied: false when no application exists", async () => {
+        // mockWhereGet already defaults to { empty: true } → hasApplied = false
         const res = await request(app)
             .get("/applicant/hasApplied")
             .query({ applicantID: "user_001", listingID: "listing_001" });
 
         expect(res.status).toBe(200);
-        // The mock returns { empty: true } so hasApplied = !true = false
         expect(res.body.hasApplied).toBe(false);
+    });
+
+    test("✅ Returns hasApplied: true when application exists", async () => {
+        mockWhereGet.mockResolvedValue({ empty: false });
+
+        const res = await request(app)
+            .get("/applicant/hasApplied")
+            .query({ applicantID: "user_001", listingID: "listing_001" });
+
+        expect(res.status).toBe(200);
+        expect(res.body.hasApplied).toBe(true);
     });
 });

@@ -1,8 +1,10 @@
 // ─── Role → Allowed Routes ───────────────────────────────────────────────────
 const rolePermissions = {
     'applicant': [
-        '/api/listings',
-        '/applicant-home'
+         '/applicant-home',
+        '/api/listings',  // ← is this here?
+        '/listing-info',
+
     ],
     'provider': [
         '/api/listings',

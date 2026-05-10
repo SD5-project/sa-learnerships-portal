@@ -214,3 +214,8 @@ select{
   display: block;
 }
 
+#myApplications, th, td{
+    border: 1px solid;
+    color: white;
+}
+

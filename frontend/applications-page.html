@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Applications</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .page-wrapper {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            color: white;
+            font-family: serif;
+            font-size: 28px;
+            font-weight: bold;
+            border-left: 5px solid white;
+            padding-left: 14px;
+            margin-bottom: 30px;
+        }
+
+        .table-wrapper {
+            background-color: #545454;
+            border: 2px solid white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #myApplications {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+        }
+
+        #myApplications th {
+            background-color: #3a3a3a;
+            color: white;
+            font-family: serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 0.05em;
+            padding: 14px 18px;
+            text-align: left;
+            border: none;
+            border-bottom: 2px solid white;
+        }
+
+        #myApplications td {
+            color: white;
+            font-family: serif;
+            padding: 12px 18px;
+            border: none;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            font-size: 15px;
+        }
+
+        #myApplications tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        #myApplications tbody tr:hover {
+            background-color: rgba(255,255,255,0.08);
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .status.pending {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid #ffc107;
+        }
+
+        .status.reviewing,
+        .status.shortlisted {
+            background-color: rgba(13, 202, 240, 0.2);
+            color: #0dcaf0;
+            border: 1px solid #0dcaf0;
+        }
+
+        .status.accepted {
+            background-color: rgba(25, 135, 84, 0.2);
+            color: #4ade80;
+            border: 1px solid #4ade80;
+        }
+
+        .status.rejected {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #f87171;
+            border: 1px solid #f87171;
+        }
+
+        .empty-row td {
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-style: italic;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <h1 class="page-title">My Applications</h1>
+        <div class="table-wrapper">
+            <table id="myApplications">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Organization</th>
+                        <th>Date Applied</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="applications-list">
+                    <!-- rows injected by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

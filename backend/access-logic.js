@@ -2,7 +2,7 @@
 const rolePermissions = {
     'applicant': [
          '/applicant-home',
-        '/api/listings',  // ← is this here?
+        '/api/listings',  // 
         '/listing-info',
 
     ],
@@ -16,8 +16,6 @@ const rolePermissions = {
     'admin': [
         '/api/listings',
         '/admin-dashboard',
-        '/applicant-home',
-        '/provider-home',
         '/create-opportunity',
         '/api/applicants',
         '/api/opportunities/submit'   // ✅ admin can also submit

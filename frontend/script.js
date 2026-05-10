@@ -444,7 +444,9 @@ async function loadApplications(applicantID) {
         }
 
         const opportunity = await oppResponse.json();
-        return { ...app, ...opportunity };
+        const merged = { ...app, ...opportunity };
+        console.log("Merged app:", merged.status);
+        return { ...opportunity, ...app };
 
     } catch (error) {
         return { ...app, title: "Listing no longer available", company: "-" };
@@ -462,7 +464,7 @@ async function loadApplications(applicantID) {
 // ─── displayApplications ─────────────────────────────────────────────────────
 function displayApplications(applications) {
     const tbody = document.getElementById('applications-list');
-
+    if (!tbody) return;
     if (applications.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -488,9 +490,13 @@ function displayApplications(applications) {
 
 // ── Auth check ────────────────────────────────────────────────────────────────
 auth.onAuthStateChanged((user) => {
-    if (!user) {
-        window.location.href = '/';
-        return;
+    if (user) {
+        // Only redirect if we're on the login page
+        const isLoginPage = window.location.pathname === '/' || 
+                            window.location.pathname.includes('index.html');
+        if (isLoginPage) {
+            window.location.href = '/applicant-home';
+        }
+        loadApplications(user.uid);
     }
-    loadApplications(user.uid);
 });

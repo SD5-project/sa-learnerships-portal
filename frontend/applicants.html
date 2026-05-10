@@ -490,10 +490,14 @@
                 </td>
                 <td>
                     <div class="actions-cell">
-                        <button class="action-small" onclick="openModal('${app.id}')">View</button>
-                        <button class="action-small shortlist" onclick="updateStatus('${app.id}', 'shortlisted')">Shortlist</button>
-                        <button class="action-small accept"    onclick="updateStatus('${app.id}', 'accepted')">Accept</button>
-                        <button class="action-small reject"    onclick="updateStatus('${app.id}', 'rejected')">Reject</button>
+                        ${app.status === 'accepted' ? `
+            <span style="color: #4ade80; font-size: 13px;">✓ Accepted</span>
+        ` : `
+            <button class="action-small" onclick="openModal('${app.id}')">View</button>
+            <button class="action-small shortlist" onclick="updateStatus('${app.id}', 'shortlisted')">Shortlist</button>
+            ${app.status === 'shortlisted' ? `<button class="action-small accept" onclick="updateStatus('${app.id}', 'accepted')">Accept</button>` : ''}
+            <button class="action-small reject" onclick="updateStatus('${app.id}', 'rejected')">Reject</button>
+        `}
                     </div>
                 </td>
             </tr>`;

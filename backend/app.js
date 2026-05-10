@@ -392,11 +392,37 @@ app.patch("/api/applicants/:applicationID/status", verifyToken, async (req, res)
         const valid = ["pending", "reviewing", "shortlisted", "accepted", "rejected"];
         if (!valid.includes(status)) return res.status(400).json({ error: "Invalid status" });
 
+        // ── Fetch the application ─────────────────────────────────────────────
+        const appDoc = await db.collection("applications").doc(applicationID).get();
+        if (!appDoc.exists) return res.status(404).json({ error: "Application not found" });
+
+        const currentStatus = appDoc.data().status;
+        const listingID     = appDoc.data().listingID;
+
+        // ── AC2: Must be shortlisted before accepting ─────────────────────────
+        if (status === "accepted" && currentStatus !== "shortlisted") {
+            return res.status(400).json({ error: "Applicant must be shortlisted before accepting" });
+        }
+
+        // ── AC4: Applicants cannot update status ──────────────────────────────
+        if (req.user.role === "applicant") {
+            return res.status(403).json({ error: "You are not authorized to update this application" });
+        }
+
+        // ── AC4: Provider must own the listing ────────────────────────────────
+        const listingDoc = await db.collection("Opportunities").doc(listingID).get();
+        if (listingDoc.exists && req.user.role !== "admin" && listingDoc.data().providerID !== req.user.uid) {
+            return res.status(403).json({ error: "You are not authorized to update this application" });
+        }
+
+        // ── All checks passed — update status ─────────────────────────────────
         await db.collection("applications").doc(applicationID).update({
             status,
             updatedAt: new Date().toISOString()
         });
+
         res.json({ message: "Status updated", applicationID, status });
+
     } catch (error) {
         console.error("Status update error:", error);
         res.status(500).json({ error: "Failed to update status" });
@@ -410,10 +436,16 @@ app.get("/api/applications", verifyToken, async (req, res) => {
 
         const snapshot = await db.collection("applications")
             .where("applicantID", "==", applicantID)
-            .get();
+            .get({ source: "server" }); // ← force fresh read from Firestore
+
 
         const applications = [];
-        snapshot.forEach(doc => applications.push({ id: doc.id, ...doc.data() }));
+        snapshot.forEach(appDoc => {
+            const data = appDoc.data();
+            console.log("Doc ID:", appDoc.id, "Status:", data.status); // ← inside forEach
+            applications.push({ id: appDoc.id, ...data });
+        });
+        
 
         res.json(applications);
 

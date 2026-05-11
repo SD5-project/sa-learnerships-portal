@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50.86% </span>
+                <span class="strong">54.18% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>118/232</span>
+                <span class='fraction'>110/203</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">32.92% </span>
+                <span class="strong">34.84% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>27/82</span>
+                <span class='fraction'>23/66</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">36.36% </span>
+                <span class="strong">34.37% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>12/33</span>
+                <span class='fraction'>11/32</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">53.91% </span>
+                <span class="strong">57.67% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>117/217</span>
+                <span class='fraction'>109/189</span>
             </div>
         
             
@@ -742,10 +742,14 @@
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -811,6 +815,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1039,6 +1052,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1236,18 +1254,21 @@ app.post("/api/opportunities/submit", verifyToken, guard('/api/opportunities/sub
         // ✅ IMPORTANT: Attach the UID of the provider creating this
         opportunityData.providerID = req.user.uid; 
 &nbsp;
+        // Set mandatory metadata
         opportunityData.status = "pending-review";
         opportunityData.createdAt = new Date().toISOString();
         opportunityData.updatedAt = new Date().toISOString();
 &nbsp;
+        // Save directly to the "Opportunities" collection in Firestore
         const docRef = await db.collection("Opportunities").add(opportunityData);
 &nbsp;
         res.status(201).json({ 
             message: "Opportunity submitted successfully",
             id: docRef.id
         });
+&nbsp;
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error submitting opportunity:", error);
         res.status(500).json({ error: "Failed to submit opportunity" });
     }
 });

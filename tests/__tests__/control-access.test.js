@@ -1,7 +1,5 @@
-// 1. Remove the require('assert') - Jest has its own built-in tools.
 const { authorize } = require('../../backend/access-logic');
 
-// Jest uses 'describe' and 'it' (or 'test') just like Mocha.
 describe('Access Control Tests', () => {
     
     test('authorize_applicant_accessToAdminDenied', () => {

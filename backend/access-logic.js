@@ -1,8 +1,10 @@
 // ─── Role → Allowed Routes ───────────────────────────────────────────────────
 const rolePermissions = {
     'applicant': [
-        '/api/listings',
-        '/applicant-home'
+         '/applicant-home',
+        '/api/listings',  // 
+        '/listing-info',
+
     ],
     'provider': [
         '/api/listings',
@@ -33,3 +35,6 @@ function authorize(user, route) {
 }
 
 module.exports = { authorize };
+
+
+

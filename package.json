@@ -21,9 +21,8 @@
     ],
     "collectCoverage": false,
     "collectCoverageFrom": [
-      "backend/app.js",
-      "backend/auth.js",
-      "backend/access-logic.js"
+      "backend/access-logic.js",
+      "backend/auth.js"
     ],
     "coverageReporters": [
       "lcov",
@@ -35,7 +34,8 @@
       "global": {
         "lines": 10
       }
-    }
+    },
+    "moduleNameMapper": {}
   },
   "repository": {
     "type": "git",

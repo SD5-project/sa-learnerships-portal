@@ -31,37 +31,32 @@ jobs:
         env:
           NODE_ENV: test
 
-      # ── Jest: All other tests with coverage ──────────────────────────────────
+      # ── Jest: Run tests and generate coverage ─────────────────────────────────
       - name: Run Jest tests with coverage
         run: npx jest --testPathPattern="tests/__tests__" --coverage --passWithNoTests --forceExit
         continue-on-error: true
         env:
           NODE_ENV: test
 
-      # ── Debug: show what coverage files were generated ───────────────────────
-      - name: List coverage files
+      # ── Verify lcov.info was created ──────────────────────────────────────────
+      - name: Check coverage output
         run: |
-          echo "=== Coverage directory contents ==="
-          ls -la coverage/ 2>/dev/null || echo "No coverage directory found"
-          echo "=== lcov.info size ==="
-          wc -l coverage/lcov.info 2>/dev/null || echo "No lcov.info found"
-          echo "=== First 20 lines of lcov.info ==="
-          head -20 coverage/lcov.info 2>/dev/null || echo "File is empty or missing"
+          ls -la coverage/ || echo "No coverage folder"
+          wc -l coverage/lcov.info || echo "No lcov.info"
 
-      # ── Upload coverage report as artifact ───────────────────────────────────
+      # ── Upload coverage report as artifact ────────────────────────────────────
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage/
+          if-no-files-found: warn
 
-      # ── Codecov: Always runs regardless of test results ───────────────────────
-      - name: Upload results to Codecov
+      # ── Codecov upload ────────────────────────────────────────────────────────
+      - name: Upload to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
-          flags: unittests
-          name: skillsconnect-coverage
           fail_ci_if_error: false
           verbose: true

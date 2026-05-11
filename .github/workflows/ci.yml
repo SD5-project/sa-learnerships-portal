@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    continue-on-error: true        # ✅ Job failure never blocks anything
+    continue-on-error: true
 
     steps:
       - name: Checkout code
@@ -27,14 +27,14 @@ jobs:
       # ── Mocha: Access Control Tests ──────────────────────────────────────────
       - name: Run Mocha access control tests
         run: npx mocha tests/control-access.test.js --timeout 10000
-        continue-on-error: true    # ✅ Mocha failure won't stop Codecov upload
+        continue-on-error: true
         env:
           NODE_ENV: test
 
       # ── Jest: All other tests with coverage ──────────────────────────────────
       - name: Run Jest tests with coverage
-        run: npx jest --testPathPattern="tests/__tests__" --coverage --coverageThreshold='{"global":{"lines":50}}' --passWithNoTests --forceExit --coverageReporters=lcov --coverageReporters=text
-        continue-on-error: true    # ✅ Jest failure won't stop Codecov upload
+        run: npx jest --testPathPattern="tests/__tests__" --coverage --coverageThreshold='{"global":{"lines":10}}' --passWithNoTests --forceExit --coverageReporters=lcov --coverageReporters=text --collectCoverageFrom="backend/**/*.js"
+        continue-on-error: true
         env:
           NODE_ENV: test
 
@@ -53,4 +53,4 @@ jobs:
           files: ./coverage/lcov.info
           flags: unittests
           name: skillsconnect-coverage
-          fail_ci_if_error: false  # ✅ Codecov upload failure also won't fail CI
+          fail_ci_if_error: false

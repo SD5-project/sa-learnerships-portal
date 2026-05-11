@@ -18,7 +18,9 @@ const rolePermissions = {
         '/admin-dashboard',
         '/create-opportunity',
         '/api/applicants',
-        '/api/opportunities/submit'   // ✅ admin can also submit
+        '/api/opportunities/submit',
+        '/api/admin/listings', 
+        '/api/admin/users'   // ✅ admin can also submit
     ]
 };
 
@@ -35,3 +37,6 @@ function authorize(user, route) {
 }
 
 module.exports = { authorize };
+
+
+

@@ -8,10 +8,10 @@
     "test": "tests"
   },
   "scripts": {
-    "start":      "node backend/app.js",
-    "test":       "mocha tests/control-access.test.js && jest --testPathPattern=__tests__",
-    "test:mocha": "mocha tests/control-access.test.js",
-    "test:jest":  "jest --testPathPattern=__tests__",
+    "start":         "node backend/app.js",
+    "test":          "mocha tests/control-access.test.js && jest --testPathPattern=__tests__",
+    "test:mocha":    "mocha tests/control-access.test.js",
+    "test:jest":     "jest --testPathPattern=__tests__",
     "test:coverage": "jest --testPathPattern=__tests__ --coverage --forceExit"
   },
   "jest": {
@@ -19,19 +19,23 @@
     "testMatch": [
       "**/__tests__/**/*.test.js"
     ],
+    "collectCoverage": false,
     "collectCoverageFrom": [
-      "backend/**/*.js",
-      "!backend/firebaseAdmin.js",
-      "!backend/reminderJob.js",
-      "!backend/seedNQF.js",
-      "!backend/promoteAdmin.js"
+      "backend/app.js",
+      "backend/auth.js",
+      "backend/access-logic.js"
     ],
     "coverageReporters": [
       "lcov",
       "text",
       "text-summary"
     ],
-    "coverageDirectory": "coverage"
+    "coverageDirectory": "coverage",
+    "coverageThreshold": {
+      "global": {
+        "lines": 10
+      }
+    }
   },
   "repository": {
     "type": "git",

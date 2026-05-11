@@ -211,6 +211,29 @@ app.get('/api/listings', verifyToken, async (req, res) => {
     }
 });
 
+app.get("/applicant/hasApplied", async (req, res) => {
+    const { applicantID, listingID } = req.query;
+
+    // Basic validation: If either ID is missing, don't even call Firestore
+    if (!applicantID || !listingID) {
+        return res.status(400).json({ error: "Missing applicantID or listingID" });
+    }
+
+    try {
+        const snapshot = await db.collection("applications")
+            .where("applicantID", "==", applicantID)
+            .where("listingID", "==", listingID)
+            .get();
+
+        // If snapshot.empty is true, hasApplied will be false (200 OK)
+        res.status(200).json({ hasApplied: !snapshot.empty });
+        
+    } catch (error) {
+        console.error("Error checking application status:", error);
+        res.status(500).json({ error: "Failed to check application" });
+    }
+});
+
 // Single opportunity
 app.get("/api/opportunities/:id", verifyToken, async (req, res) => {
     try {
@@ -792,6 +815,135 @@ app.get("/api/health", (req, res) => {
 // EXPORT
 // =============================================================================
 
+// ─── Get Applicants for Provider ─────────────────────────────────────────────
+app.get("/api/applicants", verifyToken, async (req, res) => {
+    try {
+        const providerID  = req.query.providerID || req.user.uid;
+        const providerDoc = await db.collection("users").doc(providerID).get();
+        const orgName     = providerDoc.exists ? providerDoc.data().organization : null;
+
+        let listingIDs    = [];
+        let listingTitles = {};
+        let oppSnapshot;
+
+        if (orgName) {
+            oppSnapshot = await db.collection("Opportunities").where("company", "==", orgName).get();
+        } else {
+            oppSnapshot = await db.collection("Opportunities").where("providerID", "==", providerID).get();
+        }
+
+        oppSnapshot.forEach(doc => {
+            listingIDs.push(doc.id);
+            listingTitles[doc.id] = doc.data().title || "Untitled";
+        });
+
+        if (listingIDs.length === 0) return res.json([]);
+
+        // Chunk into groups of 30 (Firestore "in" limit)
+        const chunks = [];
+        for (let i = 0; i < listingIDs.length; i += 30) chunks.push(listingIDs.slice(i, i + 30));
+
+        let allApplications = [];
+        for (const chunk of chunks) {
+            const snap = await db.collection("applications").where("listingID", "in", chunk).get();
+            snap.forEach(doc => allApplications.push({ id: doc.id, ...doc.data() }));
+        }
+
+        // Join applicant profiles
+        const applicantUIDs = [...new Set(allApplications.map(a => a.applicantID))];
+        const profiles = {};
+        await Promise.all(applicantUIDs.map(async uid => {
+            try {
+                const d = await db.collection("users").doc(uid).get();
+                profiles[uid] = d.exists ? d.data() : {};
+            } catch { profiles[uid] = {}; }
+        }));
+
+        const enriched = allApplications.map(app => ({
+            ...app,
+            listingTitle: listingTitles[app.listingID] || app.listingID,
+            applicant:    profiles[app.applicantID] || {}
+        }));
+
+        res.json(enriched);
+    } catch (error) {
+        console.error("Get applicants error:", error);
+        res.status(500).json({ error: "Failed to fetch applicants" });
+    }
+});
+
+// ─── Update Application Status ────────────────────────────────────────────────
+app.patch("/api/applicants/:applicationID/status", verifyToken, async (req, res) => {
+    try {
+        const { applicationID } = req.params;
+        const { status } = req.body;
+        const providerUid = req.user.uid; // From verifyToken middleware
+
+        const valid = ["pending", "reviewing", "shortlisted", "accepted", "rejected"];
+        if (!valid.includes(status)) return res.status(400).json({ error: "Invalid status" });
+
+        // DATA ISOLATION (Requirement: Provider cannot modify listings they don't own)
+        const appRef = db.collection("applications").doc(applicationID);
+        const appDoc = await appRef.get();
+        if (!appDoc.exists) return res.status(404).json({ error: "Application not found" });
+
+        const appData = appDoc.data();
+        const listingDoc = await db.collection("Opportunities").doc(appData.listingID).get();
+        
+        // Check if current user is the owner of this opportunity
+        if (listingDoc.data().providerID !== providerUid) {
+            return res.status(403).json({ error: "Forbidden: You do not own this listing." });
+        }
+
+        // INTEGRITY (Requirement: Status transition must be atomic)
+        await appRef.update({
+            status,
+            updatedAt: new Date().toISOString()
+        });
+
+        // NOTIFICATION (Requirement: Create in-app notification)
+        const listingTitle = listingDoc.data().title || "Opportunity";
+        await db.collection("notifications").add({
+            recipientId: appData.applicantID,
+            message: `Your application for "${listingTitle}" has been ${status}.`,
+            status: "unread",
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            applicationId: applicationID
+        });
+
+        // EMAIL (Requirement: Catch failure without breaking status update)
+        try {
+            // Get Applicant details
+            const applicantDoc = await db.collection("users").doc(appData.applicantID).get();
+            if (applicantDoc.exists) {
+                const { email, firstname } = applicantDoc.data();
+                
+                // Send the Email
+                await transporter.sendMail({
+                    from: `"SkillsConnect" <skillsconnectsupport@gmail.com>`,
+                    to: email,
+                    subject: `Update: Application for ${listingDoc.data().title}`,
+                    html: `
+                        <p>Hi ${firstname || 'Applicant'},</p>
+                        <p>Your application for <strong>${listingDoc.data().title}</strong> has been updated.</p>
+                        <p>New Status: <strong>${status}</strong></p>
+                        <p>Log in to your dashboard for more details.</p>
+                    `
+                });
+                console.log("Email sent successfully to:", email);
+            }
+        } catch (error) {
+            console.error("Email failed but status was updated:", error);
+        }
+
+        res.json({ message: "Status updated and applicant notified", status });
+    } catch (error) {
+        console.error("Status update error:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+// ✅Export for testing
 module.exports = app;
 
 if (process.env.NODE_ENV !== "test") {

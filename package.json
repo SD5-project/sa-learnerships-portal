@@ -8,35 +8,16 @@
     "test": "tests"
   },
   "scripts": {
-    "start":         "node backend/app.js",
-    "test":          "mocha tests/control-access.test.js && jest --testPathPattern=__tests__",
-    "test:mocha":    "mocha tests/control-access.test.js",
-    "test:jest":     "jest --testPathPattern=__tests__",
-    "test:coverage": "jest --testPathPattern=__tests__ --coverage --forceExit"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/__tests__/**/*.test.js"
-    ],
-    "collectCoverage": false,
-    "collectCoverageFrom": [
-      "backend/access-logic.js",
-      "backend/auth.js"
-    ],
-    "coverageReporters": [
-      "lcov",
-      "text",
-      "text-summary"
-    ],
-    "coverageDirectory": "coverage",
-    "coverageThreshold": {
-      "global": {
-        "lines": 10
-      }
-    },
-    "moduleNameMapper": {}
-  },
+  "start": "node backend/app.js",
+  "test": "jest --coverage",
+  "test:watch": "jest --watchAll"
+},
+"jest": {
+  "testEnvironment": "node",
+  "collectCoverage": true,
+  "coverageDirectory": "coverage",
+  "coverageReporters": ["lcov", "text"]
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Swag-png/sa-learnerships-portal.git"

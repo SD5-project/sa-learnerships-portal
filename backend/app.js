@@ -1,12 +1,10 @@
 const express = require('express');
-const path = require('path');
-const cors = require("cors");
-const app = express();
-const { verifyToken } = require("./auth");
-const { db, admin } = require("./firebaseAdmin");
-const { authorize } = require('./access-logic');
+const path    = require('path');
+const cors    = require("cors");
 
-//reminder job
+const app = express();
+
+// ─── Reminder Job ────────────────────────────────
 if (process.env.NODE_ENV !== "test") {
     require("./reminderJob");
 }
@@ -17,7 +15,11 @@ app.use(express.json());
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
-// ─── Guard Middleware ────────────────────────────────────────────────────────
+const { verifyToken } = require("./auth");
+const { db, admin }   = require("./firebaseAdmin");
+const { authorize }   = require('./access-logic');
+
+// ─── Guard Middleware ────────────────────────────
 function guard(route) {
     return (req, res, next) => {
         const user = req.user;
@@ -29,7 +31,7 @@ function guard(route) {
     };
 }
 
-// ─── Static Page Routes ──────────────────────────────────────────────────────
+// ─── Static Page Routes ──────────────────────────
 app.get(['/signup', '/signup.html'], (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'frontend', 'signup.html'));
 });
@@ -50,13 +52,9 @@ app.get('/applicants', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'frontend', 'applicants.html'));
 });
 
-// Serve login page at root
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
-// ─── Protected Routes ────────────────────────────────────────────────────────
-// ✅ Just serve the pages — token is verified client-side
-
 
 app.get('/admin-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'frontend', 'admin-dashboard.html'));
@@ -70,25 +68,27 @@ app.get('/listings', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'frontend', 'listings.html'));
 });
 
-// ─── NQF Levels ──────────────────────────────────────────────────────────────
-app.get('/nqf-levels', (req, res) => {
-    res.json({
-        levels: [
-            { level: 1,  name: "Grade 9",                        example: "ABET Level 4" },
-            { level: 2,  name: "Grade 10",                       example: "Elementary Certificate" },
-            { level: 3,  name: "Grade 11",                       example: "Intermediate Certificate" },
-            { level: 4,  name: "Grade 12 / Matric",              example: "National Senior Certificate" },
-            { level: 5,  name: "Higher Certificate",             example: "Short course / HE Certificate" },
-            { level: 6,  name: "Diploma / Advanced Certificate", example: "National Diploma" },
-            { level: 7,  name: "Bachelor's Degree",              example: "BTech / B-degree" },
-            { level: 8,  name: "Honours / Postgrad Diploma",     example: "Honours Degree" },
-            { level: 9,  name: "Master's Degree",                example: "MTech / Master's" },
-            { level: 10, name: "Doctoral Degree",                example: "DTech / PhD" },
-        ]
-    });
+// ─── NQF Levels — fetched from Firestore (SAQA) ──
+app.get('/nqf-levels', async (req, res) => {
+    try {
+        const snapshot = await db.collection("NQFLevels")
+            .orderBy("level")
+            .get();
+
+        const levels = [];
+        snapshot.forEach(doc => {
+            levels.push(doc.data());
+        });
+
+        res.json({ levels });
+
+    } catch (error) {
+        console.error("NQF fetch error:", error.message);
+        res.status(500).json({ error: "Failed to fetch NQF levels" });
+    }
 });
 
-// ─── Applicant Signup ────────────────────────────────────────────────────────
+// ─── Applicant Signup ─────────────────────────────
 app.post("/signup/applicant", async (req, res) => {
     const { uid, firstname, lastname, email, username, institution, city, phonenumber, cv } = req.body;
 
@@ -106,7 +106,7 @@ app.post("/signup/applicant", async (req, res) => {
             city,
             phonenumber,
             cv,
-            role: "applicant",
+            role:      "applicant",
             createdAt: new Date().toISOString()
         });
 
@@ -118,9 +118,9 @@ app.post("/signup/applicant", async (req, res) => {
     }
 });
 
-// ─── Provider Signup ─────────────────────────────────────────────────────────
+// ─── Provider Signup ──────────────────────────────
 app.post("/signup/provider", async (req, res) => {
-    console.log("📥 Received signup request:", req.body);
+    console.log("Received signup request:", req.body);
     const { uid, organization, email, city, phonenumber, username } = req.body;
 
     if (!email) return res.status(400).json({ error: "Email is required" });
@@ -134,7 +134,7 @@ app.post("/signup/provider", async (req, res) => {
             city,
             phonenumber,
             username,
-            role: "provider",
+            role:      "provider",
             createdAt: new Date().toISOString()
         });
 
@@ -146,25 +146,19 @@ app.post("/signup/provider", async (req, res) => {
     }
 });
 
-
-// ─── Opportunity Routes ──────────────────────────────────────────────────────
-
-// Submit Opportunity
+// ─── Submit Opportunity ───────────────────────────
 app.post("/api/opportunities/submit", verifyToken, guard('/api/opportunities/submit'), async (req, res) => {
     try {
         const opportunityData = req.body;
-
-        // Set mandatory metadata
-        opportunityData.status = "pending-review";
+        opportunityData.status    = "pending-review";
         opportunityData.createdAt = new Date().toISOString();
         opportunityData.updatedAt = new Date().toISOString();
 
-        // Save directly to the "Opportunities" collection in Firestore
         const docRef = await db.collection("Opportunities").add(opportunityData);
 
         res.status(201).json({ 
             message: "Opportunity submitted successfully",
-            id: docRef.id
+            id:      docRef.id
         });
 
     } catch (error) {
@@ -173,8 +167,7 @@ app.post("/api/opportunities/submit", verifyToken, guard('/api/opportunities/sub
     }
 });
 
-
-// ─── Listings ─────────────────────────────────────────────────────────
+// ─── Listings ─────────────────────────────────────
 app.get('/api/listings', verifyToken, async (req, res) => {
     const isAuthorized = authorize(req.user, '/api/listings');
 
@@ -189,13 +182,13 @@ app.get('/api/listings', verifyToken, async (req, res) => {
         snapshot.forEach(doc => {
             const data = doc.data();
             opportunities.push({ 
-                id: doc.id, 
-                title: data.title,
+                id:          doc.id, 
+                title:       data.title,
                 description: data.description,
-                price: data.stipend, 
-                location: data.location,
-                provider: data.company, 
-                type: data.type
+                price:       data.stipend, 
+                location:    data.location,
+                provider:    data.company, 
+                type:        data.type
             });
         });
 
@@ -207,64 +200,112 @@ app.get('/api/listings', verifyToken, async (req, res) => {
     }
 });
 
-
-
+// ─── Check if Applicant Applied ───────────────────
 app.get("/applicant/hasApplied", async (req, res) => {
-    const {applicantID, listingID} = req.query;
+    const { applicantID, listingID } = req.query;
     try {
         const snapshot = await db.collection("applications")
             .where("applicantID", "==", applicantID)
-            .where("listingID", "==", listingID)
+            .where("listingID",   "==", listingID)
             .get();
         res.json({ hasApplied: !snapshot.empty });
     } catch (error) {
-        res.status(500).json({ error: "Failed to check application"})
+        res.status(500).json({ error: "Failed to check application" });
     }
 });
 
-//Appicant apply
-app.post("/applicant/apply", async(req,res) => {
-    const { applicantID, listingID, status} = req.body;
+// ─── Applicant Apply ──────────────────────────────
+app.post("/applicant/apply", async (req, res) => {
+    const { applicantID, listingID, status } = req.body;
 
-    if(!applicantID || !listingID){
-        return res.status(400).json({ error: "applicationID and listing ID are required"});
+    if (!applicantID || !listingID) {
+        return res.status(400).json({ error: "applicantID and listingID are required" });
     }
    
     try {
         const userDoc = await db.collection("users").doc(applicantID).get();
-        console.log("👤 User doc exists:", userDoc.exists); // ← add this
-        console.log("👤 Looking for UID:", applicantID);
-        if(!userDoc.exists){
-            return res.status(400).json({ error: "User not found"});
+        if (!userDoc.exists) {
+            return res.status(400).json({ error: "User not found" });
         }
 
-         // ── Validate listing exists ───────────────────────────────────────
         const listingDoc = await db.collection("Opportunities").doc(listingID).get();
         if (!listingDoc.exists) {
             return res.status(404).json({ error: "Listing not found" });
         }
 
-          // ── Prevent duplicate applications ────────────────────────────────
-        const docId = `${applicantID}_${listingID}`;
+        const docId       = `${applicantID}_${listingID}`;
         const existingApp = await db.collection("applications").doc(docId).get();
         if (existingApp.exists) {
             return res.status(409).json({ error: "You have already applied to this listing" });
         }
          
-         await db.collection("applications").doc(docId).set({
+        await db.collection("applications").doc(docId).set({
             applicantID,
             listingID,
             status,
             createdAt: new Date().toISOString()
         });
+
         res.status(201).json({ message: "Application submitted" });
+
     } catch (error) {
         console.error("Apply error:", error);
         res.status(500).json({ error: "Failed to submit application" });
     }
+});
 
-})
-// ─── User Profile ─────────────────────────────────────────────────────────────
+// ─── NQF Validation ───────────────────────────────
+app.post("/validate-application", async (req, res) => {
+    const { userId, opportunityId } = req.body;
+
+    if (!userId || !opportunityId) {
+        return res.status(400).json({ error: "userId and opportunityId are required." });
+    }
+
+    try {
+        const userDoc = await db.collection("users").doc(userId).get();
+
+        if (!userDoc.exists) {
+            return res.status(404).json({ error: "Applicant not found." });
+        }
+
+        const userData     = userDoc.data();
+        const applicantNQF = userData.highestNQFLevel;
+
+        if (!applicantNQF) {
+            return res.status(400).json({
+                eligible: false,
+                message:  "Please update your profile with your highest qualification before applying."
+            });
+        }
+
+        const opportunityDoc = await db.collection("Opportunities").doc(opportunityId).get();
+
+        if (!opportunityDoc.exists) {
+            return res.status(404).json({ error: "Opportunity not found." });
+        }
+
+        const minimumNQF = opportunityDoc.data().minimumNQFLevel;
+
+        if (parseInt(applicantNQF) >= parseInt(minimumNQF)) {
+            return res.status(200).json({
+                eligible: true,
+                message:  "You meet the requirements for this opportunity."
+            });
+        } else {
+            return res.status(200).json({
+                eligible: false,
+                message:  `You do not meet the minimum qualification requirement. This opportunity requires NQF Level ${minimumNQF}. Your current level is NQF Level ${applicantNQF}.`
+            });
+        }
+
+    } catch (error) {
+        console.error("Validation error:", error.message);
+        return res.status(500).json({ error: "Validation failed." });
+    }
+});
+
+// ─── User Profile ─────────────────────────────────
 app.get("/api/user-profile", verifyToken, async (req, res) => {
     try {
         const uid     = req.query.uid || req.user.uid;
@@ -277,7 +318,7 @@ app.get("/api/user-profile", verifyToken, async (req, res) => {
     }
 });
 
-// ─── Role Lookup (Firestore fallback for login) ───────────────────────────────
+// ─── Role Lookup ──────────────────────────────────
 app.get("/api/user-role", verifyToken, async (req, res) => {
     try {
         const uid     = req.query.uid || req.user.uid;
@@ -290,7 +331,7 @@ app.get("/api/user-role", verifyToken, async (req, res) => {
     }
 });
 
-// ─── Backfill Custom Claim ────────────────────────────────────────────────────
+// ─── Backfill Custom Claim ────────────────────────
 app.post("/api/set-role-claim", verifyToken, async (req, res) => {
     try {
         const { uid, role } = req.body;
@@ -305,7 +346,7 @@ app.post("/api/set-role-claim", verifyToken, async (req, res) => {
     }
 });
 
-// ─── Provider's listings (for applicants filter) ──────────────────────────────
+// ─── Provider Listings ────────────────────────────
 app.get("/api/provider-listings", verifyToken, async (req, res) => {
     try {
         const providerID  = req.query.providerID || req.user.uid;
@@ -328,7 +369,7 @@ app.get("/api/provider-listings", verifyToken, async (req, res) => {
     }
 });
 
-// ─── Get Applicants for Provider ─────────────────────────────────────────────
+// ─── Get Applicants for Provider ──────────────────
 app.get("/api/applicants", verifyToken, async (req, res) => {
     try {
         const providerID  = req.query.providerID || req.user.uid;
@@ -352,7 +393,6 @@ app.get("/api/applicants", verifyToken, async (req, res) => {
 
         if (listingIDs.length === 0) return res.json([]);
 
-        // Chunk into groups of 30 (Firestore "in" limit)
         const chunks = [];
         for (let i = 0; i < listingIDs.length; i += 30) chunks.push(listingIDs.slice(i, i + 30));
 
@@ -362,7 +402,6 @@ app.get("/api/applicants", verifyToken, async (req, res) => {
             snap.forEach(doc => allApplications.push({ id: doc.id, ...doc.data() }));
         }
 
-        // Join applicant profiles
         const applicantUIDs = [...new Set(allApplications.map(a => a.applicantID))];
         const profiles = {};
         await Promise.all(applicantUIDs.map(async uid => {
@@ -375,7 +414,7 @@ app.get("/api/applicants", verifyToken, async (req, res) => {
         const enriched = allApplications.map(app => ({
             ...app,
             listingTitle: listingTitles[app.listingID] || app.listingID,
-            applicant:    profiles[app.applicantID] || {}
+            applicant:    profiles[app.applicantID]    || {}
         }));
 
         res.json(enriched);
@@ -385,7 +424,7 @@ app.get("/api/applicants", verifyToken, async (req, res) => {
     }
 });
 
-// ─── Update Application Status ────────────────────────────────────────────────
+// ─── Update Application Status ────────────────────
 app.patch("/api/applicants/:applicationID/status", verifyToken, async (req, res) => {
     try {
         const { applicationID } = req.params;
@@ -411,6 +450,6 @@ module.exports = app;
 if (process.env.NODE_ENV !== "test") {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-}); 
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
 }

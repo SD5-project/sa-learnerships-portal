@@ -116,6 +116,3 @@ describe('Access Control Tests', () => {
         assert.strictEqual(authorize({ role: 'unknown' }, '/api/listings'), false);
     });
 });
-
-
-

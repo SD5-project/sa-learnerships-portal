@@ -653,6 +653,8 @@ app.patch("/api/admin/users/:uid/suspend", verifyToken, adminOnly, async (req, r
         const userDoc = await db.collection("users").doc(uid).get();
         if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
 
+        const userData = userDoc.data();
+
         await admin.auth().updateUser(uid, { disabled: true });
         await db.collection("users").doc(uid).update({
             status:      "suspended",
@@ -660,6 +662,20 @@ app.patch("/api/admin/users/:uid/suspend", verifyToken, adminOnly, async (req, r
             updatedAt:   new Date().toISOString()
         });
         res.json({ message: "User suspended", uid });
+
+        // Email user (non-blocking — after response is already sent)
+        const name = userData.firstname || userData.organization || "User";
+        await sendMail(
+            userData.email,
+            "Your SkillsConnect account has been suspended",
+            `<p>Hi ${name},</p>
+             <p>Your SkillsConnect account has been <strong>suspended</strong> by an administrator.</p>
+             <p>You will not be able to log in while your account is suspended.</p>
+             <p>If you believe this is a mistake, please contact support at 
+                <a href="mailto:${process.env.EMAIL_USER}">${process.env.EMAIL_USER}</a>.
+             </p>`
+        );
+
     } catch (error) {
         console.error("Suspend error:", error);
         res.status(500).json({ error: "Failed to suspend user" });
@@ -673,6 +689,8 @@ app.patch("/api/admin/users/:uid/reactivate", verifyToken, adminOnly, async (req
         const userDoc = await db.collection("users").doc(uid).get();
         if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
 
+        const userData = userDoc.data();
+
         await admin.auth().updateUser(uid, { disabled: false });
         await db.collection("users").doc(uid).update({
             status:        "active",
@@ -680,6 +698,18 @@ app.patch("/api/admin/users/:uid/reactivate", verifyToken, adminOnly, async (req
             updatedAt:     new Date().toISOString()
         });
         res.json({ message: "User reactivated", uid });
+
+        // Email user (non-blocking — after response is already sent)
+        const name = userData.firstname || userData.organization || "User";
+        await sendMail(
+            userData.email,
+            "Your SkillsConnect account has been reactivated",
+            `<p>Hi ${name},</p>
+             <p>Good news — your SkillsConnect account has been <strong>reactivated</strong>.</p>
+             <p>You can now log in and access the platform again.</p>
+             <p><a href="${process.env.APP_URL || "https://skillsconnect.azurewebsites.net"}">Click here to log in</a></p>`
+        );
+
     } catch (error) {
         console.error("Reactivate error:", error);
         res.status(500).json({ error: "Failed to reactivate user" });

@@ -8,17 +8,16 @@
     "test": "tests"
   },
   "scripts": {
-    "start": "node backend/app.js",
-    "test": "mocha tests/control-access.test.js && jest --testPathPattern=__tests__",
-    "test:mocha": "mocha tests/control-access.test.js",
-    "test:jest": "jest --testPathPattern=__tests__"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/__tests__/**/*.test.js"
-    ]
-  },
+  "start": "node backend/app.js",
+  "test": "jest --coverage",
+  "test:watch": "jest --watchAll"
+},
+"jest": {
+  "testEnvironment": "node",
+  "collectCoverage": true,
+  "coverageDirectory": "coverage",
+  "coverageReporters": ["lcov", "text"]
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Swag-png/sa-learnerships-portal.git"

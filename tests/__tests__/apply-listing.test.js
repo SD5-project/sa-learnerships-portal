@@ -36,7 +36,7 @@ jest.mock("../../backend/firebaseAdmin", () => {
                     set:    mockSetApp,
                     update: jest.fn().mockResolvedValue()
                 }),
-                where: () => ({ get: jest.fn().mockResolvedValue({ empty: true }) }),
+                where: jest.fn().mockReturnThis(),
                 get:   jest.fn().mockResolvedValue({ forEach: () => {} }),
                 add:   jest.fn().mockResolvedValue({ id: "new-id" })
             })
@@ -116,7 +116,9 @@ describe("US-03: Applicant applies to a listing", () => {
     test("❌ Duplicate application returns 409", async () => {
         mockUserDoc.mockResolvedValue({ exists: true, data: () => ({ role: "applicant" }) });
         mockListingDoc.mockResolvedValue({ exists: true });
-        mockAppDoc.mockResolvedValue({ exists: true }); // already applied
+        
+        // The route checks the SPECIFIC doc for existence
+        mockAppDoc.mockResolvedValue({ exists: true }); 
 
         const res = await request(app)
             .post("/applicant/apply")
@@ -230,15 +232,46 @@ describe("US-04: Role-based access control (access-logic)", () => {
 // =============================================================================
 // Check application status endpoint
 // =============================================================================
-describe("hasApplied endpoint", () => {
+// ... (keep the rest of your file as is)
 
-    test("✅ Returns hasApplied: true when snapshot is non-empty (mock returns empty:true)", async () => {
+// =============================================================================
+// Check application status endpoint
+// =============================================================================
+describe("hasApplied endpoint", () => {
+    // Import the mocked db inside the describe block to ensure it's available
+    const { db } = require("../../backend/firebaseAdmin");
+
+    test("✅ Returns hasApplied: false when no application exists", async () => {
+        // We need to force the 'where' chain to return empty: true
+        const mockWhere = jest.spyOn(db, 'collection').mockReturnValue({
+            where: jest.fn().mockReturnThis(),
+            get: jest.fn().mockResolvedValue({ empty: true })
+        });
+
         const res = await request(app)
             .get("/applicant/hasApplied")
             .query({ applicantID: "user_001", listingID: "listing_001" });
 
         expect(res.status).toBe(200);
-        // The mock returns { empty: true } so hasApplied = !true = false
         expect(res.body.hasApplied).toBe(false);
+        
+        mockWhere.mockRestore(); // Clean up
+    });
+
+    test("✅ Returns hasApplied: true when application exists", async () => {
+        // We need to force the 'where' chain to return empty: false
+        const mockWhere = jest.spyOn(db, 'collection').mockReturnValue({
+            where: jest.fn().mockReturnThis(),
+            get: jest.fn().mockResolvedValue({ empty: false })
+        });
+
+        const res = await request(app)
+            .get("/applicant/hasApplied")
+            .query({ applicantID: "user_001", listingID: "listing_001" });
+
+        expect(res.status).toBe(200);
+        expect(res.body.hasApplied).toBe(true);
+        
+        mockWhere.mockRestore(); // Clean up
     });
 });

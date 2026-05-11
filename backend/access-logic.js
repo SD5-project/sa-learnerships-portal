@@ -12,13 +12,11 @@ const rolePermissions = {
         '/api/opportunities/submit'   // ✅ allows provider to submit opportunities
     ],
     'admin': [
-        '/api/listings',
-        '/admin-dashboard',
-        '/applicant-home',
-        '/provider-home',
-        '/create-opportunity',
-        '/api/applicants',
-        '/api/opportunities/submit'   // ✅ admin can also submit
+        '/api/listings',    
+        '/admin-dashboard', 
+        '/api/applicants',       
+        '/api/opportunities/submit',
+        '/create-opportunity' 
     ]
 };
 

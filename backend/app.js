@@ -189,7 +189,7 @@ app.post("/api/opportunities/submit", verifyToken, guard('/api/opportunities/sub
         });
     } catch (error) {
         console.error("Error:", error);
-        res.status(500).json({ error: "Failed to submit" });
+        res.status(500).json({ error: "Failed to submit opportunity" });
     }
 });
 
@@ -230,15 +230,25 @@ app.get('/api/listings', verifyToken, async (req, res) => {
 
 
 app.get("/applicant/hasApplied", async (req, res) => {
-    const {applicantID, listingID} = req.query;
+    const { applicantID, listingID } = req.query;
+
+    // Basic validation: If either ID is missing, don't even call Firestore
+    if (!applicantID || !listingID) {
+        return res.status(400).json({ error: "Missing applicantID or listingID" });
+    }
+
     try {
         const snapshot = await db.collection("applications")
             .where("applicantID", "==", applicantID)
             .where("listingID", "==", listingID)
             .get();
-        res.json({ hasApplied: !snapshot.empty });
+
+        // If snapshot.empty is true, hasApplied will be false (200 OK)
+        res.status(200).json({ hasApplied: !snapshot.empty });
+        
     } catch (error) {
-        res.status(500).json({ error: "Failed to check application"})
+        console.error("Error checking application status:", error);
+        res.status(500).json({ error: "Failed to check application" });
     }
 });
 

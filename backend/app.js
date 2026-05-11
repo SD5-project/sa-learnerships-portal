@@ -777,7 +777,17 @@ app.post("/api/set-role-claim", verifyToken, async (req, res) => {
         res.status(500).json({ error: "Failed to set custom claim" });
     }
 });
-
+// =============================================================================
+// Deployment temp
+// =============================================================================
+app.get("/api/health", (req, res) => {
+    res.json({
+        hasProjectId:   !!process.env.FIREBASE_PROJECT_ID,
+        hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+        hasPrivateKey:  !!process.env.FIREBASE_PRIVATE_KEY,
+        keyLength:      process.env.FIREBASE_PRIVATE_KEY?.length || 0
+    });
+});
 // =============================================================================
 // EXPORT
 // =============================================================================

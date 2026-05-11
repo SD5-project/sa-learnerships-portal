@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - SkillsConnect</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* ── SHELL ── */
         .dashboard-wrapper {
             min-height: 100vh;
             background-color: #666666;
@@ -12,7 +14,7 @@
             flex-direction: column;
         }
 
-        /* NAVBAR */
+        /* ── NAVBAR ── */
         .navbar {
             background-color: #333333;
             padding: 15px 30px;
@@ -21,402 +23,770 @@
             align-items: center;
             border-bottom: 2px solid white;
         }
-
-        .navbar h1 {
-            color: white;
-            font-size: 20px;
-            margin: 0;
-        }
-
-        .navbar-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: white;
-            font-size: 14px;
-        }
-
+        .navbar h1 { color: white; font-size: 20px; margin: 0; }
+        .navbar-right { display: flex; align-items: center; gap: 15px; color: white; font-size: 14px; }
         .nav-link-btn {
-            background-color: transparent;
-            color: white;
-            border: 2px solid white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 0;
-            text-transform: uppercase;
+            background-color: transparent; color: white; border: 2px solid white;
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            font-size: 14px; margin-top: 0; text-transform: uppercase;
         }
-
-        .nav-link-btn:hover {
-            background-color: white;
-            color: #333;
-        }
-
+        .nav-link-btn:hover { background-color: white; color: #333; }
         .logout-btn {
-            background-color: crimson;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 0;
+            background-color: crimson; color: white; border: none;
+            padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 0;
         }
+        .logout-btn:hover { opacity: 0.85; background-color: crimson; }
 
-        .logout-btn:hover {
-            opacity: 0.85;
-            background-color: crimson;
-            color: white;
-        }
+        /* ── MAIN ── */
+        .dashboard-content { padding: 30px; display: flex; flex-direction: column; gap: 20px; }
 
-        /* MAIN CONTENT */
-        .dashboard-content {
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* WELCOME CARD */
+        /* ── WELCOME ── */
         .welcome-card {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 25px;
-            color: white;
+            background-color: #545454; border: 2px solid white;
+            border-radius: 12px; padding: 25px; color: white;
         }
+        .welcome-card h2 { margin: 0 0 8px; font-size: 24px; }
+        .welcome-card p  { margin: 0; color: #ccc; font-size: 14px; }
 
-        .welcome-card h2 {
-            margin: 0 0 8px 0;
-            font-size: 24px;
-        }
-
-        .welcome-card p {
-            margin: 0;
-            color: #ccc;
-            font-size: 14px;
-        }
-
-        /* QUICK ACTIONS */
-        .quick-actions {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .action-btn {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 20px 28px;
-            color: white;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: bold;
-            text-align: center;
-            flex: 1;
-            min-width: 180px;
-            transition: background 0.2s;
-        }
-
-        .action-btn:hover {
-            background-color: white;
-            color: #333;
-        }
-
-        .action-btn .btn-icon {
-            font-size: 24px;
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        /* INFO CARDS ROW */
-        .cards-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-        }
-
+        /* ── STATS ROW ── */
+        .cards-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
         .info-card {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 20px;
-            color: white;
-            text-align: center;
+            background-color: #545454; border: 2px solid white;
+            border-radius: 12px; padding: 20px; color: white; text-align: center;
+        }
+        .info-card h3 { margin: 0 0 8px; font-size: 14px; color: #ccc; text-transform: uppercase; }
+        .info-card p  { margin: 0; font-size: 22px; font-weight: bold; }
+
+        /* ── TABS ── */
+        .tab-bar { display: flex; gap: 0; border-bottom: 2px solid white; margin-bottom: 0; }
+        .tab-btn {
+            background: #4a4a4a; color: #ccc; border: 2px solid white; border-bottom: none;
+            padding: 10px 22px; cursor: pointer; font-size: 14px; margin: 0 4px 0 0;
+            border-radius: 8px 8px 0 0; text-transform: uppercase; transition: all 0.15s;
+        }
+        .tab-btn:hover { color: white; background: #555; }
+        .tab-btn.active { background: #545454; color: white; font-weight: bold; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ── SECTION CARD ── */
+        .section-card {
+            background-color: #545454; border: 2px solid white;
+            border-radius: 0 12px 12px 12px; padding: 25px; color: white;
+        }
+        .section-title {
+            font-size: 18px; font-weight: bold; margin: 0 0 20px;
+            border-left: 5px solid white; padding-left: 12px;
         }
 
-        .info-card h3 {
-            margin: 0 0 8px 0;
-            font-size: 14px;
-            color: #ccc;
-            text-transform: uppercase;
-        }
-
-        .info-card p {
-            margin: 0;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        /* PROFILE SECTION */
+        /* ── PROFILE SECTION ── */
         .profile-section {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 25px;
-            color: white;
+            background-color: #545454; border: 2px solid white;
+            border-radius: 12px; padding: 25px; color: white;
         }
+        .profile-section h2 { margin: 0 0 20px; border-left: 5px solid white; padding-left: 10px; }
+        .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .profile-field { display: flex; flex-direction: column; gap: 4px; }
+        .profile-field label { font-size: 12px; color: #ccc; text-transform: uppercase; margin: 0; }
+        .profile-field p { margin: 0; font-size: 15px; font-weight: bold; }
+        .loading-indicator { color: #ccc; font-style: italic; }
 
-        .profile-section h2 {
-            margin: 0 0 20px 0;
-            border-left: 5px solid white;
-            padding-left: 10px;
-        }
-
-        .profile-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .profile-field {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .profile-field label {
-            font-size: 12px;
-            color: #ccc;
-            text-transform: uppercase;
-            margin: 0;
-        }
-
-        .profile-field p {
-            margin: 0;
-            font-size: 15px;
-            font-weight: bold;
-        }
-
-        /* PERMISSIONS SECTION */
+        /* ── PERMISSIONS ── */
         .permissions-section {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 25px;
-            color: white;
+            background-color: #545454; border: 2px solid white;
+            border-radius: 12px; padding: 25px; color: white;
         }
-
-        .permissions-section h2 {
-            margin: 0 0 15px 0;
-            border-left: 5px solid white;
-            padding-left: 10px;
-        }
-
-        .permissions-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
+        .permissions-section h2 { margin: 0 0 15px; border-left: 5px solid white; padding-left: 10px; }
+        .permissions-list { display: flex; flex-wrap: wrap; gap: 10px; }
         .permission-badge {
-            background-color: #333;
-            border: 1px solid white;
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
+            background-color: #333; border: 1px solid white;
+            color: white; padding: 6px 14px; border-radius: 20px; font-size: 13px;
         }
 
-        .loading-indicator {
-            color: #ccc;
-            font-style: italic;
+        /* ── TABLE ── */
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .admin-table th {
+            text-align: left; padding: 10px 12px; font-size: 11px;
+            color: #bbb; text-transform: uppercase; letter-spacing: 0.06em;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
         }
+        .admin-table td { padding: 13px 12px; border-bottom: 1px solid rgba(255,255,255,0.07); vertical-align: middle; }
+        .admin-table tr:last-child td { border-bottom: none; }
+        .admin-table tr:hover td { background-color: rgba(255,255,255,0.04); }
+
+        /* ── STATUS BADGES ── */
+        .badge {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 12px; font-weight: bold; text-transform: capitalize;
+        }
+        .badge-pending  { background: #92400e; color: #fde68a; }
+        .badge-approved { background: #14532d; color: #86efac; }
+        .badge-removed  { background: #7f1d1d; color: #fca5a5; }
+        .badge-active    { background: #14532d; color: #86efac; }
+        .badge-suspended { background: #7f1d1d; color: #fca5a5; }
+        .badge-admin     { background: #312e81; color: #c4b5fd; }
+        .badge-provider  { background: #1e3a5f; color: #93c5fd; }
+        .badge-applicant { background: #1c3a2e; color: #6ee7b7; }
+        .act-btn.suspend    { border-color: #fb923c; color: #fb923c; }
+        .act-btn.suspend:hover    { background: #fb923c; color: #111; }
+        .act-btn.reactivate { border-color: #4ade80; color: #4ade80; }
+        .act-btn.reactivate:hover { background: #4ade80; color: #111; }
+        .act-btn.delete     { border-color: #f87171; color: #f87171; }
+        .act-btn.delete:hover     { background: #f87171; color: #111; }
+
+        /* ── ACTION BUTTONS ── */
+        .actions-cell { display: flex; gap: 8px; flex-wrap: wrap; }
+        .act-btn {
+            padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+            border: 1px solid white; background: transparent; color: white; margin: 0;
+        }
+        .act-btn:hover { background: white; color: #333; }
+        .act-btn.approve { border-color: #4ade80; color: #4ade80; }
+        .act-btn.approve:hover { background: #4ade80; color: #111; }
+        .act-btn.remove  { border-color: #f87171; color: #f87171; }
+        .act-btn.remove:hover  { background: #f87171; color: #111; }
+
+        /* ── FILTER BAR ── */
+        .filter-bar {
+            display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+            margin-bottom: 18px; padding: 12px 16px;
+            background: #444; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+        }
+        .filter-bar label { color: #ccc; font-size: 12px; text-transform: uppercase; margin: 0; }
+        .filter-bar select, .filter-bar input {
+            background: #555; color: white; border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 6px; padding: 6px 10px; font-size: 13px; margin: 0; height: auto;
+        }
+        .filter-bar select option { background: #444; }
+        .filter-btn {
+            background: transparent; color: white; border: 1.5px solid white;
+            border-radius: 6px; padding: 6px 14px; font-size: 13px; cursor: pointer; margin: 0;
+        }
+        .filter-btn:hover { background: white; color: #333; }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.75); z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: #545454; border: 2px solid white; border-radius: 12px;
+            padding: 28px; color: white; width: 100%; max-width: 460px; position: relative;
+        }
+        .modal h3 { margin: 0 0 16px; border-left: 5px solid white; padding-left: 10px; font-size: 17px; }
+        .modal-close {
+            position: absolute; top: 14px; right: 16px; background: none; border: none;
+            color: white; font-size: 20px; cursor: pointer; margin: 0; padding: 0;
+        }
+        .modal-close:hover { color: #ccc; background: none; }
+        .modal label { display: block; font-size: 12px; color: #ccc; text-transform: uppercase; margin: 0 0 6px; }
+        .modal textarea {
+            width: 100%; background: #444; color: white;
+            border: 1.5px solid rgba(255,255,255,0.3); border-radius: 8px;
+            padding: 9px 12px; font-size: 14px; margin: 0 0 16px; resize: vertical;
+            box-sizing: border-box;
+        }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-cancel-modal {
+            background: transparent; color: white; border: 1.5px solid rgba(255,255,255,0.4);
+            border-radius: 8px; padding: 9px 20px; font-size: 14px; cursor: pointer; margin: 0;
+        }
+        .btn-confirm {
+            background: #f87171; color: white; border: none;
+            border-radius: 8px; padding: 9px 20px; font-size: 14px;
+            font-weight: bold; cursor: pointer; margin: 0;
+        }
+        .btn-confirm:hover { background: #ef4444; }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed; bottom: 28px; right: 28px;
+            padding: 14px 22px; border-radius: 10px; font-size: 14px;
+            font-weight: bold; color: white; z-index: 9999;
+            opacity: 0; transform: translateY(12px); transition: all 0.3s; pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { background: #15803d; border: 1px solid #4ade80; }
+        .toast.error   { background: #991b1b; border: 1px solid #f87171; }
+
+        /* ── EMPTY / ERROR ── */
+        .empty-row td { text-align: center; color: #999; padding: 36px 0; font-style: italic; }
+        .error-row  td { text-align: center; color: #f87171; padding: 36px 0; }
     </style>
 </head>
 <body>
-    <div class="dashboard-wrapper">
+<div class="dashboard-wrapper">
 
-        <!-- NAVBAR -->
-        <nav class="navbar">
-            <h1>SkillsConnect — Admin</h1>
-            <div class="navbar-right">
-                <button class="nav-link-btn" onclick="window.location.href='/listings'">📋 All Listings</button>
-                <button class="nav-link-btn" onclick="window.location.href='/create-opportunity'">➕ Post Opportunity</button>
-                <span id="navName"></span>
-                <button class="logout-btn" id="logoutBtn">Logout</button>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <h1>SkillsConnect — Admin</h1>
+        <div class="navbar-right">
+            <button class="nav-link-btn" onclick="window.location.href='/create-opportunity'">➕ Post Opportunity</button>
+            <span id="navName"></span>
+            <button class="logout-btn" id="logoutBtn">Logout</button>
+        </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="dashboard-content">
+
+        <!-- WELCOME -->
+        <div class="welcome-card">
+            <h2 id="welcomeMsg">Welcome 👋</h2>
+            <p>Admin Dashboard — moderate listings and manage the platform</p>
+        </div>
+
+        <!-- STATS -->
+        <div class="cards-row">
+            <div class="info-card"><h3>Pending</h3><p id="statPending">—</p></div>
+            <div class="info-card"><h3>Approved</h3><p id="statApproved">—</p></div>
+            <div class="info-card"><h3>Removed</h3><p id="statRemoved">—</p></div>
+            <div class="info-card"><h3>Total Listings</h3><p id="statTotal">—</p></div>
+        </div>
+
+        <!-- TABS -->
+        <div>
+            <div class="tab-bar">
+                <button class="tab-btn active" id="tab-btn-pending"  onclick="switchTab('pending')">⏳ Pending Approval</button>
+                <button class="tab-btn"         id="tab-btn-all"     onclick="switchTab('all')">📋 All Listings</button>
+                <button class="tab-btn"         id="tab-btn-users"   onclick="switchTab('users')">👥 Manage Users</button>
+                <button class="tab-btn"         id="tab-btn-profile" onclick="switchTab('profile')">👤 My Profile</button>
             </div>
-        </nav>
 
-        <!-- MAIN CONTENT -->
-        <div class="dashboard-content">
-
-            <!-- WELCOME -->
-            <div class="welcome-card">
-                <h2 id="welcomeMsg">Welcome 👋</h2>
-                <p>Admin Dashboard — manage users, listings and platform settings</p>
-            </div>
-
-            <!-- QUICK ACTIONS -->
-            <div class="quick-actions">
-                <button class="action-btn" onclick="window.location.href='/listings'">
-                    <span class="btn-icon">📋</span>Manage Listings
-                </button>
-                <button class="action-btn" onclick="window.location.href='/create-opportunity'">
-                    <span class="btn-icon">➕</span>Post Opportunity
-                </button>
-                <button class="action-btn" id="manageUsersBtn">
-                    <span class="btn-icon">👥</span>Manage Users
-                </button>
-            </div>
-
-            <!-- INFO CARDS -->
-            <div class="cards-row">
-                <div class="info-card">
-                    <h3>Role</h3>
-                    <p>Admin</p>
+            <!-- TAB: PENDING -->
+            <div class="tab-panel active" id="tab-pending">
+                <div class="section-card">
+                    <div class="section-title">Listings Awaiting Approval</div>
+                    <table class="admin-table">
+                        <thead><tr>
+                            <th>Title</th>
+                            <th>Company</th>
+                            <th>Type</th>
+                            <th>Location</th>
+                            <th>Stipend</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr></thead>
+                        <tbody id="pendingBody">
+                            <tr><td colspan="7" style="text-align:center;color:#ccc;padding:30px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="info-card">
-                    <h3>Username</h3>
-                    <p id="cardUsername">-</p>
-                </div>
-                <div class="info-card">
-                    <h3>Status</h3>
-                    <p id="cardStatus">-</p>
-                </div>
             </div>
 
-            <!-- PROFILE -->
-            <div class="profile-section">
-                <h2>Admin Profile</h2>
-                <div class="profile-grid">
-                    <div class="profile-field">
-                        <label>Full Name</label>
-                        <p id="profileName" class="loading-indicator">Loading...</p>
+            <!-- TAB: ALL LISTINGS -->
+            <div class="tab-panel" id="tab-all">
+                <div class="section-card">
+                    <div class="section-title">All Opportunity Listings</div>
+                    <div class="filter-bar">
+                        <label>Status:</label>
+                        <select id="statusFilter" onchange="renderAllListings()">
+                            <option value="all">All</option>
+                            <option value="pending-review">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="removed">Removed</option>
+                        </select>
+                        <label>Search:</label>
+                        <input type="text" id="listingSearch" placeholder="Title or company..." oninput="renderAllListings()" style="min-width:180px;">
                     </div>
-                    <div class="profile-field">
-                        <label>Email</label>
-                        <p id="profileEmail" class="loading-indicator">Loading...</p>
+                    <table class="admin-table">
+                        <thead><tr>
+                            <th>Title</th>
+                            <th>Company</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr></thead>
+                        <tbody id="allListingsBody">
+                            <tr><td colspan="6" style="text-align:center;color:#ccc;padding:30px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: USERS -->
+            <div class="tab-panel" id="tab-users">
+                <div class="section-card">
+                    <div class="section-title">User Account Management</div>
+                    <div class="filter-bar">
+                        <label>Role:</label>
+                        <select id="userRoleFilter" onchange="loadUsers(1)">
+                            <option value="">All Roles</option>
+                            <option value="applicant">Applicant</option>
+                            <option value="provider">Provider</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <label>Search:</label>
+                        <input type="text" id="userSearch" placeholder="Name or email..." oninput="renderUsersFiltered()" style="min-width:180px;">
                     </div>
-                    <div class="profile-field">
-                        <label>Username</label>
-                        <p id="profileUsername">-</p>
-                    </div>
-                    <div class="profile-field">
-                        <label>Status</label>
-                        <p id="profileStatus">-</p>
+                    <table class="admin-table">
+                        <thead><tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Registered</th>
+                            <th>Actions</th>
+                        </tr></thead>
+                        <tbody id="usersBody">
+                            <tr><td colspan="6" style="text-align:center;color:#ccc;padding:30px;">Click "Manage Users" tab to load.</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="display:flex;justify-content:center;align-items:center;gap:14px;margin-top:18px;color:#ccc;font-size:13px;">
+                        <button class="act-btn" id="prevPageBtn" onclick="loadUsers(currentUserPage - 1)" disabled style="padding:6px 14px;">← Prev</button>
+                        <span id="userPageInfo">Page 1</span>
+                        <button class="act-btn" id="nextPageBtn" onclick="loadUsers(currentUserPage + 1)" style="padding:6px 14px;">Next →</button>
                     </div>
                 </div>
             </div>
 
-            <!-- PERMISSIONS -->
-            <div class="permissions-section">
-                <h2>Permissions</h2>
-                <div class="permissions-list" id="permissionsList">
-                    <p style="color:#ccc;">Loading permissions...</p>
+            <!-- TAB: PROFILE -->
+            <div class="tab-panel" id="tab-profile">
+                <div class="section-card">
+                    <div class="section-title">Admin Profile</div>
+                    <div class="profile-grid" style="margin-bottom:24px;">
+                        <div class="profile-field">
+                            <label>Full Name</label>
+                            <p id="profileName" class="loading-indicator">Loading...</p>
+                        </div>
+                        <div class="profile-field">
+                            <label>Email</label>
+                            <p id="profileEmail" class="loading-indicator">Loading...</p>
+                        </div>
+                        <div class="profile-field">
+                            <label>Username</label>
+                            <p id="profileUsername">-</p>
+                        </div>
+                        <div class="profile-field">
+                            <label>Status</label>
+                            <p id="profileStatus">-</p>
+                        </div>
+                    </div>
+                    <div style="border-left:5px solid white;padding-left:12px;margin-bottom:14px;font-size:16px;font-weight:bold;">Permissions</div>
+                    <div class="permissions-list" id="permissionsList">
+                        <p style="color:#ccc;">Loading...</p>
+                    </div>
                 </div>
             </div>
+        </div>
 
+    </div>
+</div>
+
+<!-- REMOVE MODAL -->
+<div class="modal-overlay" id="removeModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('removeModal')">✕</button>
+        <h3>Remove Listing</h3>
+        <label>Reason (optional)</label>
+        <textarea id="removeReason" rows="3" placeholder="e.g. Fraudulent, duplicate, etc."></textarea>
+        <div class="modal-actions">
+            <button class="btn-cancel-modal" onclick="closeModal('removeModal')">Cancel</button>
+            <button class="btn-confirm" id="confirmRemoveBtn">Remove</button>
         </div>
     </div>
+</div>
 
-    <script type="module">
-        import { auth } from "./firebase.js";
+<!-- DELETE USER MODAL -->
+<div class="modal-overlay" id="deleteUserModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('deleteUserModal')">✕</button>
+        <h3>Delete User Account</h3>
+        <p style="color:#ccc;font-size:14px;margin:0 0 18px;">This permanently removes the user from Firebase Auth and Firestore. This cannot be undone.</p>
+        <div class="modal-actions">
+            <button class="btn-cancel-modal" onclick="closeModal('deleteUserModal')">Cancel</button>
+            <button class="btn-confirm" id="confirmDeleteBtn">Permanently Delete</button>
+        </div>
+    </div>
+</div>
 
-        const token = localStorage.getItem("token");
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
-        if (!token) {
-            alert("You must log in first!");
+<script type="module">
+    import { auth } from "./firebase.js";
+
+    // ── State ──────────────────────────────────────────────────────────────────
+    let allListings     = [];
+    let allUsers        = [];
+    let pendingRemoveId = null;
+    let pendingDeleteUid= null;
+    let currentUserPage = 1;
+    let totalUserPages  = 1;
+    let usersLoaded     = false;
+
+    // ── Auth guard ─────────────────────────────────────────────────────────────
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = "/"; return; }
+
+        const idTokenResult = await user.getIdTokenResult();
+        const role = idTokenResult.claims.role;
+
+        if (role && role !== "admin") {
+            alert("Access denied. Admins only.");
             window.location.href = "/";
+            return;
         }
 
-        // ── Load profile from Firestore via backend ─────────────────────────────
-        auth.onAuthStateChanged(async (user) => {
-            if (!user) {
-                window.location.href = "/";
+        const freshToken = await user.getIdToken();
+        localStorage.setItem("token", freshToken);
+
+        // Load profile
+        try {
+            const res = await fetch(`/api/user-profile?uid=${user.uid}`, {
+                headers: { "Authorization": `Bearer ${freshToken}` }
+            });
+            const data = res.ok ? await res.json() : {};
+            populateProfile(data, user.email);
+        } catch (e) {
+            populateProfile({}, user.email);
+        }
+
+        // Load listings
+        await loadAllListings();
+    });
+
+    // ── Profile ────────────────────────────────────────────────────────────────
+    function populateProfile(data, authEmail) {
+        const fullName    = [data.firstname, data.lastname].filter(Boolean).join(" ") || data.organization || "-";
+        const email       = data.email    || authEmail || "-";
+        const username    = data.username || "-";
+        const status      = data.status   || "active";
+        const displayName = fullName !== "-" ? fullName : email;
+        const permissions = data.permissions || [];
+
+        document.getElementById("navName").innerText        = displayName;
+        document.getElementById("welcomeMsg").innerText     = "Welcome, " + displayName + " 👋";
+        document.getElementById("profileName").innerText    = fullName;
+        document.getElementById("profileEmail").innerText   = email;
+        document.getElementById("profileUsername").innerText= username;
+        document.getElementById("profileStatus").innerText  = status;
+
+        const permList   = document.getElementById("permissionsList");
+        const permsArray = permissions.length > 0
+            ? (Array.isArray(permissions) ? permissions : permissions.split(","))
+            : ["Manage Users", "Manage Listings", "Approve Opportunities", "Post Opportunities"];
+
+        permList.innerHTML = "";
+        permsArray.forEach(perm => {
+            const badge = document.createElement("span");
+            badge.className = "permission-badge";
+            badge.innerText = perm.trim();
+            permList.appendChild(badge);
+        });
+    }
+
+    // ── Load all listings from backend ─────────────────────────────────────────
+    async function loadAllListings() {
+        const tok = localStorage.getItem("token");
+        try {
+            const res = await fetch("/api/admin/listings", {
+                headers: { "Authorization": `Bearer ${tok}` }
+            });
+
+            if (!res.ok) {
+                showError("pendingBody",    7, "Failed to load listings (" + res.status + ").");
+                showError("allListingsBody", 6, "Failed to load listings (" + res.status + ").");
                 return;
             }
 
-            // Verify admin role
-            const idTokenResult = await user.getIdTokenResult();
-            const role = idTokenResult.claims.role;
-            if (role && role !== "admin") {
-                alert("Access denied.");
-                window.location.href = "/";
-                return;
-            }
+            allListings = await res.json();
+            updateStats();
+            renderPending();
+            renderAllListings();
 
-            try {
-                const freshToken = await user.getIdToken();
-                const res = await fetch(`/api/user-profile?uid=${user.uid}`, {
-                    headers: { "Authorization": `Bearer ${freshToken}` }
-                });
+        } catch (e) {
+            showError("pendingBody",    7, "Network error loading listings.");
+            showError("allListingsBody", 6, "Network error loading listings.");
+        }
+    }
 
-                if (res.ok) {
-                    const data = await res.json();
-                    populateProfile(data, user.email);
-                } else {
-                    populateProfile({}, user.email);
-                }
-            } catch (err) {
-                console.error("Profile fetch error:", err);
-                populateProfile({}, user.email);
-            }
+    // ── Stats ──────────────────────────────────────────────────────────────────
+    function updateStats() {
+        document.getElementById("statTotal").innerText    = allListings.length;
+        document.getElementById("statPending").innerText  = allListings.filter(l => l.status === "pending-review").length;
+        document.getElementById("statApproved").innerText = allListings.filter(l => l.status === "approved").length;
+        document.getElementById("statRemoved").innerText  = allListings.filter(l => l.status === "removed").length;
+    }
+
+    // ── Render pending tab ─────────────────────────────────────────────────────
+    function renderPending() {
+        const body    = document.getElementById("pendingBody");
+        const pending = allListings.filter(l => l.status === "pending-review");
+
+        if (!pending.length) {
+            body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#999;padding:36px;font-style:italic;">No listings awaiting approval.</td></tr>`;
+            return;
+        }
+
+        body.innerHTML = pending.map(l => `
+            <tr>
+                <td><strong>${l.title}</strong></td>
+                <td>${l.company || "—"}</td>
+                <td>${l.type    || "—"}</td>
+                <td>${l.location|| "—"}</td>
+                <td>${l.stipend != null ? "R" + l.stipend : "—"}</td>
+                <td>${l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-ZA") : "—"}</td>
+                <td><div class="actions-cell">
+                    <button class="act-btn approve" onclick="approveListing('${l.id}')">✓ Approve</button>
+                    <button class="act-btn remove"  onclick="openRemoveModal('${l.id}')">✕ Remove</button>
+                </div></td>
+            </tr>`).join("");
+    }
+
+    // ── Render all listings tab ────────────────────────────────────────────────
+    window.renderAllListings = function() {
+        const body        = document.getElementById("allListingsBody");
+        const statusVal   = document.getElementById("statusFilter").value;
+        const searchVal   = document.getElementById("listingSearch").value.toLowerCase().trim();
+
+        const filtered = allListings.filter(l => {
+            const matchStatus = statusVal === "all" || l.status === statusVal;
+            const matchSearch = !searchVal ||
+                (l.title   || "").toLowerCase().includes(searchVal) ||
+                (l.company || "").toLowerCase().includes(searchVal);
+            return matchStatus && matchSearch;
         });
 
-        function populateProfile(data, authEmail) {
-            const fullName   = [data.firstname, data.lastname].filter(Boolean).join(" ") || data.organization || "-";
-            const email      = data.email      || authEmail || "-";
-            const username   = data.username   || "-";
-            const status     = data.status     || "active";
-            const permissions= data.permissions|| [];
+        if (!filtered.length) {
+            body.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#999;padding:36px;font-style:italic;">No listings found.</td></tr>`;
+            return;
+        }
 
-            const displayName = fullName !== "-" ? fullName : email;
+        body.innerHTML = filtered.map(l => {
+            const badgeClass = l.status === "approved" ? "badge-approved"
+                             : l.status === "removed"  ? "badge-removed"
+                             : "badge-pending";
+            const label      = l.status === "pending-review" ? "Pending" : (l.status || "Unknown");
+            return `<tr>
+                <td><strong>${l.title}</strong></td>
+                <td>${l.company || "—"}</td>
+                <td>${l.type    || "—"}</td>
+                <td><span class="badge ${badgeClass}">${label}</span></td>
+                <td>${l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-ZA") : "—"}</td>
+                <td><div class="actions-cell">
+                    ${l.status !== "approved" ? `<button class="act-btn approve" onclick="approveListing('${l.id}')">✓ Approve</button>` : ""}
+                    ${l.status !== "removed"  ? `<button class="act-btn remove"  onclick="openRemoveModal('${l.id}')">✕ Remove</button>` : ""}
+                    ${l.status === "approved" ? `<span style="color:#86efac;font-size:12px;">✓ Live</span>` : ""}
+                </div></td>
+            </tr>`;
+        }).join("");
+    };
 
-            document.getElementById("navName").innerText           = displayName;
-            document.getElementById("welcomeMsg").innerText        = "Welcome, " + displayName + " 👋";
-            document.getElementById("cardUsername").innerText      = username;
-            document.getElementById("cardStatus").innerText        = status;
-            document.getElementById("profileName").innerText       = fullName;
-            document.getElementById("profileEmail").innerText      = email;
-            document.getElementById("profileUsername").innerText   = username;
-            document.getElementById("profileStatus").innerText     = status;
-
-            // Permissions
-            const permList = document.getElementById("permissionsList");
-            if (permissions && permissions.length > 0) {
-                permList.innerHTML = "";
-                const permsArray = Array.isArray(permissions) ? permissions : permissions.split(",");
-                permsArray.forEach(perm => {
-                    const badge = document.createElement("span");
-                    badge.className = "permission-badge";
-                    badge.innerText = perm.trim();
-                    permList.appendChild(badge);
-                });
+    // ── Approve ────────────────────────────────────────────────────────────────
+    window.approveListing = async function(id) {
+        const tok = localStorage.getItem("token");
+        try {
+            const res = await fetch(`/api/admin/listings/${id}/approve`, {
+                method:  "PATCH",
+                headers: { "Authorization": `Bearer ${tok}` }
+            });
+            if (res.ok) {
+                showToast("Listing approved — now visible to applicants ✓", "success");
+                await loadAllListings();
             } else {
-                // Default admin permissions shown visually
-                permList.innerHTML = "";
-                ["Manage Users", "Manage Listings", "View Reports", "Post Opportunities"].forEach(perm => {
-                    const badge = document.createElement("span");
-                    badge.className = "permission-badge";
-                    badge.innerText = perm;
-                    permList.appendChild(badge);
-                });
+                const d = await res.json();
+                showToast(d.error || "Failed to approve", "error");
             }
+        } catch (e) { showToast("Network error", "error"); }
+    };
+
+    // ── Remove modal ───────────────────────────────────────────────────────────
+    window.openRemoveModal = function(id) {
+        pendingRemoveId = id;
+        document.getElementById("removeReason").value = "";
+        document.getElementById("removeModal").classList.add("open");
+    };
+
+    window.closeModal = function(id) {
+        document.getElementById(id).classList.remove("open");
+        if (id === "removeModal")    pendingRemoveId  = null;
+        if (id === "deleteUserModal") pendingDeleteUid = null;
+    };
+
+    document.getElementById("removeModal").addEventListener("click", e => {
+        if (e.target === document.getElementById("removeModal")) closeModal("removeModal");
+    });
+    document.getElementById("deleteUserModal").addEventListener("click", e => {
+        if (e.target === document.getElementById("deleteUserModal")) closeModal("deleteUserModal");
+    });
+
+    document.getElementById("confirmRemoveBtn").addEventListener("click", async () => {
+        if (!pendingRemoveId) return;
+        const tok    = localStorage.getItem("token");
+        const reason = document.getElementById("removeReason").value.trim();
+        try {
+            const res = await fetch(`/api/admin/listings/${pendingRemoveId}/remove`, {
+                method:  "PATCH",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${tok}` },
+                body:    JSON.stringify({ reason: reason || null })
+            });
+            closeModal();
+            if (res.ok) {
+                showToast("Listing removed", "success");
+                await loadAllListings();
+            } else {
+                const d = await res.json();
+                showToast(d.error || "Failed to remove", "error");
+            }
+        } catch (e) { showToast("Network error", "error"); closeModal(); }
+    });
+
+    document.getElementById("confirmRemoveBtn").addEventListener("click", async () => {
+        if (!pendingRemoveId) return;
+        const tok    = localStorage.getItem("token");
+        const reason = document.getElementById("removeReason").value.trim();
+        try {
+            const res = await fetch(`/api/admin/listings/${pendingRemoveId}/remove`, {
+                method:  "PATCH",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${tok}` },
+                body:    JSON.stringify({ reason: reason || null })
+            });
+            closeModal("removeModal");
+            if (res.ok) {
+                showToast("Listing removed", "success");
+                await loadAllListings();
+            } else {
+                const d = await res.json();
+                showToast(d.error || "Failed to remove", "error");
+            }
+        } catch (e) { showToast("Network error", "error"); closeModal("removeModal"); }
+    });
+
+    // ── User Management ────────────────────────────────────────────────────────
+    window.loadUsers = async function(page = 1) {
+        currentUserPage = page;
+        const tok  = localStorage.getItem("token");
+        const role = document.getElementById("userRoleFilter").value;
+        const url  = `/api/admin/users?page=${page}&limit=15${role ? "&role=" + role : ""}`;
+        try {
+            const res  = await fetch(url, { headers: { "Authorization": `Bearer ${tok}` } });
+            if (!res.ok) {
+                showError("usersBody", 6, "Failed to load users (" + res.status + ").");
+                return;
+            }
+            const data = await res.json();
+            allUsers        = data.users;
+            totalUserPages  = data.pagination.totalPages || 1;
+            usersLoaded     = true;
+            document.getElementById("userPageInfo").textContent =
+                `Page ${data.pagination.page} of ${totalUserPages}`;
+            document.getElementById("prevPageBtn").disabled = page <= 1;
+            document.getElementById("nextPageBtn").disabled = page >= totalUserPages;
+            renderUsersFiltered();
+        } catch (e) {
+            showError("usersBody", 6, "Network error loading users.");
         }
+    };
 
-        // ── Logout ──────────────────────────────────────────────────────────────
-        document.getElementById("logoutBtn").addEventListener("click", async () => {
-            try { await auth.signOut(); } catch (e) { console.error(e); }
-            localStorage.clear();
-            window.location.href = "/";
+    window.renderUsersFiltered = function() {
+        if (!usersLoaded) { loadUsers(1); return; }
+        const searchVal = document.getElementById("userSearch").value.toLowerCase().trim();
+        const filtered  = allUsers.filter(u => {
+            if (!searchVal) return true;
+            const name = [u.firstname, u.lastname, u.organization].filter(Boolean).join(" ").toLowerCase();
+            return name.includes(searchVal) || (u.email || "").toLowerCase().includes(searchVal);
         });
+        const body = document.getElementById("usersBody");
+        if (!filtered.length) {
+            body.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#999;padding:30px;font-style:italic;">No users found.</td></tr>`;
+            return;
+        }
+        body.innerHTML = filtered.map(u => {
+            const name        = [u.firstname, u.lastname].filter(Boolean).join(" ") || u.organization || "—";
+            const roleClass   = "badge-" + (u.role   || "applicant");
+            const statusClass = "badge-" + (u.status || "active");
+            const regDate     = u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-ZA") : "—";
+            return `<tr>
+                <td><strong>${name}</strong></td>
+                <td style="font-size:13px;color:#ccc;">${u.email || "—"}</td>
+                <td><span class="badge ${roleClass}">${u.role || "—"}</span></td>
+                <td><span class="badge ${statusClass}">${u.status || "active"}</span></td>
+                <td style="font-size:13px;">${regDate}</td>
+                <td><div class="actions-cell">
+                    ${u.status !== "suspended"
+                        ? `<button class="act-btn suspend"    onclick="suspendUser('${u.uid}')">Suspend</button>`
+                        : `<button class="act-btn reactivate" onclick="reactivateUser('${u.uid}')">Reactivate</button>`}
+                    <button class="act-btn delete" onclick="openDeleteModal('${u.uid}')">Delete</button>
+                </div></td>
+            </tr>`;
+        }).join("");
+    };
 
-        document.getElementById("manageUsersBtn").addEventListener("click", () => {
-            alert("User management page coming soon!");
+    window.suspendUser = async function(uid) {
+        const tok = localStorage.getItem("token");
+        try {
+            const res = await fetch(`/api/admin/users/${uid}/suspend`, {
+                method: "PATCH", headers: { "Authorization": `Bearer ${tok}` }
+            });
+            if (res.ok) { showToast("User suspended", "success"); loadUsers(currentUserPage); }
+            else { const d = await res.json(); showToast(d.error || "Failed", "error"); }
+        } catch (e) { showToast("Network error", "error"); }
+    };
+
+    window.reactivateUser = async function(uid) {
+        const tok = localStorage.getItem("token");
+        try {
+            const res = await fetch(`/api/admin/users/${uid}/reactivate`, {
+                method: "PATCH", headers: { "Authorization": `Bearer ${tok}` }
+            });
+            if (res.ok) { showToast("User reactivated ✓", "success"); loadUsers(currentUserPage); }
+            else { const d = await res.json(); showToast(d.error || "Failed", "error"); }
+        } catch (e) { showToast("Network error", "error"); }
+    };
+
+    window.openDeleteModal = function(uid) {
+        pendingDeleteUid = uid;
+        document.getElementById("deleteUserModal").classList.add("open");
+    };
+
+    document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+        if (!pendingDeleteUid) return;
+        const tok = localStorage.getItem("token");
+        try {
+            const res = await fetch(`/api/admin/users/${pendingDeleteUid}`, {
+                method: "DELETE", headers: { "Authorization": `Bearer ${tok}` }
+            });
+            closeModal("deleteUserModal");
+            if (res.ok) { showToast("User deleted", "success"); loadUsers(currentUserPage); }
+            else { const d = await res.json(); showToast(d.error || "Failed", "error"); }
+        } catch (e) { showToast("Network error", "error"); closeModal("deleteUserModal"); }
+    });
+
+    // ── Tab switching ──────────────────────────────────────────────────────────
+    window.switchTab = function(name) {
+        ["pending", "all", "users", "profile"].forEach(t => {
+            document.getElementById("tab-" + t).classList.remove("active");
+            document.getElementById("tab-btn-" + t).classList.remove("active");
         });
-    </script>
+        document.getElementById("tab-" + name).classList.add("active");
+        document.getElementById("tab-btn-" + name).classList.add("active");
+        // Lazy-load users the first time that tab is opened
+        if (name === "users" && !usersLoaded) loadUsers(1);
+    };
+
+    // ── Logout ─────────────────────────────────────────────────────────────────
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+        try { await auth.signOut(); } catch (e) {}
+        localStorage.clear();
+        window.location.href = "/";
+    });
+
+    // ── Helpers ────────────────────────────────────────────────────────────────
+    function showError(bodyId, cols, msg) {
+        document.getElementById(bodyId).innerHTML =
+            `<tr><td colspan="${cols}" style="text-align:center;color:#f87171;padding:30px;">${msg}</td></tr>`;
+    }
+
+    window.showToast = function(msg, type = "success") {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.className   = `toast ${type} show`;
+        setTimeout(() => { t.className = "toast"; }, 3500);
+    };
+</script>
 </body>
 </html>

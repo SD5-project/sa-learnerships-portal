@@ -31,11 +31,9 @@ jobs:
 
       # ── Jest: All other tests with coverage ──────────────────────────────────
       - name: Run Jest tests with coverage
-        run: npx jest --testPathPattern="tests/__tests__" --coverage --coverageThreshold='{"global":{"lines":50}}' --passWithNoTests --forceExit
+        run: npx jest --testPathPattern="tests/__tests__" --coverage --coverageThreshold='{"global":{"lines":50}}' --passWithNoTests --forceExit --coverageReporters=lcov --coverageReporters=text
         env:
           NODE_ENV: test
-
-      
 
       # ── Upload coverage report as artifact ───────────────────────────────────
       - name: Upload coverage report
@@ -44,8 +42,12 @@ jobs:
           name: coverage-report
           path: coverage/
 
-    # ── Codecov: Upload coverage results ───────────────────────────────────────
+      # ── Codecov: Upload coverage results ─────────────────────────────────────
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: skillsconnect-coverage
+          fail_ci_if_error: false

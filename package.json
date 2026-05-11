@@ -8,23 +8,30 @@
     "test": "tests"
   },
   "scripts": {
-    "start": "node backend/app.js",
-    "dev": "nodemon backend/app.js",
-    "seed:nqf": "node backend/seedNQF.js",
-    "test": "mocha tests/control-access.test.js && jest --testPathPattern=__tests__",
+    "start":      "node backend/app.js",
+    "test":       "mocha tests/control-access.test.js && jest --testPathPattern=__tests__",
     "test:mocha": "mocha tests/control-access.test.js",
-    "test:jest": "jest --testPathPattern=__tests__"
+    "test:jest":  "jest --testPathPattern=__tests__",
+    "test:coverage": "jest --testPathPattern=__tests__ --coverage --forceExit"
   },
   "jest": {
     "testEnvironment": "node",
     "testMatch": [
       "**/__tests__/**/*.test.js"
     ],
+    "collectCoverageFrom": [
+      "backend/**/*.js",
+      "!backend/firebaseAdmin.js",
+      "!backend/reminderJob.js",
+      "!backend/seedNQF.js",
+      "!backend/promoteAdmin.js"
+    ],
     "coverageReporters": [
       "lcov",
       "text",
-      "clover"
-    ]
+      "text-summary"
+    ],
+    "coverageDirectory": "coverage"
   },
   "repository": {
     "type": "git",
@@ -45,12 +52,11 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^17.4.2",
+    "dotenv": "^16.0.0",
     "express": "^5.2.1",
     "firebase-admin": "^13.8.0",
     "node-cron": "^3.0.0",
-    "nodemailer": "^6.10.1",
-    "nodemon": "^3.1.14",
-    "test": "^3.3.0"
+    "nodemailer": "^6.9.0",
+    "nodemon": "^3.1.14"
   }
 }

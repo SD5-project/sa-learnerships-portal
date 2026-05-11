@@ -1,4 +1,3 @@
-
 const { db, admin } = require("./firebaseAdmin");
 
 // ── GET LISTINGS CLOSING WITHIN 3 DAYS ──────────
@@ -26,7 +25,7 @@ async function getClosingListings() {
 async function getEligibleApplicants(minimumNQFLevel) {
     const snapshot = await db.collection("users")
         .where("role",            "==", "applicant")
-        .where("highestNQFLevel", ">=", minimumNQFLevel)
+        .where("nqfLevel", ">=", minimumNQFLevel)
         .get();
 
     const applicants = [];
@@ -39,8 +38,8 @@ async function getEligibleApplicants(minimumNQFLevel) {
  // ── CHECK IF APPLICANT ALREADY APPLIED ──────────
 async function hasAlreadyApplied(applicantId, listingId) {
     const snapshot = await db.collection("applications")
-        .where("applicantId",  "==", applicantId)
-        .where("opportunityId","==", listingId)
+        .where("applicantID", "==", applicantId)
+        .where("listingID","==", listingId)
         .get();
 
     return !snapshot.empty; // true = already applied
@@ -48,7 +47,7 @@ async function hasAlreadyApplied(applicantId, listingId) {
  // ── CHECK IF REMINDER ALREADY SENT ──────────────
 async function reminderAlreadySent(applicantId, listingId) {
     const snapshot = await db.collection("reminderLogs")
-        .where("applicantId", "==", applicantId)
+        .where("applicantID", "==", applicantId)
         .where("listingId",   "==", listingId)
         .get();
 
@@ -145,7 +144,7 @@ async function runReminderJob() {
 
                 // Step 7: Log that reminder was sent
                 await db.collection("reminderLogs").add({
-                    applicantId: applicant.id,
+                    applicantID: applicant.id,
                     listingId:   listing.id,
                     sentAt:      admin.firestore.FieldValue.serverTimestamp()
                 });

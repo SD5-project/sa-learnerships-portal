@@ -1,8 +1,10 @@
 // ─── Role → Allowed Routes ───────────────────────────────────────────────────
 const rolePermissions = {
     'applicant': [
-        '/api/listings',
-        '/applicant-home'
+         '/applicant-home',
+        '/api/listings',  // 
+        '/listing-info',
+
     ],
     'provider': [
         '/api/listings',
@@ -14,8 +16,6 @@ const rolePermissions = {
     'admin': [
         '/api/listings',
         '/admin-dashboard',
-        '/applicant-home',
-        '/provider-home',
         '/create-opportunity',
         '/api/applicants',
         '/api/opportunities/submit'   // ✅ admin can also submit

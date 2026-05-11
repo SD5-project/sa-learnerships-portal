@@ -41,6 +41,7 @@ async function handleLogin(e) {
         }
 
         // Step 6: Fallback — role claim missing, look up Firestore
+        
         console.warn("No role claim, falling back to Firestore lookup");
         try {
             const res = await fetch("/api/user-role?uid=" + user.uid, {
@@ -58,7 +59,7 @@ async function handleLogin(e) {
         }
 
         alert("Your account has no role assigned. Please contact support.");
-
+        
     } catch (error) {
         console.error("Login error:", error.code);
         if (error.code === "auth/invalid-credential" ||

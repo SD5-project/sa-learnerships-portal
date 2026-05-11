@@ -298,7 +298,7 @@
             window.location.href = "/";
         }
 
-        // ── Load profile from Firestore via backend ─────────────────────────────
+        //── Load profile from Firestore via backend ─────────────────────────────
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = "/";

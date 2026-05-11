@@ -486,7 +486,7 @@ app.patch("/api/applicants/:applicationID/status", verifyToken, async (req, res)
     }
 });
 
-// ✅ Export for testing
+// ✅Export for testing
 module.exports = app;
 
 // ✅ Only run server outside tests

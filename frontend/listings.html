@@ -222,6 +222,7 @@
             const idTokenResult = await user.getIdTokenResult();
             const role = idTokenResult.claims.role;
             if (role) localStorage.setItem("userRole", role);
+            fetchListings();
         });
 
         // ── Logout ──────────────────────────────────────────────────────────────
@@ -233,26 +234,35 @@
 
         // ── Fetch and render listings ───────────────────────────────────────────
         async function fetchListings() {
-            const token = localStorage.getItem("token");
-            const container = document.getElementById("listings-grid");
+    const container = document.getElementById("listings-grid");
 
-            try {
-                const response = await fetch("/api/listings", {
-                    headers: { "Authorization": `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    const listings = await response.json();
-                    renderListings(listings);
-                } else if (response.status === 401 || response.status === 403) {
-                    container.innerHTML = `<p class="error-msg">Session expired. Please <a href="/" style="color:#7dd3fc;">log in again</a>.</p>`;
-                } else {
-                    container.innerHTML = `<p class="error-msg">Could not load opportunities.</p>`;
-                }
-            } catch (err) {
-                container.innerHTML = `<p class="error-msg">Error loading data. Check your connection.</p>`;
-            }
+    try {
+        const user = auth.currentUser;
+        if (!user) {
+            window.location.href = "/";
+            return;
         }
+
+        const token = await user.getIdToken(true); // force refresh
+        localStorage.setItem("token", token);
+
+        const response = await fetch("/api/listings", {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const listings = await response.json();
+            renderListings(listings);
+        } else if (response.status === 401 || response.status === 403) {
+            container.innerHTML = `<p class="error-msg">Session expired. Please <a href="/" style="color:#7dd3fc;">log in again</a>.</p>`;
+        } else {
+            container.innerHTML = `<p class="error-msg">Could not load opportunities.</p>`;
+        }
+    } catch (err) {
+        console.error("fetchListings error:", err);
+        container.innerHTML = `<p class="error-msg">Error loading data. Check your connection.</p>`;
+    }
+}
 
         function renderListings(data) {
             const container = document.getElementById("listings-grid");
@@ -286,7 +296,7 @@
             });
         }
 
-        fetchListings();
+       
     </script>
 </body>
 </html>

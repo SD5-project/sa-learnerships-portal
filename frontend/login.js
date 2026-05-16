@@ -1,6 +1,6 @@
 import { auth } from "./firebase.js";
 import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
+//login.js
 const provider  = new GoogleAuthProvider();
 const googleBtn = document.getElementById("google-login-btn");
 

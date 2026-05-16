@@ -1,8 +1,29 @@
-const express = require('express');
 const path    = require('path');
+require("dotenv").config({ path: path.join(__dirname, '..', '.env') });
+const express = require('express');
 const cors    = require("cors");
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const multer = require("multer");
 
 const app = express();
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary,
+    params: {
+        folder:         "cvs",
+        allowed_formats: ["pdf", "doc", "docx"],
+        resource_type:  "raw"   // required for non-image files like PDFs
+    }
+});
+
+const upload = multer({ storage });
 
 // ─── Reminder Job (skip in tests) ────────────────────────────────────────────
 if (process.env.NODE_ENV !== "test") {
@@ -12,7 +33,7 @@ if (process.env.NODE_ENV !== "test") {
 app.use(cors());
 app.use(express.json());
 
-require('dotenv').config();
+
 const nodemailer  = require('nodemailer');
 const transporter = nodemailer.createTransport({
     host:   process.env.EMAIL_HOST,
@@ -31,6 +52,9 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 const { verifyToken } = require("./auth");
 const { db, admin }   = require("./firebaseAdmin");
 const { authorize }   = require('./access-logic');
+
+
+
 
 // ─── Email helper ─────────────────────────────────────────────────────────────
 async function sendMail(to, subject, html) {
@@ -128,15 +152,25 @@ app.get('/nqf-levels', async (req, res) => {
 // AUTH — SIGNUP
 // =============================================================================
 
-app.post("/signup/applicant", async (req, res) => {
-    const { uid, firstname, lastname, email, username, institution, city, phonenumber, cv } = req.body;
+app.post("/signup/applicant", verifyToken, upload.single("cv"), async (req, res) => {
+    const { uid, firstname, lastname, email, username, institution, city, phonenumber } = req.body;
+    const cvUrl = req.file ? req.file.path : null;  // Cloudinary URL
+
     if (!email) return res.status(400).json({ error: "Email is required" });
+
     try {
         await admin.auth().setCustomUserClaims(uid, { role: "applicant" });
-        await db.collection("users").doc(uid).set({
-            firstname, lastname, email, username, institution, city, phonenumber, cv,
-            role: "applicant", status: "active", createdAt: new Date().toISOString()
-        });
+        await db
+        .collection("users")
+        .doc("applicants")
+        .collection("profiles")
+        .doc(uid)
+        .set({
+        firstname, lastname, email, username, institution, city, phonenumber,
+        cv: cvUrl,
+        cvFilename: req.file ? req.file.originalname : null,  // add this
+        role: "applicant", status: "active", createdAt: new Date().toISOString()
+    });
         res.status(201).json({ message: "Applicant created successfully" });
     } catch (error) {
         console.error("Applicant signup error:", error.message);
@@ -144,15 +178,20 @@ app.post("/signup/applicant", async (req, res) => {
     }
 });
 
-app.post("/signup/provider", async (req, res) => {
+app.post("/signup/provider", verifyToken, async (req, res) => {
     const { uid, organization, email, city, phonenumber, username } = req.body;
     if (!email) return res.status(400).json({ error: "Email is required" });
     try {
         await admin.auth().setCustomUserClaims(uid, { role: "provider" });
-        await db.collection("users").doc(uid).set({
-            organization, email, city, phonenumber, username,
-            role: "provider", status: "active", createdAt: new Date().toISOString()
-        });
+        await db
+            .collection("users")
+            .doc("providers")
+            .collection("profiles")
+            .doc(uid)
+            .set({
+                organization, email, city, phonenumber, username,
+                role: "provider", status: "active", createdAt: new Date().toISOString()
+            });
         res.status(201).json({ message: "Provider created successfully" });
     } catch (error) {
         console.error("Provider signup error:", error.message);
@@ -170,7 +209,7 @@ app.post("/api/opportunities/submit", verifyToken, guard('/create-opportunity'),
         const opportunityData = {
             ...req.body,
             providerID: req.user.uid,
-            status:     "pending-review",
+            status:     "approved",
             createdAt:  new Date().toISOString(),
             updatedAt:  new Date().toISOString()
         };
@@ -300,13 +339,18 @@ app.get("/applicant/hasApplied", async (req, res) => {
 });
 
 // Submit application
-app.post("/applicant/apply", async (req, res) => {
+app.post("/applicant/apply", verifyToken, async (req, res) => {
     const { applicantID, listingID, status } = req.body;
     if (!applicantID || !listingID) {
         return res.status(400).json({ error: "applicantID and listingID are required" });
     }
     try {
-        const userDoc = await db.collection("users").doc(applicantID).get();
+        const userDoc = await db
+            .collection("users")
+            .doc("applicants")
+            .collection("profiles")
+            .doc(applicantID)
+            .get();
         if (!userDoc.exists) return res.status(400).json({ error: "User not found" });
 
         const listingDoc = await db.collection("Opportunities").doc(listingID).get();
@@ -410,8 +454,13 @@ app.patch("/api/applicants/:applicationID/status", verifyToken, async (req, res)
 app.get("/api/provider-listings", verifyToken, async (req, res) => {
     try {
         const providerID  = req.query.providerID || req.user.uid;
-        const providerDoc = await db.collection("users").doc(providerID).get();
-        const orgName     = providerDoc.exists ? providerDoc.data().organization : null;
+        const providerDoc = await db
+            .collection("users")
+            .doc("providers")
+            .collection("profiles")
+            .doc(providerID)
+            .get();
+        const orgName = providerDoc.exists ? providerDoc.data().organization : null;
 
         const snapshot = orgName
             ? await db.collection("Opportunities").where("company",    "==", orgName).get()
@@ -429,8 +478,13 @@ app.get("/api/provider-listings", verifyToken, async (req, res) => {
 app.get("/api/applicants", verifyToken, async (req, res) => {
     try {
         const providerID  = req.query.providerID || req.user.uid;
-        const providerDoc = await db.collection("users").doc(providerID).get();
-        const orgName     = providerDoc.exists ? providerDoc.data().organization : null;
+        const providerDoc = await db
+            .collection("users")
+            .doc("providers")
+            .collection("profiles")
+            .doc(providerID)
+            .get();
+        const orgName = providerDoc.exists ? providerDoc.data().organization : null;
 
         let listingIDs    = [];
         let listingTitles = {};
@@ -458,7 +512,12 @@ app.get("/api/applicants", verifyToken, async (req, res) => {
         const profiles      = {};
         await Promise.all(applicantUIDs.map(async uid => {
             try {
-                const d = await db.collection("users").doc(uid).get();
+                const d = await db
+                    .collection("users")
+                    .doc("applicants")
+                    .collection("profiles")
+                    .doc(uid)
+                    .get();
                 profiles[uid] = d.exists ? d.data() : {};
             } catch { profiles[uid] = {}; }
         }));
@@ -775,17 +834,43 @@ app.get("/api/user-profile", verifyToken, async (req, res) => {
 });
 
 app.get("/api/user-role", verifyToken, async (req, res) => {
+    const uid = req.query.uid || req.user.uid;
+
     try {
-        const uid     = req.query.uid || req.user.uid;
-        const userDoc = await db.collection("users").doc(uid).get();
-        if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
-        res.json({ role: userDoc.data().role || null });
+        const applicantDoc = await db
+            .collection("users")
+            .doc("applicants")
+            .collection("profiles")
+            .doc(uid)
+            .get();
+
+        if (applicantDoc.exists) return res.json({ role: "applicant" });
+
+        const providerDoc = await db
+            .collection("users")
+            .doc("providers")
+            .collection("profiles")
+            .doc(uid)
+            .get();
+
+        if (providerDoc.exists) return res.json({ role: "provider" });
+
+        const adminDoc = await db
+            .collection("users")
+            .doc("admins")
+            .collection("profiles")
+            .doc(uid)
+            .get();
+
+        if (adminDoc.exists) return res.json({ role: "admin" });
+
+        return res.status(404).json({ error: "User not found" });
+
     } catch (error) {
         console.error("Role lookup error:", error);
         res.status(500).json({ error: "Failed to look up role" });
     }
 });
-
 app.post("/api/set-role-claim", verifyToken, async (req, res) => {
     try {
         const { uid, role } = req.body;

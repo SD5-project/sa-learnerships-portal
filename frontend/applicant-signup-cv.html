@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up — Step 4 | SkillsConnect</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="signup.css">
+</head>
+<body class="signup-page">
+    <div class="signup-card">
+        <img src="SkillsConnect Logo 2.PNG" class="signup-logo" alt="SkillsConnect">
+
+        <div class="signup-step-indicator">
+            <div class="step-dot completed"></div>
+            <div class="step-dot completed"></div>
+            <div class="step-dot completed"></div>
+            <div class="step-dot completed"></div>
+            <div class="step-dot active"></div>
+        </div>
+
+        <h2 class="signup-heading">Upload your CV</h2>
+        <p class="signup-subheading">Optional — you can upload or update it later from your profile</p>
+
+        <div id="global-error" class="global-error"></div>
+
+        <div class="cv-upload-area" id="upload-area">
+            <input type="file" id="cv-input" accept=".pdf,.doc,.docx">
+            <span class="cv-upload-icon">📄</span>
+            <div class="cv-upload-label">Click to browse or drag your CV here</div>
+            <div class="cv-upload-hint">PDF, DOC, or DOCX &nbsp;·&nbsp; Max 10 MB</div>
+        </div>
+        <div class="cv-file-selected" id="file-name"></div>
+        <p class="cv-optional-note">You can still complete sign-up without a CV.</p>
+
+        <div class="signup-actions">
+            <a href="applicant-signup-qualifications.html" class="btn-back">← Back</a>
+            <button class="btn-next" id="submit-btn">Complete sign-up</button>
+        </div>
+    </div>
+
+    <script type="module" src="applicant-signup-cv.js"></script>
+</body>
+</html>

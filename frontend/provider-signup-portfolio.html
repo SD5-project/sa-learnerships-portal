@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider Sign Up — Portfolio | SkillsConnect</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="signup.css">
+</head>
+<body class="signup-page">
+    <div class="signup-card">
+        <img src="SkillsConnect Logo 2.PNG" class="signup-logo" alt="SkillsConnect">
+
+        <div class="signup-step-indicator">
+            <div class="step-dot completed"></div>
+            <div class="step-dot completed"></div>
+            <div class="step-dot active"></div>
+        </div>
+
+        <h2 class="signup-heading">Portfolios offered</h2>
+        <p class="signup-subheading">Select the type(s) of opportunities your organisation offers. You must select at least one.</p>
+
+        <div id="global-error" class="global-error"></div>
+
+        <div class="portfolio-options">
+            <label class="portfolio-option" id="opt-internships">
+                <input type="checkbox" id="chk-internships" value="internships">
+                <div class="portfolio-option-text">
+                    <strong>Internships</strong>
+                    <span>Work experience placements, typically for students or recent graduates.</span>
+                </div>
+            </label>
+
+            <label class="portfolio-option" id="opt-apprenticeships">
+                <input type="checkbox" id="chk-apprenticeships" value="apprenticeships">
+                <div class="portfolio-option-text">
+                    <strong>Apprenticeships</strong>
+                    <span>Structured programmes combining on-the-job training with formal instruction.</span>
+                </div>
+            </label>
+
+            <label class="portfolio-option" id="opt-learnerships">
+                <input type="checkbox" id="chk-learnerships" value="learnerships">
+                <div class="portfolio-option-text">
+                    <strong>Learnerships</strong>
+                    <span>SETA-accredited programmes leading to a registered NQF qualification.</span>
+                </div>
+            </label>
+        </div>
+
+        <div class="signup-actions">
+            <a href="provider-signup-details.html" class="btn-back">← Back</a>
+            <button class="btn-next" id="next-btn">Next →</button>
+        </div>
+
+        <p class="back-to-login">Already have an account? <a href="index.html">Log in</a></p>
+    </div>
+
+    <script type="module" src="provider-signup-portfolio.js"></script>
+</body>
+</html>

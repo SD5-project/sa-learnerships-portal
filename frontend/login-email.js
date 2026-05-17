@@ -7,7 +7,7 @@ const loginBtn = document.querySelector(".login");
 async function handleLogin(e) {
     e && e.preventDefault();
 
-    const emailInput    = document.querySelector("input[name='username']").value.trim();
+    const emailInput    = document.querySelector("input[name='email']").value.trim();
     const passwordInput = document.querySelector("input[name='password']").value;
 
     clearError();

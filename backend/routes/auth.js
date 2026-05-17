@@ -2,8 +2,7 @@ const express         = require('express');
 const { admin }       = require('../firebaseAdmin');
 const { verifyToken } = require('../auth');
 const {
-    applicantsCol, providersCol,
-    applicantRef, providerRef, lookupUser
+    applicantsCol, providersCol, lookupUser
 } = require('../userPaths');
 
 const router = express.Router();
@@ -67,55 +66,6 @@ router.get("/api/check-phone", async (req, res) => {
     } catch (error) {
         console.error("Phone check error:", error.message);
         res.status(500).json({ error: "Failed to check phone number" });
-    }
-});
-
-// ─── Signup: Applicant ────────────────────────────────────────────────────────
-router.post("/signup/applicant", async (req, res) => {
-    const {
-        uid, firstname, lastname, email, phonenumber,
-        idNumber, cv, qualifications
-    } = req.body;
-
-    if (!email) return res.status(400).json({ error: "Email is required" });
-
-    try {
-        await admin.auth().setCustomUserClaims(uid, { role: "applicant" });
-        await applicantRef(uid).set({
-            firstname:      (firstname      || "").trim(),
-            lastname:       (lastname       || "").trim(),
-            email:          (email          || "").trim(),
-            phonenumber:    (phonenumber    || "").trim(),
-            ...(idNumber ? { idNumber: idNumber.trim() } : {}),
-            ...(cv       ? { cv }                        : {}),
-            qualifications: qualifications || [],
-            role: "applicant", status: "active", createdAt: new Date().toISOString()
-        });
-        res.status(201).json({ message: "Applicant created successfully" });
-    } catch (error) {
-        console.error("Applicant signup error:", error.message);
-        res.status(500).json({ error: "Failed to create applicant" });
-    }
-});
-
-// ─── Signup: Provider ─────────────────────────────────────────────────────────
-router.post("/signup/provider", async (req, res) => {
-    const { uid, organization, email, phonenumber } = req.body;
-
-    if (!email) return res.status(400).json({ error: "Email is required" });
-
-    try {
-        await admin.auth().setCustomUserClaims(uid, { role: "provider" });
-        await providerRef(uid).set({
-            organization: (organization || "").trim(),
-            email:        (email        || "").trim(),
-            phonenumber:  (phonenumber  || "").trim(),
-            role: "provider", status: "active", createdAt: new Date().toISOString()
-        });
-        res.status(201).json({ message: "Provider created successfully" });
-    } catch (error) {
-        console.error("Provider signup error:", error.message);
-        res.status(500).json({ error: "Failed to create provider" });
     }
 });
 

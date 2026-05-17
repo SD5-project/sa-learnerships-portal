@@ -13,7 +13,7 @@ jest.mock("../../backend/firebaseAdmin", () => {
     mockAdd             = jest.fn();
     mockVerifyIdToken   = jest.fn();
     mockSetCustomClaims = jest.fn().mockResolvedValue();
-    mockDocGet          = jest.fn();
+    mockDocGet          = jest.fn().mockResolvedValue({ exists: false });
     mockSet             = jest.fn().mockResolvedValue();
 
     return {

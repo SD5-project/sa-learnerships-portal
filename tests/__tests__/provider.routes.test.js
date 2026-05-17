@@ -13,6 +13,7 @@ jest.mock("../../backend/firebaseAdmin", () => {
         admin: { auth: () => ({ verifyIdToken: mockVerifyIdToken }) },
         db: {
             collection: (name) => ({
+                doc: () => ({ get: () => mockProviderDocGet() }),
                 where: jest.fn(() => ({
                     get:   () => mockWhereGet(name),
                     where: jest.fn(() => ({ get: () => mockWhereGet(name) })),
@@ -112,7 +113,7 @@ describe("GET /api/provider-listings", () => {
     });
 
     test("returns 500 on Firestore error", async () => {
-        mockProviderDocGet.mockRejectedValue(new Error("DB down"));
+        mockWhereGet.mockRejectedValueOnce(new Error("DB down"));
 
         const res = await request(app)
             .get("/api/provider-listings")
@@ -141,7 +142,10 @@ describe("GET /api/applicants", () => {
     });
 
     test("returns applicants with profile data enriched", async () => {
-        mockProviderDocGet.mockResolvedValue({ exists: true, data: () => ({}) });
+        mockProviderDocGet.mockResolvedValue({
+            exists: true,
+            data:   () => ({ firstname: "Thabo", email: "t@test.com" })
+        });
 
         // First where() call returns listings
         mockWhereGet
@@ -156,11 +160,6 @@ describe("GET /api/applicants", () => {
                     cb({ id: "app-1", data: () => ({ applicantID: "uid-a1", listingID: "listing-1", status: "pending" }) });
                 }
             });
-
-        mockApplicantDocGet.mockResolvedValue({
-            exists: true,
-            data:   () => ({ firstname: "Thabo", email: "t@test.com" })
-        });
 
         const res = await request(app)
             .get("/api/applicants")
@@ -179,7 +178,7 @@ describe("GET /api/applicants", () => {
     });
 
     test("returns 500 on Firestore error", async () => {
-        mockProviderDocGet.mockRejectedValue(new Error("DB down"));
+        mockWhereGet.mockRejectedValueOnce(new Error("DB down"));
 
         const res = await request(app)
             .get("/api/applicants")

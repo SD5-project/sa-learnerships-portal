@@ -32,6 +32,8 @@ const { verifyToken } = require("./auth");
 const { db, admin }   = require("./firebaseAdmin");
 const { authorize }   = require('./access-logic');
 
+app.use('/', require('./routes/auth'));
+
 // ─── Email helper ─────────────────────────────────────────────────────────────
 async function sendMail(to, subject, html) {
     if (!to) return;
@@ -167,8 +169,12 @@ app.post("/signup/provider", async (req, res) => {
 // Submit — providers and admins only; always starts as "pending-review"
 app.post("/api/opportunities/submit", verifyToken, guard('/create-opportunity'), async (req, res) => {
     try {
+        const providerDoc = await db.collection("users").doc(req.user.uid).get();
+        const company = providerDoc.exists ? (providerDoc.data().organization || null) : null;
+
         const opportunityData = {
             ...req.body,
+            company,
             providerID: req.user.uid,
             status:     "pending-review",
             createdAt:  new Date().toISOString(),
@@ -409,15 +415,9 @@ app.patch("/api/applicants/:applicationID/status", verifyToken, async (req, res)
 
 app.get("/api/provider-listings", verifyToken, async (req, res) => {
     try {
-        const providerID  = req.query.providerID || req.user.uid;
-        const providerDoc = await db.collection("users").doc(providerID).get();
-        const orgName     = providerDoc.exists ? providerDoc.data().organization : null;
-
-        const snapshot = orgName
-            ? await db.collection("Opportunities").where("company",    "==", orgName).get()
-            : await db.collection("Opportunities").where("providerID", "==", providerID).get();
-
-        const listings = [];
+        const providerID = req.query.providerID || req.user.uid;
+        const snapshot   = await db.collection("Opportunities").where("providerID", "==", providerID).get();
+        const listings   = [];
         snapshot.forEach(doc => listings.push({ id: doc.id, title: doc.data().title || "Untitled" }));
         res.json(listings);
     } catch (error) {
@@ -429,14 +429,10 @@ app.get("/api/provider-listings", verifyToken, async (req, res) => {
 app.get("/api/applicants", verifyToken, async (req, res) => {
     try {
         const providerID  = req.query.providerID || req.user.uid;
-        const providerDoc = await db.collection("users").doc(providerID).get();
-        const orgName     = providerDoc.exists ? providerDoc.data().organization : null;
 
         let listingIDs    = [];
         let listingTitles = {};
-        const oppSnapshot = orgName
-            ? await db.collection("Opportunities").where("company",    "==", orgName).get()
-            : await db.collection("Opportunities").where("providerID", "==", providerID).get();
+        const oppSnapshot = await db.collection("Opportunities").where("providerID", "==", providerID).get();
 
         oppSnapshot.forEach(doc => {
             listingIDs.push(doc.id);
@@ -819,18 +815,10 @@ app.get("/api/health", (req, res) => {
 app.get("/api/applicants", verifyToken, async (req, res) => {
     try {
         const providerID  = req.query.providerID || req.user.uid;
-        const providerDoc = await db.collection("users").doc(providerID).get();
-        const orgName     = providerDoc.exists ? providerDoc.data().organization : null;
 
         let listingIDs    = [];
         let listingTitles = {};
-        let oppSnapshot;
-
-        if (orgName) {
-            oppSnapshot = await db.collection("Opportunities").where("company", "==", orgName).get();
-        } else {
-            oppSnapshot = await db.collection("Opportunities").where("providerID", "==", providerID).get();
-        }
+        const oppSnapshot = await db.collection("Opportunities").where("providerID", "==", providerID).get();
 
         oppSnapshot.forEach(doc => {
             listingIDs.push(doc.id);

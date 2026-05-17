@@ -2,10 +2,10 @@ const {
     getEligibleApplicants,
     hasAlreadyApplied,
     reminderAlreadySent
-} = require("../backend/reminderJob");
+} = require("../reminderJob");
 
 // Mock Firestore so we don't hit real database
-jest.mock("../backend/firebaseAdmin", () => ({
+jest.mock("../firebaseAdmin", () => ({
     db: {
         collection: jest.fn(() => ({
             where: jest.fn(() => ({

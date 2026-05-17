@@ -1,5 +1,5 @@
 // ─── Imports (MUST be at top for ES modules) ────────────────────────────────
-import { auth } from "./firebase.js";
+/*import { auth } from "./firebase.js";
 import { 
     createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -499,4 +499,4 @@ auth.onAuthStateChanged((user) => {
         }
         loadApplications(user.uid);
     }
-});
+}); */

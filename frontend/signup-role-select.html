@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | SkillsConnect</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="signup.css">
+</head>
+<body class="signup-page">
+    <div class="signup-card">
+        <img src="SkillsConnect Logo 2.PNG" class="signup-logo" alt="SkillsConnect">
+        <h2 class="signup-heading">Join SkillsConnect</h2>
+        <p class="signup-subheading">How will you be using the platform?</p>
+
+        <div class="role-cards">
+            <a href="#" class="role-card" id="applicant-card">
+                <span class="role-card-icon">🎓</span>
+                <div class="role-card-title">Applicant</div>
+                <p class="role-card-desc">Looking for learnerships, internships, or apprenticeships</p>
+            </a>
+            <a href="#" class="role-card" id="provider-card">
+                <span class="role-card-icon">🏢</span>
+                <div class="role-card-title">Provider</div>
+                <p class="role-card-desc">Employer or training organisation offering opportunities</p>
+            </a>
+        </div>
+
+        <p class="back-to-login">Already have an account? <a href="index.html">Log in</a></p>
+    </div>
+
+    <script type="module">
+        import { SignupBuilder } from './SignupBuilder.js';
+
+        document.getElementById('applicant-card').addEventListener('click', e => {
+            e.preventDefault();
+            SignupBuilder.start('applicant');
+            window.location.href = 'applicant-signup-identity.html';
+        });
+
+        document.getElementById('provider-card').addEventListener('click', e => {
+            e.preventDefault();
+            SignupBuilder.start('provider');
+            window.location.href = 'provider-signup-identity.html';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up — Step 3 | SkillsConnect</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="signup.css">
+</head>
+<body class="signup-page">
+    <div class="signup-card">
+        <img src="SkillsConnect Logo 2.PNG" class="signup-logo" alt="SkillsConnect">
+
+        <div class="signup-step-indicator">
+            <div class="step-dot completed"></div>
+            <div class="step-dot completed"></div>
+            <div class="step-dot completed"></div>
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+        </div>
+
+        <h2 class="signup-heading">Qualifications</h2>
+        <p class="signup-subheading">Add up to 8 qualifications. You can skip this and add them from your profile later.</p>
+
+        <div id="global-error" class="global-error"></div>
+
+        <div class="qualification-list" id="qualification-list"></div>
+
+        <button class="btn-add-qualification" id="add-qual-btn">+ Add Qualification</button>
+
+        <div class="signup-actions">
+            <a href="applicant-signup-details.html" class="btn-back">← Back</a>
+            <button class="btn-next" id="next-btn">Next →</button>
+        </div>
+
+        <p class="back-to-login">Already have an account? <a href="index.html">Log in</a></p>
+    </div>
+
+    <script type="module" src="applicant-signup-qualifications.js"></script>
+</body>
+</html>

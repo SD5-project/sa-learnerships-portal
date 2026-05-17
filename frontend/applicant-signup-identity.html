@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up — Step 1 | SkillsConnect</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="signup.css">
+</head>
+<body class="signup-page">
+    <div class="signup-card">
+        <img src="SkillsConnect Logo 2.PNG" class="signup-logo" alt="SkillsConnect">
+
+        <div class="signup-step-indicator">
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+        </div>
+
+        <h2 class="signup-heading">Create your account</h2>
+        <p class="signup-subheading">Choose how you'd like to sign up</p>
+
+        <div id="global-error" class="global-error"></div>
+
+        <button class="btn-social" id="google-btn">
+            <img src="google.svg" alt="Google">
+            <span class="social-label">Continue with Google</span>
+        </button>
+
+        <div class="or-divider"><span>or</span></div>
+
+        <button class="btn-next" id="email-btn" style="width: 100%;">
+            Sign up with email
+        </button>
+
+        <p class="back-to-login" style="margin-top: 24px;">
+            <a href="signup-role-select.html">← Change role</a>
+            &nbsp;·&nbsp;
+            Already have an account? <a href="index.html">Log in</a>
+        </p>
+    </div>
+
+    <script type="module" src="applicant-signup-identity.js"></script>
+</body>
+</html>

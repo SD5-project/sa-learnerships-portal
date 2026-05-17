@@ -14,5 +14,15 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // SAQA qualifications — any authenticated user can search
+    match /qualifications/{docId} {
+      allow read: if request.auth != null;
+    }
+
+    // Accredited providers — any authenticated user can verify
+    match /accredited_providers/{docId} {
+      allow read: if request.auth != null;
+    }
   }
 }

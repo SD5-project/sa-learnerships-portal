@@ -7,7 +7,7 @@ const loginBtn = document.querySelector(".login");
 async function handleLogin(e) {
     e && e.preventDefault();
 
-    const emailInput    = document.querySelector("input[name='username']").value.trim();
+    const emailInput    = document.querySelector("input[name='email']").value.trim();
     const passwordInput = document.querySelector("input[name='password']").value;
 
     clearError();
@@ -17,11 +17,15 @@ async function handleLogin(e) {
         return;
     }
 
+    if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = "Logging in..."; }
+
     try {
         const userCredential = await signInWithEmailAndPassword(auth, emailInput, passwordInput);
         const user = userCredential.user;
 
-        await user.getIdToken(true);
+        // Best-effort token refresh — don't block login if Firebase is slow
+        try { await user.getIdToken(true); } catch (_) {}
+
         const freshToken    = await user.getIdToken();
         const idTokenResult = await user.getIdTokenResult();
         const role          = idTokenResult.claims.role;
@@ -46,6 +50,7 @@ async function handleLogin(e) {
         showError("Your account has no role assigned. Please contact support.");
 
     } catch (error) {
+        if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = "Login"; }
         console.error("Login error:", error.code);
 
         if (error.code === "auth/user-disabled") {

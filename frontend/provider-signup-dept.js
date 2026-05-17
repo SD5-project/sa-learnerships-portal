@@ -119,6 +119,15 @@ async function submitProvider() {
         return;
     }
 
+    function showError(msg) {
+        if (errorBox) {
+            errorBox.textContent = msg;
+            errorBox.classList.add('visible');
+        } else {
+            alert(msg);
+        }
+    }
+
     try {
         const token = await user.getIdToken();
 
@@ -137,22 +146,22 @@ async function submitProvider() {
         const data = await res.json();
 
         if (!res.ok) {
-            errorBox.textContent = data.error || 'Sign-up failed. Please try again.';
-            errorBox.classList.add('visible');
+            showError(data.error || 'Sign-up failed. Please try again.');
             nextBtn.disabled    = false;
             nextBtn.textContent = 'Next →';
             return;
         }
 
-        await user.getIdToken(true);
+        // Token refresh is best-effort — don't block navigation if it fails
+        try { await user.getIdToken(true); } catch (_) {}
+
         const { clearState } = await import('./signup-state.js');
         clearState();
         window.location.href = '/provider-home';
 
     } catch (err) {
         console.error('Provider submit error:', err);
-        errorBox.textContent = 'Something went wrong. Please try again.';
-        errorBox.classList.add('visible');
+        showError(err.message || 'Something went wrong. Please try again.');
         nextBtn.disabled    = false;
         nextBtn.textContent = 'Next →';
     }

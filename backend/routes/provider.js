@@ -1,22 +1,16 @@
 const express         = require('express');
 const { db, admin }   = require('../firebaseAdmin');
 const { verifyToken } = require('../auth');
-const { providerRef, applicantRef } = require('../userPaths');
+const { applicantRef } = require('../userPaths');
 
 const router = express.Router();
 
 // ─── Provider's Own Listings ──────────────────────────────────────────────────
 router.get("/api/provider-listings", verifyToken, async (req, res) => {
     try {
-        const providerID  = req.query.providerID || req.user.uid;
-        const providerDoc = await providerRef(providerID).get();
-        const orgName     = providerDoc.exists ? providerDoc.data().organization : null;
-
-        const snapshot = orgName
-            ? await db.collection("Opportunities").where("company",    "==", orgName).get()
-            : await db.collection("Opportunities").where("providerID", "==", providerID).get();
-
-        const listings = [];
+        const providerID = req.query.providerID || req.user.uid;
+        const snapshot   = await db.collection("Opportunities").where("providerID", "==", providerID).get();
+        const listings   = [];
         snapshot.forEach(doc => listings.push({ id: doc.id, title: doc.data().title || "Untitled" }));
         res.json(listings);
     } catch (error) {
@@ -29,14 +23,10 @@ router.get("/api/provider-listings", verifyToken, async (req, res) => {
 router.get("/api/applicants", verifyToken, async (req, res) => {
     try {
         const providerID  = req.query.providerID || req.user.uid;
-        const providerDoc = await providerRef(providerID).get();
-        const orgName     = providerDoc.exists ? providerDoc.data().organization : null;
 
         let listingIDs    = [];
         let listingTitles = {};
-        const oppSnapshot = orgName
-            ? await db.collection("Opportunities").where("company",    "==", orgName).get()
-            : await db.collection("Opportunities").where("providerID", "==", providerID).get();
+        const oppSnapshot = await db.collection("Opportunities").where("providerID", "==", providerID).get();
 
         oppSnapshot.forEach(doc => {
             listingIDs.push(doc.id);

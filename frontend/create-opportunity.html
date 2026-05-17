@@ -185,38 +185,96 @@
             font-weight: bold;
         }
 
-        /* ── SUBJECT ROWS ── */
-        .subject-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .remove-btn {
-            background: none;
-            border: 1px solid #f87171;
-            color: #f87171;
-            border-radius: 6px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 0;
-            line-height: 1;
-        }
-        .remove-btn:hover { background-color: #f87171; color: white; }
-
-        .add-row-btn {
-            background: transparent;
-            color: white;
-            border: 1.5px dashed rgba(255,255,255,0.4);
+        /* ── QUALIFICATION DROPDOWN ── */
+        .qual-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #3a3a3a;
+            border: 1.5px solid rgba(255,255,255,0.4);
             border-radius: 8px;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 8px;
+            z-index: 100;
+            max-height: 280px;
+            overflow-y: auto;
+            margin-top: 4px;
         }
-        .add-row-btn:hover { border-color: white; background-color: rgba(255,255,255,0.05); }
+        .qual-dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 14px;
+            color: white;
+        }
+        .qual-dropdown-item:last-child { border-bottom: none; }
+        .qual-dropdown-item:hover { background: #4a4a4a; }
+        .qual-dropdown-item .qual-meta { font-size: 11px; color: #aaa; margin-top: 2px; }
+        .qual-dropdown-empty {
+            padding: 16px;
+            color: #888;
+            font-size: 14px;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* ── QUALIFICATION CONFIRMED CARD ── */
+        .qual-confirmed-card {
+            background: #3a3a3a;
+            border: 2px solid white;
+            border-radius: 10px;
+            padding: 18px;
+            margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .qual-confirmed-card .qual-info { flex: 1; }
+        .qual-confirmed-card .qual-name { font-weight: bold; font-size: 15px; margin-bottom: 8px; }
+        .qual-confirmed-card .qual-details { font-size: 13px; color: #ccc; line-height: 1.9; }
+        .qual-confirmed-card .saqa-link { font-size: 12px; color: #aaa; margin-top: 6px; display: inline-block; }
+        .qual-confirmed-card .saqa-link:hover { color: white; }
+        .btn-change {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.4);
+            color: #ccc;
+            border-radius: 6px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+            margin: 0;
+        }
+        .btn-change:hover { border-color: white; color: white; }
+
+        /* ── VERIFY BUTTON ── */
+        .btn-verify {
+            background: white;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin: 0;
+        }
+        .btn-verify:hover { background: #ddd; }
+        .btn-verify:disabled { background: #888; color: #ccc; cursor: not-allowed; }
+
+        /* ── ACCREDITATION RESULT BANNERS ── */
+        .accred-banner {
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-top: 16px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: white;
+        }
+        .accred-banner.success { background: #15803d; border: 2px solid #4ade80; }
+        .accred-banner.warning { background: #92400e; border: 2px solid #fbbf24; }
+        .accred-banner.error   { background: #7f1d1d; border: 2px solid #f87171; }
 
         /* ── DIVIDER ── */
         .divider { border: none; border-top: 1px solid rgba(255,255,255,0.15); margin: 20px 0; }
@@ -280,8 +338,7 @@
 
         @media (max-width: 700px) {
             .grid-2, .grid-3, .type-selector { grid-template-columns: 1fr; }
-            .subject-row { grid-template-columns: 1fr auto; }
-            .subject-row select { grid-column: 1 / -1; }
+            .qual-confirmed-card { flex-direction: column; }
         }
     </style>
 </head>
@@ -333,133 +390,205 @@
             </div>
         </div>
 
-        <!-- STEP 2: ACCREDITATION (learnership / apprenticeship only) -->
+        <!-- STEP 2: QUALIFICATION VERIFICATION (learnership / apprenticeship only) -->
         <div class="form-card" id="accreditation-section">
             <div class="card-title">2. Program Accreditation</div>
-            <p class="helper-text" style="margin-bottom:18px;">Required for learnerships and apprenticeships.</p>
-            <div class="grid-2">
-                <div class="form-group">
-                    <label>SETA Registration Number <span class="req">*</span></label>
-                    <input type="text" id="seta-number" placeholder="e.g. 17/SETA21/010122">
-                    <span class="field-error" id="err-seta">Required for this opportunity type.</span>
+
+            <!-- 2a: Qualification search -->
+            <div id="qual-search-section">
+                <p class="helper-text" style="margin-bottom:16px;">Search for the SAQA-registered qualification this opportunity is linked to.</p>
+                <div class="form-group" style="position:relative;">
+                    <label>Qualification Title <span class="req">*</span></label>
+                    <input type="text" id="qual-search-input" placeholder="e.g. National Certificate: Information Technology" autocomplete="off" oninput="onQualSearch(this.value)">
+                    <div id="qual-dropdown" class="qual-dropdown hidden"></div>
                 </div>
-                <div class="form-group">
-                    <label>SAQA Qualification ID <span class="req">*</span></label>
-                    <input type="number" id="saqa-id" placeholder="e.g. 12345">
-                    <span class="field-error" id="err-saqa">Required for this opportunity type.</span>
+
+                <!-- Confirmed qualification card -->
+                <div id="qual-confirmed" class="qual-confirmed-card hidden">
+                    <div class="qual-info">
+                        <div class="qual-name" id="qual-title-display"></div>
+                        <div class="qual-details">
+                            NQF Level: <strong id="qual-nqf-display"></strong> &nbsp;·&nbsp;
+                            SETA: <strong id="qual-seta-display"></strong> &nbsp;·&nbsp;
+                            Credits: <strong id="qual-credits-display"></strong>
+                        </div>
+                        <a class="saqa-link" id="qual-saqa-link" href="#" target="_blank" rel="noopener">View on SAQA ↗</a>
+                    </div>
+                    <button type="button" class="btn-change" onclick="resetQualification()">Change</button>
                 </div>
+            </div>
+
+            <!-- 2b: Provider accreditation check (shown after qualification selected) -->
+            <div id="accred-check-section" class="hidden" style="margin-top:24px; padding-top:24px; border-top:1px solid rgba(255,255,255,0.15);">
+                <p style="font-size:14px; color:#ccc; margin:0 0 16px;">Now verify your organisation's accreditation for this qualification.</p>
+                <div class="form-group">
+                    <label>Your organisation name (as registered with SETA) <span class="req">*</span></label>
+                    <input type="text" id="provider-name-input" placeholder="e.g. SkillsConnect Academy (Pty) Ltd">
+                </div>
+                <button type="button" class="btn-verify" id="verify-btn" onclick="verifyAccreditation()">Verify Accreditation</button>
+
+                <div id="accred-success" class="accred-banner success hidden"></div>
+                <div id="accred-warning" class="accred-banner warning hidden"></div>
+                <div id="accred-error"   class="accred-banner error hidden"></div>
             </div>
         </div>
 
-        <!-- STEP 3: OPPORTUNITY DETAILS -->
-        <div class="form-card">
-            <div class="card-title">3. Opportunity Details</div>
+        <!-- STEPS 3–6 + SUBMIT (hidden until verification passes or skipped) -->
+        <div id="form-body" class="hidden">
 
-            <div class="form-group">
-                <label>Opportunity Title <span class="req">*</span></label>
-                <input type="text" id="title" placeholder="e.g. Software Engineering Learnership">
-                <span class="field-error" id="err-title">Please enter a title.</span>
-            </div>
+            <!-- STEP 3: OPPORTUNITY DETAILS -->
+            <div class="form-card">
+                <div class="card-title">3. Opportunity Details</div>
 
-            <div class="form-group">
-                <label>Company / Organisation <span class="req">*</span></label>
-                <input type="text" id="company" placeholder="e.g. Tech Solutions SA" id="company">
-                <span class="field-error" id="err-company">Please enter your organisation name.</span>
-            </div>
+                <div class="form-group">
+                    <label>Opportunity Title <span class="req">*</span></label>
+                    <input type="text" id="title" placeholder="e.g. Software Engineering Learnership">
+                    <span class="field-error" id="err-title">Please enter a title.</span>
+                </div>
 
-            <div class="form-group">
-                <label>Description <span class="req">*</span></label>
-                <textarea id="description" rows="5" placeholder="Describe learning outcomes, duties, and what candidates will gain..."></textarea>
-                <span class="field-error" id="err-description">Please add a description.</span>
-            </div>
+                <div class="form-group">
+                    <label>Description <span class="req">*</span></label>
+                    <textarea id="description" rows="5" placeholder="Describe learning outcomes, duties, and what candidates will gain..."></textarea>
+                    <span class="field-error" id="err-description">Please add a description.</span>
+                </div>
 
-            <div class="grid-2">
-                <div class="form-group">
-                    <label>Location <span class="req">*</span></label>
-                    <input type="text" id="location" placeholder="e.g. Johannesburg, Gauteng">
-                    <span class="field-error" id="err-location">Please enter a location.</span>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Location <span class="req">*</span></label>
+                        <input type="text" id="location" placeholder="e.g. Johannesburg, Gauteng">
+                        <span class="field-error" id="err-location">Please enter a location.</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly Stipend (ZAR)</label>
+                        <input type="number" id="stipend" min="0" placeholder="e.g. 5000">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Monthly Stipend (ZAR)</label>
-                    <input type="number" id="stipend" min="0" placeholder="e.g. 5000">
-                </div>
-            </div>
 
-            <div class="grid-3">
-                <div class="form-group">
-                    <label>Duration (Months) <span class="req">*</span></label>
-                    <input type="number" id="duration" min="1" max="24" placeholder="e.g. 12">
-                    <span class="field-error" id="err-duration">Please enter duration (1–24 months).</span>
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label>Duration (Months) <span class="req">*</span></label>
+                        <input type="number" id="duration" min="1" max="24" placeholder="e.g. 12">
+                        <span class="field-error" id="err-duration">Please enter duration (1–24 months).</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Closing Date <span class="req">*</span></label>
+                        <input type="date" id="closing-date">
+                        <span class="field-error" id="err-closing">Please set a closing date.</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Required NQF Level <span class="req">*</span></label>
+                        <select id="min-nqf">
+                            <option value="">Select NQF Level</option>
+                        </select>
+                        <span class="field-error" id="err-nqf">Please select an NQF level.</span>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Closing Date <span class="req">*</span></label>
-                    <input type="date" id="closing-date">
-                    <span class="field-error" id="err-closing">Please set a closing date.</span>
-                </div>
-                <div class="form-group">
-                    <label>Required NQF Level <span class="req">*</span></label>
-                    <select id="min-nqf">
-                        <option value="">Select NQF Level</option>
-                    </select>
-                    <span class="field-error" id="err-nqf">Please select an NQF level.</span>
-                </div>
-            </div>
 
-            <div class="grid-2">
-                <div class="form-group">
-                    <label>Target Age — Minimum</label>
-                    <input type="number" id="min-age" min="15" max="65" placeholder="e.g. 18">
-                </div>
-                <div class="form-group">
-                    <label>Target Age — Maximum</label>
-                    <input type="number" id="max-age" min="15" max="65" placeholder="e.g. 35">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Target Age — Minimum</label>
+                        <input type="number" id="min-age" min="15" max="65" placeholder="e.g. 18">
+                    </div>
+                    <div class="form-group">
+                        <label>Target Age — Maximum</label>
+                        <input type="number" id="max-age" min="15" max="65" placeholder="e.g. 35">
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- STEP 4: SKILLS -->
-        <div class="form-card">
-            <div class="card-title">4. Required Skills &amp; Licences</div>
-            <p class="helper-text" style="margin-bottom:14px;">Click to toggle. Selected skills will be highlighted.</p>
-            <div class="skills-grid" id="skills-grid">
-                <div class="skill-chip" onclick="toggleSkill(this)">Communication</div>
-                <div class="skill-chip" onclick="toggleSkill(this)">Problem Solving</div>
-                <div class="skill-chip" onclick="toggleSkill(this)">Technical Writing</div>
-                <div class="skill-chip" onclick="toggleSkill(this)">Physically Fit</div>
-                <div class="skill-chip" onclick="toggleSkill(this)">Manual Labour Experience</div>
-                <div class="skill-chip" onclick="toggleSkill(this)">Java Development</div>
-                <div class="skill-chip" onclick="toggleSkill(this)">C++ Development</div>
-                <div class="skill-chip" onclick="toggleSkill(this)">Web Technologies</div>
-                <div class="skill-chip" onclick="toggleSkill(this)">Driver's Licence (Code 8)</div>
-                <div class="skill-chip" onclick="toggleSkill(this)">Driver's Licence (Code 10)</div>
-                <div class="skill-chip" onclick="toggleSkill(this)">Driver's Licence (Code 14)</div>
-                <div class="skill-chip" onclick="toggleSkill(this)">PDP (Professional Driving Permit)</div>
+            <!-- STEP 4: SKILLS -->
+            <div class="form-card">
+                <div class="card-title">4. Required Skills &amp; Licences</div>
+                <p class="helper-text" style="margin-bottom:14px;">Click to toggle. Selected skills will be highlighted.</p>
+                <div class="skills-grid" id="skills-grid">
+                    <div class="skill-chip" onclick="toggleSkill(this)">Communication</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Problem Solving</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Technical Writing</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Physically Fit</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Manual Labour Experience</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Java Development</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">C++ Development</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Web Technologies</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Driver's Licence (Code 8)</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Driver's Licence (Code 10)</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Driver's Licence (Code 14)</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">PDP (Professional Driving Permit)</div>
+                </div>
             </div>
-        </div>
 
-        <!-- STEP 5: EDUCATION REQUIREMENTS -->
-        <div class="form-card">
-            <div class="card-title">5. Matric Subject Requirements</div>
-            <p class="helper-text" style="margin-bottom:18px;">Specify minimum marks for key subjects (max 5).</p>
+            <!-- STEP 5: TARGET DISCIPLINES -->
+            <div class="form-card">
+                <div class="card-title">5. Target Applicant Disciplines</div>
+                <p class="helper-text" style="margin-bottom:14px;">Select the fields of study or backgrounds you are looking for. Click to toggle.</p>
+                <div class="skills-grid" id="disciplines-grid">
+                    <div class="skill-chip" onclick="toggleSkill(this)">Information Technology</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Cloud Computing</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Cybersecurity</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Data Science &amp; Analytics</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Software Development</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Accounting &amp; Finance</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Business Administration</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Human Resources</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Marketing &amp; Communications</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Project Management</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Civil Engineering</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Mechanical Engineering</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Electrical Engineering</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Construction &amp; Trades</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Supply Chain &amp; Logistics</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Legal &amp; Compliance</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Healthcare &amp; Nursing</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Education &amp; Training</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Agriculture</div>
+                    <div class="skill-chip" onclick="toggleSkill(this)">Media &amp; Design</div>
+                </div>
+            </div>
 
-            <div id="subject-rows"></div>
+            <!-- STEP 6: PROVIDER INDUSTRY -->
+            <div class="form-card">
+                <div class="card-title">6. Your Industry</div>
+                <p class="helper-text" style="margin-bottom:14px;">Select the industry your organisation operates in.</p>
+                <div class="skills-grid" id="industry-grid">
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Technology &amp; ICT</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Finance &amp; Banking</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Healthcare &amp; Pharmaceuticals</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Construction &amp; Infrastructure</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Mining &amp; Resources</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Manufacturing</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Retail &amp; Consumer Goods</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Agriculture &amp; Farming</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Education &amp; Training</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Government &amp; Public Sector</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Transport &amp; Logistics</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Energy &amp; Utilities</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Media &amp; Entertainment</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Legal &amp; Professional Services</div>
+                    <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Hospitality &amp; Tourism</div>
+                </div>
+            </div>
 
-            <button type="button" class="add-row-btn" id="add-subject-btn" onclick="addSubjectRow()">
-                + Add Subject Requirement
-            </button>
-        </div>
+            <!-- SUBMIT -->
+            <div class="submit-area">
+                <button class="btn-cancel" onclick="goBack()">Cancel</button>
+                <button class="btn-submit" id="submitBtn" onclick="submitOpportunity()">Submit for Review</button>
+            </div>
 
-        <!-- SUBMIT -->
-        <div class="submit-area">
-            <button class="btn-cancel" onclick="goBack()">Cancel</button>
-            <button class="btn-submit" id="submitBtn" onclick="submitOpportunity()">Submit for Review</button>
-        </div>
+        </div><!-- /#form-body -->
 
     </div>
 </div>
 
 <script type="module">
-    import { auth } from "./firebase.js";
+    import { auth, db } from "./firebase.js";
+    import {
+        collection, query, where,
+        orderBy, startAt, endAt, getDocs, limit
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // ── Verification state ────────────────────────────────────────────────────
+    let selectedSaqaId    = null;
+    let verificationStatus = null; // "verified" | "unverified" | "skipped"
+    let qualSearchTimer   = null;
 
     // ── Auth guard ────────────────────────────────────────────────────────────
     const token = localStorage.getItem("token");
@@ -471,37 +600,170 @@
         const idTokenResult = await user.getIdTokenResult();
         const role = idTokenResult.claims.role;
 
-        // Only providers and admins can post
         if (role && role !== "provider" && role !== "admin") {
             alert("Only providers can post opportunities.");
             window.location.href = "/";
             return;
         }
 
-        // Pre-fill company if provider
         const freshToken = await user.getIdToken();
         localStorage.setItem("token", freshToken);
 
-        try {
-            const res = await fetch(`/api/user-profile?uid=${user.uid}`, {
-                headers: { "Authorization": `Bearer ${freshToken}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                if (data.organization) {
-                    document.getElementById("company").value = data.organization;
-                }
-            }
-        } catch (e) { /* no-op */ }
-
-        // Dashboard button
         document.getElementById("dashboardBtn").addEventListener("click", () => {
-            if (role === "admin")    window.location.href = "/admin-dashboard";
-            else                     window.location.href = "/provider-home";
+            if (role === "admin") window.location.href = "/admin-dashboard";
+            else                  window.location.href = "/provider-home";
         });
     });
 
-    // Expose submit to global scope
+    // ── Qualification search (debounced) ──────────────────────────────────────
+    window.onQualSearch = function(value) {
+        clearTimeout(qualSearchTimer);
+        const term = value.trim();
+        if (!term) { hideDropdown(); return; }
+        qualSearchTimer = setTimeout(() => searchQualifications(term), 300);
+    };
+
+    async function searchQualifications(term) {
+        const dropdown = document.getElementById("qual-dropdown");
+        dropdown.innerHTML = '<div class="qual-dropdown-empty">Searching…</div>';
+        dropdown.classList.remove("hidden");
+
+        try {
+            const q = query(
+                collection(db, "qualifications"),
+                orderBy("title"),
+                startAt(term),
+                endAt(term + ""),
+                limit(8)
+            );
+            const snap = await getDocs(q);
+
+            if (snap.empty) {
+                dropdown.innerHTML = '<div class="qual-dropdown-empty">No qualifications found.</div>';
+                return;
+            }
+
+            dropdown.innerHTML = "";
+            snap.forEach(doc => {
+                const d    = doc.data();
+                const item = document.createElement("div");
+                item.className = "qual-dropdown-item";
+                item.innerHTML = `
+                    <div>${d.title}</div>
+                    <div class="qual-meta">NQF ${d.nqf_level} · ${d.seta} · ${d.credits} credits</div>
+                `;
+                item.addEventListener("click", () => selectQualification(doc.id, d));
+                dropdown.appendChild(item);
+            });
+        } catch (err) {
+            console.error("Qualification search error:", err);
+            dropdown.innerHTML = '<div class="qual-dropdown-empty">Search failed. Try again.</div>';
+        }
+    }
+
+    window.selectQualification = function(id, data) {
+        selectedSaqaId = data.saqa_id || id;
+        hideDropdown();
+
+        document.getElementById("qual-search-input").classList.add("hidden");
+        document.getElementById("qual-title-display").textContent   = data.title;
+        document.getElementById("qual-nqf-display").textContent     = data.nqf_level ?? "—";
+        document.getElementById("qual-seta-display").textContent    = data.seta      ?? "—";
+        document.getElementById("qual-credits-display").textContent = data.credits   ?? "—";
+
+        const link = document.getElementById("qual-saqa-link");
+        if (data.saqa_link) { link.href = data.saqa_link; link.style.display = "inline-block"; }
+        else                { link.style.display = "none"; }
+
+        document.getElementById("qual-confirmed").classList.remove("hidden");
+        document.getElementById("accred-check-section").classList.remove("hidden");
+    };
+
+    window.resetQualification = function() {
+        selectedSaqaId    = null;
+        verificationStatus = null;
+
+        document.getElementById("qual-search-input").value = "";
+        document.getElementById("qual-search-input").classList.remove("hidden");
+        document.getElementById("qual-confirmed").classList.add("hidden");
+        document.getElementById("accred-check-section").classList.add("hidden");
+        document.getElementById("provider-name-input").value = "";
+        ["accred-success","accred-warning","accred-error"].forEach(id =>
+            document.getElementById(id).classList.add("hidden")
+        );
+        document.getElementById("form-body").classList.add("hidden");
+    };
+
+    window.verifyAccreditation = function() {
+        const name = document.getElementById("provider-name-input").value.trim();
+        if (!name) {
+            document.getElementById("provider-name-input").focus();
+            return;
+        }
+        runAccreditationCheck(name);
+    };
+
+    async function runAccreditationCheck(providerName) {
+        const btn = document.getElementById("verify-btn");
+        btn.disabled = true;
+        btn.textContent = "Verifying…";
+        ["accred-success","accred-warning","accred-error"].forEach(id =>
+            document.getElementById(id).classList.add("hidden")
+        );
+
+        const selectedType = document.querySelector(".type-card.active")?.dataset.type;
+
+        try {
+            const q = query(
+                collection(db, "accredited_providers"),
+                where("qual_id",          "==", selectedSaqaId),
+                where("provider_name",    "==", providerName),
+                where("opportunity_type", "==", selectedType),
+                where("status",           "==", "Active"),
+                limit(1)
+            );
+            const snap = await getDocs(q);
+
+            if (!snap.empty) {
+                const d = snap.docs[0].data();
+                verificationStatus = "verified";
+                const banner = document.getElementById("accred-success");
+                banner.innerHTML = `
+                    ✅ <strong>Accreditation verified.</strong><br>
+                    Accreditation #: <strong>${d.accreditation_number ?? "—"}</strong> &nbsp;·&nbsp;
+                    SETA: <strong>${d.seta ?? "—"}</strong> &nbsp;·&nbsp;
+                    Province: <strong>${d.province ?? "—"}</strong>
+                `;
+                banner.classList.remove("hidden");
+            } else {
+                verificationStatus = "unverified";
+                const banner = document.getElementById("accred-warning");
+                banner.innerHTML = `
+                    ⚠️ <strong>No accreditation record found.</strong><br>
+                    Your listing will be submitted for admin review before going live.
+                    You may still proceed.
+                `;
+                banner.classList.remove("hidden");
+            }
+
+            revealForm();
+        } catch (err) {
+            console.error("Accreditation check error:", err);
+            const banner = document.getElementById("accred-error");
+            banner.textContent = "❌ Verification failed due to a server error. Please try again.";
+            banner.classList.remove("hidden");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Verify Accreditation";
+        }
+    }
+
+    function revealForm() {
+        document.getElementById("form-body").classList.remove("hidden");
+        document.getElementById("form-body").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    // ── Submit ────────────────────────────────────────────────────────────────
     window.submitOpportunity = submitOpportunity;
 
     async function submitOpportunity() {
@@ -513,38 +775,31 @@
 
         const selectedType = document.querySelector(".type-card.active")?.dataset.type || "learnership";
 
-        const skills = [...document.querySelectorAll(".skill-chip.selected")]
+        const skills = [...document.querySelectorAll("#skills-grid .skill-chip.selected")]
             .map(c => c.textContent.trim());
 
-        const subjects = [];
-        document.querySelectorAll(".subject-row").forEach(row => {
-            const subjectEl = row.querySelector(".subject-name");
-            const markEl    = row.querySelector(".subject-mark");
-            if (subjectEl?.value && markEl?.value) {
-                subjects.push({ subject: subjectEl.value, minMark: parseInt(markEl.value) });
-            }
-        });
+        const disciplines = [...document.querySelectorAll("#disciplines-grid .skill-chip.selected")]
+            .map(c => c.textContent.trim());
+
+        const industry = document.querySelector(".industry-chip.selected")?.textContent.trim() || null;
 
         const payload = {
-            type:        selectedType,
-            title:       document.getElementById("title").value.trim(),
-            company:     document.getElementById("company").value.trim(),
-            description: document.getElementById("description").value.trim(),
-            location:    document.getElementById("location").value.trim(),
-            stipend:     parseFloat(document.getElementById("stipend").value) || 0,
-            duration:    parseInt(document.getElementById("duration").value) || null,
-            closingDate: document.getElementById("closing-date").value,
-            nqfLevel:    document.getElementById("min-nqf").value,
-            minAge:      parseInt(document.getElementById("min-age").value) || null,
-            maxAge:      parseInt(document.getElementById("max-age").value) || null,
+            type:               selectedType,
+            title:              document.getElementById("title").value.trim(),
+            description:        document.getElementById("description").value.trim(),
+            location:           document.getElementById("location").value.trim(),
+            stipend:            parseFloat(document.getElementById("stipend").value) || 0,
+            duration:           parseInt(document.getElementById("duration").value) || null,
+            closingDate:        document.getElementById("closing-date").value,
+            nqfLevel:           document.getElementById("min-nqf").value,
+            minAge:             parseInt(document.getElementById("min-age").value) || null,
+            maxAge:             parseInt(document.getElementById("max-age").value) || null,
             skills,
-            subjectRequirements: subjects,
+            disciplines,
+            industry,
+            saqaId:             selectedSaqaId,
+            verificationStatus: verificationStatus,
         };
-
-        if (selectedType !== "internship") {
-            payload.setaNumber = document.getElementById("seta-number").value.trim();
-            payload.saqaId     = document.getElementById("saqa-id").value.trim();
-        }
 
         const freshToken = localStorage.getItem("token");
 
@@ -575,6 +830,15 @@
             btn.textContent = "Submit for Review";
         }
     }
+
+    function hideDropdown() {
+        document.getElementById("qual-dropdown").classList.add("hidden");
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", e => {
+        if (!e.target.closest("#qual-search-section")) hideDropdown();
+    });
 </script>
 
 <script>
@@ -601,15 +865,15 @@
 
     function populateFallbackNQF() {
         const levels = [
-            { level: 1, name: "Grade 9" },
-            { level: 2, name: "Grade 10" },
-            { level: 3, name: "Grade 11" },
-            { level: 4, name: "Grade 12 / Matric" },
-            { level: 5, name: "Higher Certificate" },
-            { level: 6, name: "Diploma / Advanced Certificate" },
-            { level: 7, name: "Bachelor's Degree" },
-            { level: 8, name: "Honours / Postgraduate Diploma" },
-            { level: 9, name: "Master's Degree" },
+            { level: 1,  name: "Grade 9" },
+            { level: 2,  name: "Grade 10" },
+            { level: 3,  name: "Grade 11" },
+            { level: 4,  name: "Grade 12 / Matric" },
+            { level: 5,  name: "Higher Certificate" },
+            { level: 6,  name: "Diploma / Advanced Certificate" },
+            { level: 7,  name: "Bachelor's Degree" },
+            { level: 8,  name: "Honours / Postgraduate Diploma" },
+            { level: 9,  name: "Master's Degree" },
             { level: 10, name: "Doctoral Degree" },
         ];
         const dropdown = document.getElementById("min-nqf");
@@ -624,8 +888,8 @@
 
     window.onload = () => {
         loadNQFLevels();
-        // Set min closing date to today
         const today = new Date().toISOString().split("T")[0];
+        // closing-date is inside form-body — set min once it's visible
         document.getElementById("closing-date").min = today;
     };
 
@@ -633,74 +897,35 @@
     window.selectType = function(type) {
         document.querySelectorAll(".type-card").forEach(c => c.classList.remove("active"));
         document.querySelector(`[data-type="${type}"]`).classList.add("active");
+
         const accSection = document.getElementById("accreditation-section");
-        if (type === "learnership" || type === "apprenticeship") {
-            accSection.classList.remove("hidden");
-        } else {
+        const formBody   = document.getElementById("form-body");
+
+        if (type === "internship") {
             accSection.classList.add("hidden");
+            formBody.classList.remove("hidden");
+            // Mark as skipped so validation passes
+            window._verificationStatus = "skipped";
+            window._selectedSaqaId    = null;
+        } else {
+            accSection.classList.remove("hidden");
+            // Hide form body again if switching back from internship
+            // (only re-hide if verification hasn't been completed)
+            const alreadyVerified = !document.getElementById("accred-success").classList.contains("hidden") ||
+                                    !document.getElementById("accred-warning").classList.contains("hidden");
+            if (!alreadyVerified) {
+                formBody.classList.add("hidden");
+            }
         }
     };
 
-    // Skills toggle
+    // Skills toggle (multi-select)
     window.toggleSkill = function(chip) { chip.classList.toggle("selected"); };
 
-    // Subject rows
-    const SUBJECTS = [
-        { value: "", label: "Select Subject" },
-        { value: "mathematics", label: "Mathematics" },
-        { value: "mathematical-literacy", label: "Mathematical Literacy" },
-        { value: "physical-sciences", label: "Physical Sciences" },
-        { value: "english-hl", label: "English Home Language" },
-        { value: "english-fal", label: "English First Additional Language" },
-        { value: "it", label: "Information Technology" },
-        { value: "accounting", label: "Accounting" },
-        { value: "biology", label: "Life Sciences / Biology" },
-        { value: "history", label: "History" },
-        { value: "geography", label: "Geography" },
-    ];
-
-    function buildSubjectSelect(selectedValue = "") {
-        return `<select class="subject-name" onchange="checkDuplicateSubjects()">
-            ${SUBJECTS.map(s => `<option value="${s.value}"${s.value === selectedValue ? " selected" : ""}>${s.label}</option>`).join("")}
-        </select>`;
-    }
-
-    window.addSubjectRow = function() {
-        const container = document.getElementById("subject-rows");
-        const existing  = container.querySelectorAll(".subject-row").length;
-        if (existing >= 5) {
-            alert("Maximum 5 subject requirements allowed.");
-            return;
-        }
-        const row = document.createElement("div");
-        row.className = "subject-row";
-        row.innerHTML = `
-            ${buildSubjectSelect()}
-            <input type="number" min="0" max="100" placeholder="Min Mark %" class="subject-mark" oninput="limitMark(this)">
-            <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✕</button>
-        `;
-        // Wire up the inline select
-        row.querySelector(".subject-name").addEventListener("change", checkDuplicateSubjects);
-        container.appendChild(row);
-    };
-
-    window.checkDuplicateSubjects = function() {
-        const selects = document.querySelectorAll(".subject-name");
-        const seen = [];
-        selects.forEach(sel => {
-            if (!sel.value) return;
-            if (seen.includes(sel.value)) {
-                alert(`"${sel.options[sel.selectedIndex].text}" is already added. Choose a different subject.`);
-                sel.value = "";
-            } else {
-                seen.push(sel.value);
-            }
-        });
-    };
-
-    window.limitMark = function(input) {
-        if (input.value > 100) input.value = 100;
-        if (input.value < 0 && input.value !== "") input.value = 0;
+    // Industry select (single-select)
+    window.selectIndustry = function(chip) {
+        document.querySelectorAll(".industry-chip").forEach(c => c.classList.remove("selected"));
+        chip.classList.add("selected");
     };
 
     // Validation
@@ -713,18 +938,20 @@
         let valid = true;
         const type = document.querySelector(".type-card.active")?.dataset.type;
 
+        // For learnership/apprenticeship, a qualification must have been selected
         if (type !== "internship") {
-            const seta = document.getElementById("seta-number").value.trim();
-            showErr("seta", !seta); if (!seta) valid = false;
-            const saqa = document.getElementById("saqa-id").value.trim();
-            showErr("saqa", !saqa); if (!saqa) valid = false;
+            const hasSaqa = !!window._selectedSaqaId ||
+                            document.getElementById("qual-confirmed") &&
+                            !document.getElementById("qual-confirmed").classList.contains("hidden");
+            if (!hasSaqa) {
+                alert("Please search for and select a qualification before submitting.");
+                document.getElementById("qual-search-input").focus();
+                return false;
+            }
         }
 
         const title = document.getElementById("title").value.trim();
         showErr("title", !title); if (!title) valid = false;
-
-        const company = document.getElementById("company").value.trim();
-        showErr("company", !company); if (!company) valid = false;
 
         const desc = document.getElementById("description").value.trim();
         showErr("description", !desc); if (!desc) valid = false;

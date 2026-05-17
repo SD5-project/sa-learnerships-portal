@@ -7,20 +7,9 @@ let mockSetCustomClaims;
 jest.mock("../../backend/firebaseAdmin", () => {
     mockSet             = jest.fn().mockResolvedValue();
     mockSetCustomClaims = jest.fn().mockResolvedValue();
-
     return {
-        admin: {
-            auth: () => ({
-                setCustomUserClaims: mockSetCustomClaims
-            })
-        },
-        db: {
-            collection: () => ({
-                doc: () => ({
-                    set: mockSet
-                })
-            })
-        }
+        admin: { auth: () => ({ setCustomUserClaims: mockSetCustomClaims }) },
+        db: { collection: () => ({ doc: () => ({ set: mockSet }) }) }
     };
 });
 

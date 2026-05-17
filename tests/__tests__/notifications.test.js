@@ -1,10 +1,9 @@
 const request = require('supertest');
-const app = require('./app'); // Your Express app
-const { db } = require('./firebaseAdmin');
+const app = require('../../backend/app');
 const nodemailer = require('nodemailer');
 
 // Mocking dependencies
-jest.mock('./firebaseAdmin');
+jest.mock('../../backend/firebaseAdmin');
 jest.mock('nodemailer');
 
 describe('PATCH /api/applicants/:applicationID/status', () => {

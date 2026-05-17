@@ -2,6 +2,7 @@ const request = require("supertest");
 
 let mockVerifyIdToken;
 let mockSetCustomClaims;
+let mockGetUserByEmail;
 let mockApplicantSet;
 let mockProviderSet;
 let mockApplicantWhereGet;
@@ -11,8 +12,9 @@ let mockLookupUser;
 jest.mock("../../backend/firebaseAdmin", () => {
     mockVerifyIdToken   = jest.fn();
     mockSetCustomClaims = jest.fn().mockResolvedValue();
+    mockGetUserByEmail  = jest.fn().mockRejectedValue(Object.assign(new Error("Not found"), { code: "auth/user-not-found" }));
     return {
-        admin: { auth: () => ({ verifyIdToken: mockVerifyIdToken, setCustomUserClaims: mockSetCustomClaims }) },
+        admin: { auth: () => ({ verifyIdToken: mockVerifyIdToken, setCustomUserClaims: mockSetCustomClaims, getUserByEmail: mockGetUserByEmail }) },
         db: {}
     };
 });
@@ -42,9 +44,12 @@ const app = require("../../backend/app");
 beforeEach(() => {
     jest.clearAllMocks();
     mockSetCustomClaims.mockResolvedValue();
+    mockGetUserByEmail.mockRejectedValue(Object.assign(new Error("Not found"), { code: "auth/user-not-found" }));
     mockApplicantSet.mockResolvedValue();
     mockProviderSet.mockResolvedValue();
+    mockApplicantWhereGet.mockReset();
     mockApplicantWhereGet.mockResolvedValue({ empty: true });
+    mockProviderWhereGet.mockReset();
     mockProviderWhereGet.mockResolvedValue({ empty: true });
 });
 

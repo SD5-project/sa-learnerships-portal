@@ -1,13 +1,13 @@
 import { auth } from "/firebase.js";
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
+//loginE-email.js
 const form     = document.querySelector("form");
 const loginBtn = document.querySelector(".login");
 
 async function handleLogin(e) {
     e && e.preventDefault();
 
-    const emailInput    = document.querySelector("input[name='username']").value.trim();
+    const emailInput    = document.querySelector("input[name='email']").value.trim();
     const passwordInput = document.querySelector("input[name='password']").value;
 
     clearError();
@@ -17,11 +17,15 @@ async function handleLogin(e) {
         return;
     }
 
+    if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = "Logging in..."; }
+
     try {
         const userCredential = await signInWithEmailAndPassword(auth, emailInput, passwordInput);
         const user = userCredential.user;
 
-        await user.getIdToken(true);
+        // Best-effort token refresh — don't block login if Firebase is slow
+        try { await user.getIdToken(true); } catch (_) {}
+
         const freshToken    = await user.getIdToken();
         const idTokenResult = await user.getIdTokenResult();
         const role          = idTokenResult.claims.role;
@@ -46,6 +50,7 @@ async function handleLogin(e) {
         showError("Your account has no role assigned. Please contact support.");
 
     } catch (error) {
+        if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = "Login"; }
         console.error("Login error:", error.code);
 
         if (error.code === "auth/user-disabled") {
@@ -107,7 +112,6 @@ function showSuspendedBanner(email) {
 
 // ── Show a simple inline error ────────────────────────────────────────────────
 function showError(msg) {
-    // Try to find or create an error element inside the form
     let el = document.getElementById("login-error-msg");
     if (!el) {
         el = document.createElement("p");
@@ -116,19 +120,20 @@ function showError(msg) {
         const form = document.querySelector("form");
         if (form) form.appendChild(el);
     }
-    el.textContent = msg;
+    el.textContent    = msg;
+    el.style.display  = "block";
 }
 
 function clearError() {
     const el     = document.getElementById("login-error-msg");
     const banner = document.getElementById("suspended-banner");
-    if (el)     el.textContent = "";
+    if (el)     { el.textContent = ""; el.style.display = "none"; }
     if (banner) banner.remove();
 }
 
 function redirectByRole(role) {
     const r = (role || "").toLowerCase();
-    if      (r === "applicant") window.location.href = "/listings";
+    if      (r === "applicant") window.location.href = "/applicant-home";
     else if (r === "provider")  window.location.href = "/provider-home";
     else if (r === "admin")     window.location.href = "/admin-dashboard";
     else showError("Unknown role '" + role + "'. Please contact support.");

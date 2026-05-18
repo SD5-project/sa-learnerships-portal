@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // This rule allows applicants to see ONLY their own notifications
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.recipientId;
+      
+      // Allow your backend/others to create notifications
+      allow create: if request.auth != null;
+    }
+    
+    // Standard rule for user profiles
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // SAQA qualifications — any authenticated user can search
+    match /qualifications/{docId} {
+      allow read: if request.auth != null;
+    }
+
+    // Accredited providers — any authenticated user can verify
+    match /accredited_providers/{docId} {
+      allow read: if request.auth != null;
+    }
+  }
+}

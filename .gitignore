@@ -3,5 +3,6 @@ node_modules/
 serviceAccountKey.json
 dist/
 build/
+uploads/
 *.log
 .DS_Store

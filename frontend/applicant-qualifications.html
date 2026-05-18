@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Qualifications | SkillsConnect</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .page-wrapper {
+            min-height: 100vh;
+            background-color: #666666;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background-color: #444444;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid white;
+        }
+        .navbar h1 { color: white; font-size: 20px; margin: 0; }
+        .navbar-right { display: flex; align-items: center; gap: 15px; }
+
+        .nav-link-btn {
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 0;
+            text-transform: uppercase;
+        }
+        .nav-link-btn:hover { background-color: white; color: #444; }
+
+        .main-content {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 860px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .page-header {
+            background-color: #545454;
+            border: 2px solid white;
+            border-radius: 12px;
+            padding: 25px;
+            color: white;
+        }
+        .page-header h2 { margin: 0 0 6px; font-size: 24px; }
+        .page-header p  { margin: 0; color: #ccc; font-size: 14px; }
+
+        .qual-card {
+            background-color: #545454;
+            border: 2px solid white;
+            border-radius: 12px;
+            padding: 22px;
+            color: white;
+        }
+        .qual-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .qual-card-header span {
+            font-weight: bold;
+            font-size: 14px;
+            color: #ccc;
+            text-transform: uppercase;
+            border-left: 4px solid white;
+            padding-left: 10px;
+        }
+        .btn-remove-qual {
+            background: transparent;
+            border: 1px solid #f87171;
+            color: #f87171;
+            border-radius: 6px;
+            padding: 5px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            margin: 0;
+        }
+        .btn-remove-qual:hover { background: #f87171; color: white; }
+
+        .qual-field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .qual-field label {
+            display: block;
+            font-size: 12px;
+            color: #ccc;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 5px;
+        }
+        .qual-field input,
+        .qual-field select {
+            width: 100%;
+            background: #444;
+            color: white;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            padding: 9px 13px;
+            font-size: 14px;
+            margin: 0;
+        }
+        .qual-field input:focus, .qual-field select:focus {
+            outline: none;
+            border-color: white;
+        }
+        .qual-field select option { background: #444; }
+
+        .subjects-heading {
+            font-size: 12px;
+            color: #ccc;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+        }
+        .subject-row {
+            display: grid;
+            grid-template-columns: 1fr 100px auto;
+            gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .subject-row input {
+            background: #444;
+            color: white;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 13px;
+            margin: 0;
+            width: 100%;
+        }
+        .btn-remove-subject {
+            background: transparent;
+            border: 1px solid #f87171;
+            color: #f87171;
+            border-radius: 6px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 13px;
+            margin: 0;
+        }
+        .btn-remove-subject:hover { background: #f87171; color: white; }
+        .btn-add-subject {
+            background: transparent;
+            color: #ccc;
+            border: 1px dashed rgba(255,255,255,0.3);
+            border-radius: 6px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            margin: 4px 0 0;
+        }
+        .btn-add-subject:hover { border-color: white; color: white; }
+
+        .btn-add-qual {
+            background: transparent;
+            color: white;
+            border: 1.5px dashed rgba(255,255,255,0.5);
+            border-radius: 12px;
+            padding: 14px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 0;
+            width: 100%;
+        }
+        .btn-add-qual:hover { border-color: white; background: rgba(255,255,255,0.05); }
+        .btn-add-qual:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .card-save-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn-save-card {
+            background: white;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            padding: 9px 26px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0;
+            text-transform: uppercase;
+        }
+        .btn-save-card:hover { background: #ddd; }
+        .btn-save-card:disabled { background: #888; cursor: not-allowed; }
+        .save-msg { font-size: 13px; color: #4ade80; }
+        .save-msg.error { color: #f87171; }
+        .field-error-msg {
+            color: #f87171;
+            font-size: 11px;
+            margin-top: 3px;
+            display: block;
+            min-height: 14px;
+        }
+        .qual-field input.invalid,
+        .qual-field select.invalid {
+            border-color: #f87171 !important;
+        }
+
+        .empty-state {
+            background-color: #545454;
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 12px;
+            padding: 40px;
+            color: #ccc;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        /* ── View mode ──────────────────────────────── */
+        .qual-view-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        .view-field { display: flex; flex-direction: column; gap: 4px; }
+        .view-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; }
+        .view-value { font-size: 15px; color: white; font-weight: 500; }
+        .view-subjects { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .view-subject-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 13px;
+            color: #ccc;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .view-subject-row:last-child { border-bottom: none; }
+
+        /* ── Card action buttons ─────────────────────── */
+        .btn-edit-qual {
+            background: transparent;
+            border: 1px solid white;
+            color: white;
+            border-radius: 6px;
+            padding: 5px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            margin: 0;
+        }
+        .btn-edit-qual:hover { background: white; color: #444; }
+        .btn-cancel-edit {
+            background: transparent;
+            color: #ccc;
+            border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 8px;
+            padding: 9px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 0;
+        }
+        .btn-cancel-edit:hover { border-color: white; color: white; }
+
+        @media (max-width: 600px) {
+            .qual-field-row { grid-template-columns: 1fr; }
+            .qual-view-grid  { grid-template-columns: 1fr; }
+            .subject-row     { grid-template-columns: 1fr auto; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+    <nav class="navbar">
+        <h1>SkillsConnect</h1>
+        <div class="navbar-right">
+            <button class="nav-link-btn" onclick="window.location.href='/applicant-home'">← Dashboard</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+
+        <div class="page-header">
+            <h2>My Qualifications</h2>
+            <p>Add up to 8 qualifications. Click Edit on a saved qualification to change it.</p>
+        </div>
+
+        <div id="qual-list"></div>
+
+        <button class="btn-add-qual" id="addQualBtn">+ Add Qualification</button>
+        <p id="addQualMsg" style="display:none;color:#f87171;font-size:13px;text-align:center;margin:0;"></p>
+
+    </div>
+</div>
+
+<script type="module">
+    import { auth } from "./firebase.js";
+
+    if (!localStorage.getItem("token")) { window.location.href = "/"; }
+
+    const MAX_QUALS    = 8;
+    const MAX_SUBJECTS = 20;
+    let qualifications = [];
+    let nqfLevels      = [];
+    let currentToken   = null;
+
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = "/"; return; }
+        const result = await user.getIdTokenResult(true);
+        if (result.claims.role !== "applicant") { window.location.href = "/"; return; }
+
+        currentToken = await user.getIdToken();
+        await loadNQFLevels();
+
+        try {
+            const res = await fetch(`/api/user-profile?uid=${user.uid}`, {
+                headers: { "Authorization": `Bearer ${currentToken}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                qualifications = (data.qualifications || []).map(q => ({
+                    ...q, subjects: q.subjects || [], _isNew: false, _editing: false
+                }));
+            }
+        } catch (err) { console.error("Profile load error:", err); }
+
+        renderQuals();
+    });
+
+    // ── NQF helpers ───────────────────────────────────────────────────────────
+    async function loadNQFLevels() {
+        try {
+            const res  = await fetch('/nqf-levels');
+            nqfLevels  = (await res.json()).levels || [];
+        } catch {
+            nqfLevels = Array.from({ length: 10 }, (_, i) => ({ level: i + 1, name: `NQF Level ${i + 1}` }));
+        }
+    }
+
+    function nqfOptionsHtml(selected = '') {
+        return ['<option value="">Select NQF level</option>',
+            ...nqfLevels.map(l =>
+                `<option value="${l.level}"${String(l.level) === String(selected) ? ' selected' : ''}>NQF ${l.level} — ${l.name}</option>`
+            )
+        ].join('');
+    }
+
+    function nqfLevelName(level) {
+        const found = nqfLevels.find(l => String(l.level) === String(level));
+        return found ? found.name : '';
+    }
+
+    function esc(str = '') {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Subjects (edit mode only) ─────────────────────────────────────────────
+    function renderSubjects(qi) {
+        const container = document.getElementById(`ql-subj-${qi}`);
+        if (!container) return;
+        const qual = qualifications[qi];
+        container.innerHTML = qual.subjects.map((s, si) => `
+            <div class="subject-row">
+                <input type="text" placeholder="Subject name" value="${esc(s.name)}"
+                    oninput="qlUpdateSubject(${qi},${si},'name',this.value)">
+                <input type="number" placeholder="Mark" min="0" max="100" value="${s.mark ?? ''}"
+                    oninput="qlClampMark(this,${qi},${si})">
+                <button class="btn-remove-subject" onclick="qlRemoveSubject(${qi},${si})">✕</button>
+            </div>
+        `).join('');
+        const addBtn = document.getElementById(`ql-add-subj-${qi}`);
+        if (addBtn) addBtn.disabled = qual.subjects.length >= MAX_SUBJECTS;
+    }
+
+    // ── Card HTML ─────────────────────────────────────────────────────────────
+    function viewCardHTML(q, i) {
+        const nqfText = q.nqfLevel ? `NQF ${q.nqfLevel} — ${nqfLevelName(q.nqfLevel)}` : '—';
+        const subjectsHtml = q.subjects.length > 0 ? `
+            <div class="view-subjects">
+                <div class="subjects-heading">Subjects</div>
+                ${q.subjects.map(s => `
+                    <div class="view-subject-row">
+                        <span>${esc(s.name) || '—'}</span>
+                        <span>${s.mark !== '' && s.mark != null ? s.mark + '%' : '—'}</span>
+                    </div>`).join('')}
+            </div>` : '';
+        return `
+            <div class="qual-card" id="ql-card-${i}">
+                <div class="qual-card-header">
+                    <span>Qualification ${i + 1}</span>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn-edit-qual" onclick="qlStartEdit(${i})">Edit</button>
+                        <button class="btn-remove-qual" onclick="qlRemove(${i})">Remove</button>
+                    </div>
+                </div>
+                <div class="qual-view-grid">
+                    <div class="view-field">
+                        <span class="view-label">Institution</span>
+                        <span class="view-value">${esc(q.institution) || '—'}</span>
+                    </div>
+                    <div class="view-field">
+                        <span class="view-label">Qualification</span>
+                        <span class="view-value">${esc(q.name) || '—'}</span>
+                    </div>
+                    <div class="view-field">
+                        <span class="view-label">NQF Level</span>
+                        <span class="view-value">${nqfText}</span>
+                    </div>
+                    <div class="view-field">
+                        <span class="view-label">Date Obtained</span>
+                        <span class="view-value">${q.dateObtained || '—'}</span>
+                    </div>
+                </div>
+                ${subjectsHtml}
+            </div>`;
+    }
+
+    function editCardHTML(q, i) {
+        const cancelLabel = q._isNew ? 'Cancel' : 'Cancel';
+        return `
+            <div class="qual-card" id="ql-card-${i}">
+                <div class="qual-card-header">
+                    <span>Qualification ${i + 1}</span>
+                    <button class="btn-remove-qual" onclick="qlRemove(${i})">Remove</button>
+                </div>
+                <div class="qual-field-row">
+                    <div class="qual-field">
+                        <label>Institution *</label>
+                        <input id="ql-input-institution-${i}" type="text"
+                            placeholder="e.g. University of Johannesburg"
+                            value="${esc(q.institution)}"
+                            oninput="qlUpdate(${i},'institution',this.value)">
+                        <span class="field-error-msg" id="ql-err-institution-${i}"></span>
+                    </div>
+                    <div class="qual-field">
+                        <label>Qualification name *</label>
+                        <input id="ql-input-name-${i}" type="text"
+                            placeholder="e.g. BSc Computer Science"
+                            value="${esc(q.name)}"
+                            oninput="qlUpdate(${i},'name',this.value)">
+                        <span class="field-error-msg" id="ql-err-name-${i}"></span>
+                    </div>
+                </div>
+                <div class="qual-field-row">
+                    <div class="qual-field">
+                        <label>NQF level *</label>
+                        <select id="ql-input-nqfLevel-${i}" onchange="qlUpdate(${i},'nqfLevel',this.value)">
+                            ${nqfOptionsHtml(q.nqfLevel)}
+                        </select>
+                        <span class="field-error-msg" id="ql-err-nqfLevel-${i}"></span>
+                    </div>
+                    <div class="qual-field">
+                        <label>Date obtained *</label>
+                        <input id="ql-input-dateObtained-${i}" type="month"
+                            value="${esc(q.dateObtained)}"
+                            onchange="qlUpdate(${i},'dateObtained',this.value)">
+                        <span class="field-error-msg" id="ql-err-dateObtained-${i}"></span>
+                    </div>
+                </div>
+                <div class="subjects-heading">Subjects (optional)</div>
+                <div id="ql-subj-${i}"></div>
+                <button class="btn-add-subject" id="ql-add-subj-${i}" onclick="qlAddSubject(${i})">+ Add Subject</button>
+                <div class="card-save-row">
+                    <span class="save-msg" id="ql-msg-${i}" style="display:none;"></span>
+                    <button class="btn-cancel-edit" onclick="qlCancelEdit(${i})">${cancelLabel}</button>
+                    <button class="btn-save-card" id="ql-save-${i}" onclick="qlSaveCard(${i})">Save</button>
+                </div>
+            </div>`;
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    function renderQuals() {
+        const listEl = document.getElementById('qual-list');
+        if (qualifications.length === 0) {
+            listEl.innerHTML = '<div class="empty-state">No qualifications added yet. Click the button below to add one.</div>';
+            updateAddBtn();
+            return;
+        }
+        listEl.innerHTML = qualifications
+            .map((q, i) => (q._editing || q._isNew) ? editCardHTML(q, i) : viewCardHTML(q, i))
+            .join('');
+        qualifications.forEach((q, i) => { if (q._editing || q._isNew) renderSubjects(i); });
+        updateAddBtn();
+    }
+
+    function updateAddBtn() {
+        const btn = document.getElementById('addQualBtn');
+        const msg = document.getElementById('addQualMsg');
+        if (!btn) return;
+        const atMax      = qualifications.length >= MAX_QUALS;
+        const hasUnsaved = qualifications.some(q => q._isNew || q._editing);
+        const locked     = atMax || hasUnsaved;
+        btn.style.opacity      = locked ? '0.4' : '1';
+        btn.style.cursor       = locked ? 'not-allowed' : 'pointer';
+        btn.style.pointerEvents = 'auto';
+        if (msg) msg.style.display = 'none';
+    }
+
+    // ── Validation ────────────────────────────────────────────────────────────
+    const REQUIRED = ['institution', 'name', 'nqfLevel', 'dateObtained'];
+
+    function qlValidate(i) {
+        const q = qualifications[i];
+        const errors = {};
+        if (!q.institution?.trim()) errors.institution  = 'Institution is required';
+        if (!q.name?.trim())        errors.name         = 'Qualification name is required';
+        if (!q.nqfLevel)            errors.nqfLevel     = 'NQF level is required';
+        if (!q.dateObtained)        errors.dateObtained = 'Date obtained is required';
+        return errors;
+    }
+
+    function showCardErrors(i, errors) {
+        REQUIRED.forEach(field => {
+            const input = document.getElementById(`ql-input-${field}-${i}`);
+            const errEl = document.getElementById(`ql-err-${field}-${i}`);
+            if (!input || !errEl) return;
+            if (errors[field]) { input.classList.add('invalid');    errEl.textContent = errors[field]; }
+            else               { input.classList.remove('invalid'); errEl.textContent = ''; }
+        });
+    }
+
+    // ── Handlers ──────────────────────────────────────────────────────────────
+    window.qlUpdate = (i, f, v) => {
+        qualifications[i][f] = v;
+        const input = document.getElementById(`ql-input-${f}-${i}`);
+        const errEl = document.getElementById(`ql-err-${f}-${i}`);
+        if (input) input.classList.remove('invalid');
+        if (errEl) errEl.textContent = '';
+    };
+
+    window.qlStartEdit = function(i) {
+        const q = qualifications[i];
+        // Snapshot current values so Cancel can restore them
+        q._snapshot = JSON.parse(JSON.stringify({
+            institution: q.institution, name: q.name,
+            nqfLevel: q.nqfLevel, dateObtained: q.dateObtained,
+            subjects: q.subjects
+        }));
+        q._editing = true;
+        renderQuals();
+    };
+
+    window.qlCancelEdit = function(i) {
+        const q = qualifications[i];
+        if (q._isNew) {
+            qualifications.splice(i, 1);
+        } else {
+            if (q._snapshot) { Object.assign(q, q._snapshot); delete q._snapshot; }
+            q._editing = false;
+        }
+        renderQuals();
+    };
+
+    window.qlRemove = i => { qualifications.splice(i, 1); renderQuals(); };
+
+    window.qlAddSubject = i => {
+        if (qualifications[i].subjects.length >= MAX_SUBJECTS) return;
+        qualifications[i].subjects.push({ name: '', mark: '' });
+        renderSubjects(i);
+    };
+    window.qlUpdateSubject = (qi, si, f, v) => { qualifications[qi].subjects[si][f] = v; };
+    window.qlRemoveSubject = (qi, si) => { qualifications[qi].subjects.splice(si, 1); renderSubjects(qi); };
+    window.qlClampMark = (input, qi, si) => {
+        let val = parseInt(input.value, 10);
+        if (isNaN(val)) { qualifications[qi].subjects[si].mark = ''; return; }
+        val = Math.min(100, Math.max(0, val));
+        input.value = val;
+        qualifications[qi].subjects[si].mark = val;
+    };
+
+    window.qlSaveCard = async function(i) {
+        const errors = qlValidate(i);
+        showCardErrors(i, errors);
+        if (Object.keys(errors).length > 0) return;
+
+        const btn = document.getElementById(`ql-save-${i}`);
+        const msg = document.getElementById(`ql-msg-${i}`);
+        btn.disabled    = true;
+        btn.textContent = 'Saving…';
+        msg.style.display = 'none';
+
+        try {
+            const payload = qualifications.map(({ _isNew, _editing, _snapshot, ...q }) => q);
+            const res = await fetch('/api/profile/qualifications', {
+                method:  'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
+                body:    JSON.stringify({ qualifications: payload })
+            });
+            if (!res.ok) throw new Error((await res.json()).error);
+
+            qualifications[i]._isNew   = false;
+            qualifications[i]._editing = false;
+            delete qualifications[i]._snapshot;
+            renderQuals();
+        } catch (err) {
+            msg.textContent   = 'Save failed. Please try again.';
+            msg.className     = 'save-msg error';
+            msg.style.display = 'inline';
+            btn.disabled    = false;
+            btn.textContent = 'Save';
+        }
+    };
+
+    document.getElementById('addQualBtn').addEventListener('click', () => {
+        const msg = document.getElementById('addQualMsg');
+
+        if (qualifications.length >= MAX_QUALS) {
+            msg.textContent   = `You've reached the maximum of ${MAX_QUALS} qualifications.`;
+            msg.style.display = 'block';
+            return;
+        }
+        if (qualifications.some(q => q._isNew || q._editing)) {
+            msg.textContent   = 'Please save or cancel the open qualification before adding another.';
+            msg.style.display = 'block';
+            return;
+        }
+
+        msg.style.display = 'none';
+        qualifications.push({ institution: '', name: '', nqfLevel: '', dateObtained: '', subjects: [], _isNew: true, _editing: false });
+        renderQuals();
+        document.getElementById(`ql-card-${qualifications.length - 1}`)?.scrollIntoView({ behavior: 'smooth' });
+    });
+</script>
+</body>
+</html>

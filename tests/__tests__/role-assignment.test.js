@@ -1,34 +1,50 @@
+/**
+ * role-assignment.test.js
+ * Tests that signup routes correctly assign roles in Firestore and as Firebase custom claims.
+ * Also verifies that role-spoofing attempts are blocked.
+ */
 const request = require("supertest");
 
-// ─── Hoisted Mocks ────────────────────────────────────────────────────────────
 let mockSet;
 let mockSetCustomClaims;
+let mockVerifyIdToken;
 
 jest.mock("../../backend/firebaseAdmin", () => {
-    mockSet             = jest.fn().mockResolvedValue();
+    mockVerifyIdToken   = jest.fn().mockResolvedValue({ uid: "test-uid", role: "applicant" });
     mockSetCustomClaims = jest.fn().mockResolvedValue();
-
     return {
         admin: {
             auth: () => ({
-                setCustomUserClaims: mockSetCustomClaims
+                verifyIdToken:       mockVerifyIdToken,
+                setCustomUserClaims: mockSetCustomClaims,
+                getUserByEmail:      jest.fn().mockRejectedValue(Object.assign(new Error("Not found"), { code: "auth/user-not-found" }))
             })
         },
-        db: {
-            collection: () => ({
-                doc: () => ({
-                    set: mockSet
-                })
-            })
-        }
+        db: {}
     };
 });
+
+jest.mock("../../backend/userPaths", () => {
+    mockSet = jest.fn().mockResolvedValue();
+    return {
+        applicantRef:  jest.fn(() => ({ set: mockSet })),
+        providerRef:   jest.fn(() => ({ set: mockSet })),
+        applicantsCol: jest.fn(() => ({ where: jest.fn(() => ({ limit: jest.fn(() => ({ get: jest.fn().mockResolvedValue({ empty: true }) })) })) })),
+        providersCol:  jest.fn(() => ({ where: jest.fn(() => ({ limit: jest.fn(() => ({ get: jest.fn().mockResolvedValue({ empty: true }) })) })) })),
+        lookupUser:    jest.fn().mockResolvedValue({ snap: null, ref: null, role: null })
+    };
+});
+
+// Prevent cloudinary/multer from interfering with tests
+jest.mock("cloudinary", () => ({ v2: { config: jest.fn() } }), { virtual: true });
+jest.mock("multer-storage-cloudinary", () => ({ CloudinaryStorage: jest.fn(() => ({})) }), { virtual: true });
+jest.mock("multer", () => jest.fn(() => ({ single: () => (req, res, next) => next() })), { virtual: true });
 
 const app = require("../../backend/app");
 
 beforeEach(() => {
-    mockSet.mockReset();
-    mockSetCustomClaims.mockReset();
+    jest.clearAllMocks();
+    mockVerifyIdToken.mockResolvedValue({ uid: "test-uid", role: "applicant" });
     mockSet.mockResolvedValue();
     mockSetCustomClaims.mockResolvedValue();
 });
@@ -44,11 +60,10 @@ describe("TC-01: Applicant Role Assignment", () => {
 
         const res = await request(app)
             .post("/signup/applicant")
+            .set("Authorization", "Bearer valid-token")
             .send({
                 uid: "manual_test_uid_001", email: "applicant@test.com",
-                firstname: "John", lastname: "Doe", username: "johndoe",
-                institution: "Test University", city: "Cape Town",
-                phonenumber: "+27821234567", cv: ""
+                firstname: "John", lastname: "Doe"
             });
 
         expect(res.statusCode).toBe(201);
@@ -68,10 +83,10 @@ describe("TC-02: Provider Role Assignment", () => {
 
         const res = await request(app)
             .post("/signup/provider")
+            .set("Authorization", "Bearer valid-token")
             .send({
                 uid: "manual_test_uid_002", email: "hr@company.com",
-                organization: "SkillUp Academy", city: "Johannesburg",
-                phonenumber: "+27831234567", username: "skillup_hr"
+                organization: "SkillUp Academy", phonenumber: "+27831234567"
             });
 
         expect(res.statusCode).toBe(201);
@@ -91,6 +106,7 @@ describe("TC-03: Role Spoofing Attempt", () => {
 
         const res = await request(app)
             .post("/signup/applicant")
+            .set("Authorization", "Bearer valid-token")
             .send({ uid: "hacker_uid_999", email: "hacker@evil.com", role: "admin" });
 
         expect(res.statusCode).toBe(201);
@@ -108,6 +124,7 @@ describe("TC-04: Missing UID", () => {
 
         const res = await request(app)
             .post("/signup/applicant")
+            .set("Authorization", "Bearer valid-token")
             .send({ email: "error@test.com" });
 
         expect(res.statusCode).toBe(500);

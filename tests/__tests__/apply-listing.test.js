@@ -15,6 +15,21 @@ let mockAppDocSet;
 // where().get() used by /applicant/hasApplied
 let mockWhereGet;
 
+jest.mock("../../backend/userPaths", () => {
+    return {
+        applicantRef: jest.fn((uid) => ({
+            get: () => {
+                if (uid === "ghost_user") return Promise.resolve({ exists: false });
+                return mockUserDocGet();
+            }
+        })),
+        providerRef:   jest.fn(() => ({ get: jest.fn() })),
+        applicantsCol: jest.fn(),
+        providersCol:  jest.fn(),
+        lookupUser:    jest.fn().mockResolvedValue({ snap: null, ref: null, role: null })
+    };
+});
+
 jest.mock("../../backend/firebaseAdmin", () => {
     mockVerifyIdToken   = jest.fn();
     mockSetCustomClaims = jest.fn().mockResolvedValue();

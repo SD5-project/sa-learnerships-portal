@@ -119,6 +119,11 @@
             display: inline-block; padding: 4px 12px; border-radius: 20px;
             font-size: 12px; font-weight: bold; text-transform: capitalize;
         }
+        .badge-in_for_review    { background: #92400e; color: #fde68a; }
+        .badge-auto_approved    { background: #14532d; color: #86efac; }
+        .badge-review_accepted  { background: #1e3a5f; color: #93c5fd; }
+        .badge-rejected_review  { background: #7f1d1d; color: #fca5a5; }
+        /* legacy aliases */
         .badge-pending  { background: #92400e; color: #fde68a; }
         .badge-approved { background: #14532d; color: #86efac; }
         .badge-removed  { background: #7f1d1d; color: #fca5a5; }
@@ -240,25 +245,26 @@
 
         <!-- STATS -->
         <div class="cards-row">
-            <div class="info-card"><h3>Pending</h3><p id="statPending">—</p></div>
-            <div class="info-card"><h3>Approved</h3><p id="statApproved">—</p></div>
-            <div class="info-card"><h3>Removed</h3><p id="statRemoved">—</p></div>
+            <div class="info-card"><h3>In For Review</h3><p id="statPending">—</p></div>
+            <div class="info-card"><h3>Live</h3><p id="statApproved">—</p></div>
+            <div class="info-card"><h3>Rejected</h3><p id="statRemoved">—</p></div>
             <div class="info-card"><h3>Total Listings</h3><p id="statTotal">—</p></div>
         </div>
 
         <!-- TABS -->
         <div>
             <div class="tab-bar">
-                <button class="tab-btn active" id="tab-btn-pending"  onclick="switchTab('pending')">⏳ Pending Approval</button>
-                <button class="tab-btn"         id="tab-btn-all"     onclick="switchTab('all')">📋 All Listings</button>
-                <button class="tab-btn"         id="tab-btn-users"   onclick="switchTab('users')">👥 Manage Users</button>
-                <button class="tab-btn"         id="tab-btn-profile" onclick="switchTab('profile')">👤 My Profile</button>
+                <button class="tab-btn active" id="tab-btn-pending"   onclick="switchTab('pending')">⏳ In For Review</button>
+                <button class="tab-btn"         id="tab-btn-all"      onclick="switchTab('all')">📋 All Listings</button>
+                <button class="tab-btn"         id="tab-btn-rejected" onclick="switchTab('rejected')">❌ Rejected</button>
+                <button class="tab-btn"         id="tab-btn-users"    onclick="switchTab('users')">👥 Manage Users</button>
+                <button class="tab-btn"         id="tab-btn-profile"  onclick="switchTab('profile')">👤 My Profile</button>
             </div>
 
             <!-- TAB: PENDING -->
             <div class="tab-panel active" id="tab-pending">
                 <div class="section-card">
-                    <div class="section-title">Listings Awaiting Approval</div>
+                    <div class="section-title">Listings In For Review</div>
                     <table class="admin-table">
                         <thead><tr>
                             <th>Title</th>
@@ -284,9 +290,10 @@
                         <label>Status:</label>
                         <select id="statusFilter" onchange="renderAllListings()">
                             <option value="all">All</option>
-                            <option value="pending-review">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="removed">Removed</option>
+                            <option value="in_for_review">In For Review</option>
+                            <option value="auto_approved">Auto Approved</option>
+                            <option value="review_accepted">Review Accepted</option>
+                            <option value="rejected_review">Rejected</option>
                         </select>
                         <label>Search:</label>
                         <input type="text" id="listingSearch" placeholder="Title or company..." oninput="renderAllListings()" style="min-width:180px;">
@@ -302,6 +309,25 @@
                         </tr></thead>
                         <tbody id="allListingsBody">
                             <tr><td colspan="6" style="text-align:center;color:#ccc;padding:30px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: REJECTED -->
+            <div class="tab-panel" id="tab-rejected">
+                <div class="section-card">
+                    <div class="section-title">Rejected Listings</div>
+                    <table class="admin-table">
+                        <thead><tr>
+                            <th>Title</th>
+                            <th>Company</th>
+                            <th>Type</th>
+                            <th>Rejected On</th>
+                            <th>Reason</th>
+                        </tr></thead>
+                        <tbody id="rejectedBody">
+                            <tr><td colspan="5" style="text-align:center;color:#ccc;padding:30px;">Loading...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -380,12 +406,12 @@
 <div class="modal-overlay" id="removeModal">
     <div class="modal">
         <button class="modal-close" onclick="closeModal('removeModal')">✕</button>
-        <h3>Remove Listing</h3>
+        <h3>Reject Listing</h3>
         <label>Reason (optional)</label>
-        <textarea id="removeReason" rows="3" placeholder="e.g. Fraudulent, duplicate, etc."></textarea>
+        <textarea id="removeReason" rows="3" placeholder="e.g. Insufficient accreditation, duplicate, etc."></textarea>
         <div class="modal-actions">
             <button class="btn-cancel-modal" onclick="closeModal('removeModal')">Cancel</button>
-            <button class="btn-confirm" id="confirmRemoveBtn">Remove</button>
+            <button class="btn-confirm" id="confirmRemoveBtn">Reject</button>
         </div>
     </div>
 </div>
@@ -507,9 +533,9 @@
     // ── Stats ──────────────────────────────────────────────────────────────────
     function updateStats() {
         document.getElementById("statTotal").innerText    = allListings.length;
-        document.getElementById("statPending").innerText  = allListings.filter(l => l.status === "pending-review").length;
-        document.getElementById("statApproved").innerText = allListings.filter(l => l.status === "approved").length;
-        document.getElementById("statRemoved").innerText  = allListings.filter(l => l.status === "removed").length;
+        document.getElementById("statPending").innerText  = allListings.filter(l => l.status === "in_for_review").length;
+        document.getElementById("statApproved").innerText = allListings.filter(l => l.status === "auto_approved" || l.status === "review_accepted").length;
+        document.getElementById("statRemoved").innerText  = allListings.filter(l => l.status === "rejected_review").length;
     }
 
     // ── Render pending tab ─────────────────────────────────────────────────────
@@ -531,8 +557,8 @@
                 <td>${l.stipend != null ? "R" + l.stipend : "—"}</td>
                 <td>${l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-ZA") : "—"}</td>
                 <td><div class="actions-cell">
-                    <button class="act-btn approve" onclick="approveListing('${l.id}')">✓ Approve</button>
-                    <button class="act-btn remove"  onclick="openRemoveModal('${l.id}')">✕ Remove</button>
+                    <button class="act-btn approve" onclick="approveListing('${l.id}')">✓ Accept</button>
+                    <button class="act-btn remove"  onclick="openRemoveModal('${l.id}')">✕ Reject</button>
                 </div></td>
             </tr>`).join("");
     }
@@ -557,10 +583,14 @@
         }
 
         body.innerHTML = filtered.map(l => {
-            const badgeClass = l.status === "approved" ? "badge-approved"
-                             : l.status === "removed"  ? "badge-removed"
-                             : "badge-pending";
-            const label      = l.status === "pending-review" ? "Pending" : (l.status || "Unknown");
+            const statusLabels = {
+                auto_approved:   "Auto Approved",
+                review_accepted: "Review Accepted",
+                in_for_review:   "In For Review",
+                rejected_review: "Rejected"
+            };
+            const badgeClass = "badge-" + (l.status || "pending");
+            const label      = statusLabels[l.status] || l.status || "Unknown";
             return `<tr>
                 <td><strong>${l.title}</strong></td>
                 <td>${l.company || "—"}</td>
@@ -568,9 +598,10 @@
                 <td><span class="badge ${badgeClass}">${label}</span></td>
                 <td>${l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-ZA") : "—"}</td>
                 <td><div class="actions-cell">
-                    ${l.status !== "approved" ? `<button class="act-btn approve" onclick="approveListing('${l.id}')">✓ Approve</button>` : ""}
-                    ${l.status !== "removed"  ? `<button class="act-btn remove"  onclick="openRemoveModal('${l.id}')">✕ Remove</button>` : ""}
-                    ${l.status === "approved" ? `<span style="color:#86efac;font-size:12px;">✓ Live</span>` : ""}
+                    ${l.status === "in_for_review" ? `<button class="act-btn approve" onclick="approveListing('${l.id}')">✓ Accept</button>` : ""}
+                    ${l.status === "in_for_review" ? `<button class="act-btn remove"  onclick="openRemoveModal('${l.id}')">✕ Reject</button>` : ""}
+                    ${l.status === "auto_approved" || l.status === "review_accepted" ? `<span style="color:#86efac;font-size:12px;">✓ Live</span>` : ""}
+                    ${l.status === "rejected_review" ? `<span style="color:#f87171;font-size:12px;">Rejected</span>` : ""}
                 </div></td>
             </tr>`;
         }).join("");
@@ -757,15 +788,40 @@
     });
 
     // ── Tab switching ──────────────────────────────────────────────────────────
+    let rejectedLoaded = false;
+
+    async function loadRejectedListings() {
+        const tok = localStorage.getItem("token");
+        try {
+            const res = await fetch("/api/admin/listings/rejected", {
+                headers: { "Authorization": `Bearer ${tok}` }
+            });
+            if (!res.ok) { showError("rejectedBody", 5, "Failed to load rejected listings."); return; }
+            const listings = await res.json();
+            const body = document.getElementById("rejectedBody");
+            if (!listings.length) {
+                body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#999;padding:36px;font-style:italic;">No rejected listings.</td></tr>`;
+                return;
+            }
+            body.innerHTML = listings.map(l => `<tr>
+                <td><strong>${l.title}</strong></td>
+                <td>${l.company || "—"}</td>
+                <td>${l.type   || "—"}</td>
+                <td>${l.createdAt ? new Date(l.createdAt).toLocaleDateString("en-ZA") : "—"}</td>
+                <td style="font-size:13px;color:#ccc;">${l.removalReason || "—"}</td>
+            </tr>`).join("");
+        } catch (e) { showError("rejectedBody", 5, "Network error."); }
+    }
+
     window.switchTab = function(name) {
-        ["pending", "all", "users", "profile"].forEach(t => {
+        ["pending", "all", "rejected", "users", "profile"].forEach(t => {
             document.getElementById("tab-" + t).classList.remove("active");
             document.getElementById("tab-btn-" + t).classList.remove("active");
         });
         document.getElementById("tab-" + name).classList.add("active");
         document.getElementById("tab-btn-" + name).classList.add("active");
-        // Lazy-load users the first time that tab is opened
-        if (name === "users" && !usersLoaded) loadUsers(1);
+        if (name === "users"    && !usersLoaded)    loadUsers(1);
+        if (name === "rejected" && !rejectedLoaded) { rejectedLoaded = true; loadRejectedListings(); }
     };
 
     // ── Logout ─────────────────────────────────────────────────────────────────

@@ -1,63 +1,43 @@
+/**
+ * app.js
+ * Entry point for the SkillsConnect Express server.
+ *
+ * Sets up middleware (CORS, JSON parsing, static files) and mounts all
+ * feature routers. Route files handle their own validation and Firestore
+ * interactions; this file is intentionally kept minimal.
+ *
+ * Router mount points:
+ *   /          → routes/auth.js         (signup, login, profile, CV upload)
+ *   /          → routes/pages.js        (serves HTML pages)
+ *   /          → routes/nqf.js          (NQF level data — SA Data Integration)
+ *   /          → routes/opportunities.js (listings, accreditation, NQF validation)
+ *   /          → routes/applications.js  (apply, track, update status)
+ *   /          → routes/provider.js      (provider dashboard data)
+ *   /api/admin → routes/admin.js         (listing moderation, user management)
+ *
+ * The reminder job (cron) is skipped when NODE_ENV=test to keep unit tests clean.
+ */
+
+const path = require('path');
+require("dotenv").config({ path: path.join(__dirname, '..', '.env') });
 const express = require('express');
-const path    = require('path');
 const cors    = require("cors");
 
 const app = express();
 
-// ─── Reminder Job (skip in tests) ────────────────────────────────────────────
+// ─── Reminder Job ─────────────────────────────────────────────────────────────
 if (process.env.NODE_ENV !== "test") {
     require("./reminderJob");
 }
 
 app.use(cors());
 app.use(express.json());
-
-require('dotenv').config();
-const nodemailer  = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth:    { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    tls:     { rejectUnauthorized: false }
-});
-transporter.verify((error) => {
-    if (error) console.error("❌ Email Transporter Error:", error.message);
-    else       console.log("✅ Email Server ready — connected as:", process.env.EMAIL_USER);
-});
-
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 const { verifyToken } = require("./auth");
 const { db, admin }   = require("./firebaseAdmin");
-const { authorize }   = require('./access-logic');
-
-// ─── Email helper ─────────────────────────────────────────────────────────────
-async function sendMail(to, subject, html) {
-    if (!to) return;
-    try {
-        await transporter.sendMail({
-            from: `"SkillsConnect" <${process.env.EMAIL_USER}>`,
-            to, subject, html
-        });
-        console.log("Email sent to:", to);
-    } catch (err) {
-        console.error("Email failed:", err.message);
-    }
-}
-
-// ─── Guard Middleware ─────────────────────────────────────────────────────────
-function guard(route) {
-    return (req, res, next) => {
-        if (req.user && authorize(req.user, route)) return next();
-        res.status(403).json({ error: "Forbidden: You do not have access to this route." });
-    };
-}
-
-// ─── Admin-only middleware ────────────────────────────────────────────────────
-function adminOnly(req, res, next) {
-    if (req.user && req.user.role === "admin") return next();
-    res.status(403).json({ error: "Forbidden: Admins only." });
-}
+const { sendMail, guard, adminOnly } = require('./helpers');
+const { applicantRef, providerRef, applicantsCol, providersCol, lookupUser } = require('./userPaths');
 
 // =============================================================================
 // STATIC PAGE ROUTES
@@ -157,10 +137,13 @@ app.post("/signup/applicant", async (req, res) => {
     if (!email) return res.status(400).json({ error: "Email is required" });
     try {
         await admin.auth().setCustomUserClaims(uid, { role: "applicant" });
-        await db.collection("users").doc(uid).set({
+        // Write to both flat users collection (for admin queries) and subcollection
+        const userData = {
             firstname, lastname, email, username, institution, city, phonenumber, cv,
             role: "applicant", status: "active", createdAt: new Date().toISOString()
-        });
+        };
+        await db.collection("users").doc(uid).set(userData);
+        await applicantRef(uid).set(userData);
         res.status(201).json({ message: "Applicant created successfully" });
     } catch (error) {
         console.error("Applicant signup error:", error.message);
@@ -173,10 +156,13 @@ app.post("/signup/provider", async (req, res) => {
     if (!email) return res.status(400).json({ error: "Email is required" });
     try {
         await admin.auth().setCustomUserClaims(uid, { role: "provider" });
-        await db.collection("users").doc(uid).set({
+        // Write to both flat users collection and subcollection
+        const userData = {
             organization, email, city, phonenumber, username,
             role: "provider", status: "active", createdAt: new Date().toISOString()
-        });
+        };
+        await db.collection("users").doc(uid).set(userData);
+        await providerRef(uid).set(userData);
         res.status(201).json({ message: "Provider created successfully" });
     } catch (error) {
         console.error("Provider signup error:", error.message);
@@ -746,10 +732,17 @@ app.delete("/api/admin/users/:uid", verifyToken, adminOnly, async (req, res) => 
 
 app.get("/api/user-profile", verifyToken, async (req, res) => {
     try {
-        const uid     = req.query.uid || req.user.uid;
-        const userDoc = await db.collection("users").doc(uid).get();
-        if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
-        res.json(userDoc.data());
+        const uid = req.query.uid || req.user.uid;
+
+        // Try flat collection first (admins + legacy users)
+        const flatDoc = await db.collection("users").doc(uid).get();
+        if (flatDoc.exists) return res.json(flatDoc.data());
+
+        // Fall back to subcollections (new structure)
+        const { snap } = await lookupUser(uid);
+        if (snap) return res.json(snap.data());
+
+        return res.status(404).json({ error: "User not found" });
     } catch (error) {
         console.error("Profile fetch error:", error);
         res.status(500).json({ error: "Failed to fetch profile" });
@@ -758,10 +751,17 @@ app.get("/api/user-profile", verifyToken, async (req, res) => {
 
 app.get("/api/user-role", verifyToken, async (req, res) => {
     try {
-        const uid     = req.query.uid || req.user.uid;
-        const userDoc = await db.collection("users").doc(uid).get();
-        if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
-        res.json({ role: userDoc.data().role || null });
+        const uid = req.query.uid || req.user.uid;
+
+        // Try flat collection first
+        const flatDoc = await db.collection("users").doc(uid).get();
+        if (flatDoc.exists) return res.json({ role: flatDoc.data().role || null });
+
+        // Fall back to subcollections
+        const { snap, role } = await lookupUser(uid);
+        if (snap) return res.json({ role: snap.data().role || role });
+
+        return res.status(404).json({ error: "User not found" });
     } catch (error) {
         console.error("Role lookup error:", error);
         res.status(500).json({ error: "Failed to look up role" });
@@ -786,7 +786,6 @@ app.post("/api/set-role-claim", verifyToken, async (req, res) => {
 // =============================================================================
 // EXPORT
 // =============================================================================
-
 module.exports = app;
 
 if (process.env.NODE_ENV !== "test") {

@@ -133,9 +133,12 @@
 
         /* INFO CARDS ROW */
         .cards-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            display: flex;
             gap: 20px;
+        }
+        .cards-row .info-card {
+            min-width: 160px;
+            max-width: 220px;
         }
 
         .info-card {
@@ -204,6 +207,7 @@
             color: #ccc;
             font-style: italic;
         }
+
         
         /* NOTIFICATIONS SECTION */
         .notifications-section {
@@ -283,6 +287,14 @@
                 <p>Applicant Dashboard — find learnerships, internships and apprenticeships</p>
             </div>
 
+            <!-- INFO CARDS -->
+            <div class="cards-row">
+                <div class="info-card">
+                    <h3>Role</h3>
+                    <p id="cardRole">Applicant</p>
+                </div>
+            </div>
+
             <!-- QUICK ACTIONS -->
             <div class="quick-actions">
                 <button class="action-btn" onclick="window.location.href='/listings'">
@@ -291,22 +303,9 @@
                 <button class="action-btn" id="myApplicationsBtn">
                     <span class="btn-icon">📋</span>My Applications
                 </button>
-            </div>
-
-            <!-- INFO CARDS -->
-            <div class="cards-row">
-                <div class="info-card">
-                    <h3>Role</h3>
-                    <p id="cardRole">Applicant</p>
-                </div>
-                <div class="info-card">
-                    <h3>Username</h3>
-                    <p id="cardUsername">-</p>
-                </div>
-                <div class="info-card">
-                    <h3>City</h3>
-                    <p id="cardCity">-</p>
-                </div>
+                <button class="action-btn" onclick="window.location.href='/applicant-qualifications'">
+                    <span class="btn-icon">🎓</span>My Qualifications
+                </button>
             </div>
 
             <!-- PROFILE -->
@@ -322,20 +321,8 @@
                         <p id="profileEmail" class="loading-indicator">Loading...</p>
                     </div>
                     <div class="profile-field">
-                        <label>Username</label>
-                        <p id="profileUsername">-</p>
-                    </div>
-                    <div class="profile-field">
                         <label>Phone Number</label>
                         <p id="profilePhone">-</p>
-                    </div>
-                    <div class="profile-field">
-                        <label>City</label>
-                        <p id="profileCity">-</p>
-                    </div>
-                    <div class="profile-field">
-                        <label>Institution</label>
-                        <p id="profileInstitution">-</p>
                     </div>
                 </div>
             </div>
@@ -380,7 +367,6 @@
                     const data = await res.json();
                     populateProfile(data, user.email);
                 } else {
-                    // Fallback: show what we have from auth
                     populateProfile({}, user.email);
                 }
             } catch (err) {
@@ -393,24 +379,16 @@
             const fullName   = [data.firstname, data.lastname].filter(Boolean).join(" ") || "-";
             const email      = data.email || authEmail || "-";
             const username   = data.username   || "-";
-            const phone      = data.phonenumber || "-";
-            const city       = data.city        || "-";
-            const institution= data.institution || "-";
-            const role       = data.role        || "applicant";
-
+            const phone       = data.phonenumber || "-";
+            const role        = data.role        || "applicant";
             const displayName = fullName !== "-" ? fullName : email;
 
-            document.getElementById("navName").innerText          = displayName;
-            document.getElementById("welcomeMsg").innerText       = "Welcome, " + displayName + " 👋";
-            document.getElementById("cardRole").innerText         = role;
-            document.getElementById("cardUsername").innerText     = username;
-            document.getElementById("cardCity").innerText         = city;
-            document.getElementById("profileName").innerText      = fullName;
-            document.getElementById("profileEmail").innerText     = email;
-            document.getElementById("profileUsername").innerText  = username;
-            document.getElementById("profilePhone").innerText     = phone;
-            document.getElementById("profileCity").innerText      = city;
-            document.getElementById("profileInstitution").innerText = institution;
+            document.getElementById("navName").innerText     = displayName;
+            document.getElementById("welcomeMsg").innerText  = "Welcome, " + displayName + " 👋";
+            document.getElementById("cardRole").innerText    = role;
+            document.getElementById("profileName").innerText = fullName;
+            document.getElementById("profileEmail").innerText= email;
+            document.getElementById("profilePhone").innerText= phone;
         }
 
         // ── Logout ──────────────────────────────────────────────────────────────

@@ -1,3 +1,23 @@
+/**
+ * app.js
+ * Entry point for the SkillsConnect Express server.
+ *
+ * Sets up middleware (CORS, JSON parsing, static files) and mounts all
+ * feature routers. Route files handle their own validation and Firestore
+ * interactions; this file is intentionally kept minimal.
+ *
+ * Router mount points:
+ *   /          → routes/auth.js         (signup, login, profile, CV upload)
+ *   /          → routes/pages.js        (serves HTML pages)
+ *   /          → routes/nqf.js          (NQF level data — SA Data Integration)
+ *   /          → routes/opportunities.js (listings, accreditation, NQF validation)
+ *   /          → routes/applications.js  (apply, track, update status)
+ *   /          → routes/provider.js      (provider dashboard data)
+ *   /api/admin → routes/admin.js         (listing moderation, user management)
+ *
+ * The reminder job (cron) is skipped when NODE_ENV=test to keep unit tests clean.
+ */
+
 const path = require('path');
 require("dotenv").config({ path: path.join(__dirname, '..', '.env') });
 const express = require('express');

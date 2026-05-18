@@ -1,3 +1,28 @@
+/**
+ * routes/auth.js
+ * Authentication, user profile, signup, and CV upload routes.
+ *
+ * CV uploads are handled via Cloudinary using multer-storage-cloudinary.
+ * Files are stored in the "cvs" folder on Cloudinary and the public URL
+ * is saved on the applicant's Firestore profile document.
+ *
+ * Profile reads use lookupUser() which checks the subcollections first,
+ * then falls back to the flat users/{uid} collection for backwards compatibility
+ * with accounts created before the subcollection structure was introduced.
+ *
+ * Routes:
+ *   GET  /api/check-email            - Check if an email is already registered
+ *   GET  /api/check-idnumber         - Check if an ID number is already registered
+ *   GET  /api/check-phone            - Check if a phone number is already registered
+ *   POST /signup/applicant           - Register a new applicant (with optional CV upload)
+ *   POST /signup/provider            - Register a new provider
+ *   GET  /api/user-profile           - Fetch the authenticated user's profile
+ *   GET  /api/user-role              - Fetch the authenticated user's role
+ *   POST /api/set-role-claim         - Set a Firebase custom role claim (admin tool)
+ *   POST /api/upload-cv              - Upload or replace a CV for an applicant
+ *   PATCH /api/profile/qualifications - Save an applicant's qualifications (max 8)
+ */
+
 const express               = require('express');
 const { admin, db }         = require('../firebaseAdmin');
 const { verifyToken }       = require('../auth');

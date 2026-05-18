@@ -142,7 +142,8 @@ describe("GET /api/applicants", () => {
     });
 
     test("returns applicants with profile data enriched", async () => {
-        mockProviderDocGet.mockResolvedValue({
+        // applicantRef.get() returns the applicant profile
+        mockApplicantDocGet.mockResolvedValue({
             exists: true,
             data:   () => ({ firstname: "Thabo", email: "t@test.com" })
         });

@@ -1,3 +1,24 @@
+/**
+ * routes/admin.js
+ * Admin-only routes for moderating listings and managing user accounts.
+ *
+ * All routes in this file are protected by verifyToken + adminOnly middleware,
+ * which is applied at the router level so individual handlers stay clean.
+ *
+ * Listing moderation routes (mounted at /api/admin):
+ *   GET   /listings/pending    - Listings awaiting admin review (in_for_review)
+ *   GET   /listings            - All listings regardless of status
+ *   GET   /listings/rejected   - All rejected listings
+ *   PATCH /listings/:id/approve - Accept a listing → review_accepted (notifies provider)
+ *   PATCH /listings/:id/remove  - Reject a listing → rejected_review (notifies provider)
+ *
+ * User management routes (mounted at /api/admin):
+ *   GET   /users               - Paginated, filterable list of all users
+ *   PATCH /users/:uid/suspend  - Disable a user's Firebase Auth account
+ *   PATCH /users/:uid/reactivate - Re-enable a user's Firebase Auth account
+ *   DELETE /users/:uid         - Permanently delete a user (Auth + Firestore)
+ */
+
 const express         = require('express');
 const { admin, db }   = require('../firebaseAdmin');
 const { verifyToken } = require('../auth');
@@ -9,7 +30,7 @@ const {
 
 const router = express.Router();
 
-// Apply auth + admin check to every route in this router
+// Every route in this file requires a valid token AND the admin role
 router.use(verifyToken, adminOnly);
 
 // ─── Pending Listings Queue (in_for_review) ───────────────────────────────────

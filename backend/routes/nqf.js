@@ -1,11 +1,28 @@
+/**
+ * routes/nqf.js
+ * Serves the South African National Qualifications Framework (NQF) level data.
+ *
+ * SA Data Integration requirement: NQF levels are sourced from the NQFLevels
+ * Firestore collection, which is seeded from publicly available SAQA data.
+ * If the collection is empty or unreachable, a hardcoded fallback list is used
+ * so qualification dropdowns always render.
+ */
+
 const express = require('express');
 const { db }  = require('../firebaseAdmin');
 
 const router = express.Router();
 
-// ─── NQF Levels — fetched from Firestore; falls back to hardcoded list ────────
+/**
+ * GET /nqf-levels
+ * Returns an ordered list of all NQF levels with their name and example qualification.
+ * Used to populate qualification dropdowns across the app.
+ *
+ * Response: { levels: [{ level: number, name: string, example: string }] }
+ */
 router.get('/nqf-levels', async (req, res) => {
     try {
+        // Attempt to fetch live data from Firestore, ordered by level number
         const snapshot = await db.collection("NQFLevels").orderBy("level").get();
         const levels   = [];
         snapshot.forEach(doc => levels.push(doc.data()));
@@ -13,9 +30,12 @@ router.get('/nqf-levels', async (req, res) => {
         if (levels.length > 0) {
             return res.json({ levels });
         }
-        // Firestore collection empty — use hardcoded fallback
+
+        // Collection exists but is empty — fall through to hardcoded fallback
         throw new Error("Empty collection");
+
     } catch {
+        // Firestore unavailable or empty: return hardcoded SAQA-aligned NQF levels
         res.json({ levels: [
             { level: 1,  name: "Grade 9",                        example: "ABET Level 4" },
             { level: 2,  name: "Grade 10",                       example: "Elementary Certificate" },

@@ -173,14 +173,22 @@ describe("GET /api/user-profile", () => {
         expect(res.body.firstname).toBe("Alice");
     });
 
-    test("returns 404 when user does not exist", async () => {
+    test("returns 404 when user does not exist in either collection", async () => {
         mockVerifyIdToken.mockResolvedValue({ uid: "ghost", role: "applicant" });
         mockLookupUser.mockResolvedValue({ snap: null, ref: null, role: null });
+
+        // The route falls back to the flat users collection — mock that as empty too
+        const { db } = require("../../backend/firebaseAdmin");
+        const flatGet = jest.fn().mockResolvedValue({ exists: false });
+        jest.spyOn(db, "collection").mockReturnValue({
+            doc: () => ({ get: flatGet })
+        });
 
         const res = await request(app)
             .get("/api/user-profile")
             .set("Authorization", "Bearer token");
 
+        jest.restoreAllMocks();
         expect(res.status).toBe(404);
         expect(res.body.error).toBe("User not found");
     });

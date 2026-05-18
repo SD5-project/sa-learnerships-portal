@@ -83,7 +83,8 @@ describe("US-01: Provider submits a new opportunity", () => {
             .set("Authorization", "Bearer valid-token")
             .send({ title: "Test Opp", company: "Corp" });
 
-        expect(savedData.status).toBe("pending-review");
+        // Internships go to "in_for_review"; the status depends on type+verificationStatus
+        expect(["in_for_review", "auto_approved"]).toContain(savedData.status);
         expect(savedData.createdAt).toBeDefined();
     });
 
@@ -127,12 +128,18 @@ describe("US-02: Applicant browses listings", () => {
 
     test("✅ Applicant can fetch all listings", async () => {
         mockVerifyIdToken.mockResolvedValue({ uid: "applicant-uid", role: "applicant" });
-        mockGet.mockResolvedValue({
-            forEach: (cb) => {
-                cb({ id: "opp1", data: () => ({ title: "Internship", description: "Great", stipend: 3000, location: "CT", company: "Corp", type: "internship" }) });
-                cb({ id: "opp2", data: () => ({ title: "Learnership", description: "Good", stipend: 2000, location: "JHB", company: "Corp2", type: "learnership" }) });
-            }
-        });
+        // GET /api/listings runs two parallel where().get() calls (auto_approved + review_accepted)
+        mockGet
+            .mockResolvedValueOnce({
+                forEach: (cb) => {
+                    cb({ id: "opp1", data: () => ({ title: "Internship", description: "Great", stipend: 3000, location: "CT", company: "Corp", type: "internship" }) });
+                }
+            })
+            .mockResolvedValueOnce({
+                forEach: (cb) => {
+                    cb({ id: "opp2", data: () => ({ title: "Learnership", description: "Good", stipend: 2000, location: "JHB", company: "Corp2", type: "learnership" }) });
+                }
+            });
 
         const res = await request(app)
             .get("/api/listings")

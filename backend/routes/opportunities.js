@@ -1,37 +1,70 @@
-const express         = require('express');
-const { db, admin }   = require('../firebaseAdmin');
-const { verifyToken } = require('../auth');
-const { guard }       = require('../helpers');
-const { authorize }   = require('../access-logic');
+/**
+ * routes/opportunities.js
+ * Manages SETA-accredited learnership, apprenticeship and internship listings.
+ *
+ * Opportunity status lifecycle:
+ *   auto_approved   - Learnership/apprenticeship with verified SETA accreditation; goes live immediately.
+ *   in_for_review   - All internships, or unverified learnerships; requires admin review.
+ *   review_accepted - Admin approved an in_for_review listing; goes live.
+ *   rejected_review - Admin rejected the listing; provider can resubmit if resolved.
+ *
+ * Routes:
+ *   POST /api/opportunities/submit       - Submit a new opportunity listing
+ *   GET  /api/listings                   - Browse live listings (auto_approved + review_accepted)
+ *   GET  /api/opportunities/:id          - Fetch a single opportunity by ID
+ *   POST /validate-application           - Check NQF eligibility for an applicant
+ */
+
+const express          = require('express');
+const { db, admin }    = require('../firebaseAdmin');
+const { verifyToken }  = require('../auth');
+const { guard }        = require('../helpers');
+const { authorize }    = require('../access-logic');
 const { applicantRef } = require('../userPaths');
 
 const router = express.Router();
 
-// ─── Submit Opportunity (providers and admins only) ───────────────────────────
+/**
+ * POST /api/opportunities/submit
+ * Submits a new opportunity listing. Accessible to providers and admins only.
+ *
+ * Status assignment logic:
+ *   - Internships always go to "in_for_review" (no SETA accreditation required).
+ *   - Learnerships/apprenticeships with verified accreditation → "auto_approved" (live immediately).
+ *   - Learnerships/apprenticeships without verified accreditation → "in_for_review" (admin review).
+ *
+ * Duplicate prevention: if the same provider already has an active listing for
+ * the same SAQA qualification ID, the submission is rejected with 409.
+ *
+ * Body: { type, verificationStatus, saqaId, title, description, ... }
+ * Response: { message, id, status }
+ */
 router.post("/api/opportunities/submit", verifyToken, guard('/create-opportunity'), async (req, res) => {
     try {
         const { type, verificationStatus, saqaId } = req.body;
 
-        // Duplicate check (skip internships with no saqaId)
+        // Duplicate check — only applies to listings that have a SAQA qualification ID.
+        // Internships may not have one, so they are skipped.
         if (saqaId) {
             const dupSnap = await db.collection("Opportunities")
                 .where("providerID", "==", req.user.uid)
                 .where("saqaId",     "==", saqaId)
                 .get();
+            // A rejected listing is not considered active, so resubmission is allowed
             const activeDup = dupSnap.docs.find(doc => doc.data().status !== "rejected_review");
             if (activeDup) {
                 return res.status(409).json({ error: "You already have an active listing for this qualification." });
             }
         }
 
-        // Determine status
+        // Determine the initial status based on opportunity type and accreditation result
         let status;
         if (type === "internship") {
-            status = "in_for_review";
+            status = "in_for_review";               // Internships always need admin review
         } else if (verificationStatus === "verified") {
-            status = "auto_approved";
+            status = "auto_approved";               // Verified accreditation — goes live immediately
         } else {
-            status = "in_for_review";
+            status = "in_for_review";               // Unverified — pending admin review
         }
 
         const opportunityData = {
@@ -49,7 +82,15 @@ router.post("/api/opportunities/submit", verifyToken, guard('/create-opportunity
     }
 });
 
-// ─── Browse Listings (approved only) ─────────────────────────────────────────
+/**
+ * GET /api/listings
+ * Returns all live opportunity listings visible to applicants.
+ * "Live" means status is either "auto_approved" or "review_accepted".
+ * Two parallel Firestore queries are used because Firestore does not support
+ * "in" combined with other inequality filters without a composite index.
+ *
+ * Response: [{ id, title, description, price, location, provider, type }]
+ */
 router.get('/api/listings', verifyToken, async (req, res) => {
     if (!authorize(req.user, '/api/listings')) {
         return res.status(403).json({ error: "Unauthorized" });
@@ -59,8 +100,8 @@ router.get('/api/listings', verifyToken, async (req, res) => {
             db.collection('Opportunities').where('status', '==', 'auto_approved').get(),
             db.collection('Opportunities').where('status', '==', 'review_accepted').get()
         ]);
-        const allDocs = [...snap1.docs, ...snap2.docs];
-        const snapshot = { forEach: (fn) => allDocs.forEach(fn) };
+        // Merge both result sets into a single iterable snapshot
+        const snapshot = { forEach: (fn) => { snap1.forEach(fn); snap2.forEach(fn); } };
         const opportunities = [];
         snapshot.forEach(doc => {
             const d = doc.data();

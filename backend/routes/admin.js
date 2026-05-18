@@ -12,11 +12,11 @@ const router = express.Router();
 // Apply auth + admin check to every route in this router
 router.use(verifyToken, adminOnly);
 
-// ─── Pending Listings Queue ───────────────────────────────────────────────────
+// ─── Pending Listings Queue (in_for_review) ───────────────────────────────────
 router.get("/listings/pending", async (req, res) => {
     try {
         const snapshot = await db.collection("Opportunities")
-            .where("status", "==", "pending-review")
+            .where("status", "==", "in_for_review")
             .get();
         const listings = [];
         snapshot.forEach(doc => {
@@ -73,8 +73,8 @@ router.patch("/listings/:id/approve", async (req, res) => {
         const listingDoc = await listingRef.get();
         if (!listingDoc.exists) return res.status(404).json({ error: "Listing not found" });
 
-        await listingRef.update({ status: "approved", updatedAt: new Date().toISOString() });
-        res.json({ message: "Listing approved", id: req.params.id });
+        await listingRef.update({ status: "review_accepted", updatedAt: new Date().toISOString() });
+        res.json({ message: "Listing accepted", id: req.params.id });
 
         const d          = listingDoc.data();
         const providerID = d.providerID;
@@ -86,15 +86,15 @@ router.patch("/listings/:id/approve", async (req, res) => {
                 const title = d.title || "your listing";
                 await db.collection("notifications").add({
                     recipientId: providerID,
-                    message:     `Your listing "${title}" has been approved.`,
+                    message:     `Your listing "${title}" has been accepted and is now live.`,
                     status:      "unread",
                     timestamp:   admin.firestore.FieldValue.serverTimestamp(),
                     listingId:   req.params.id
                 });
                 await sendMail(
                     email,
-                    `Your listing "${title}" has been approved`,
-                    `<p>Hi ${name},</p><p>Your listing <strong>${title}</strong> has been <strong>approved</strong> and is now visible to applicants.</p>`
+                    `Your listing "${title}" has been accepted`,
+                    `<p>Hi ${name},</p><p>Your listing <strong>${title}</strong> has been <strong>accepted</strong> and is now visible to applicants.</p>`
                 );
             }
         }
@@ -113,11 +113,11 @@ router.patch("/listings/:id/remove", async (req, res) => {
         if (!listingDoc.exists) return res.status(404).json({ error: "Listing not found" });
 
         await listingRef.update({
-            status:        "removed",
+            status:        "rejected_review",
             removalReason: reason || null,
             updatedAt:     new Date().toISOString()
         });
-        res.json({ message: "Listing removed", id: req.params.id });
+        res.json({ message: "Listing rejected", id: req.params.id });
 
         const d          = listingDoc.data();
         const providerID = d.providerID;
@@ -129,21 +129,49 @@ router.patch("/listings/:id/remove", async (req, res) => {
                 const title = d.title || "your listing";
                 await db.collection("notifications").add({
                     recipientId: providerID,
-                    message:     `Your listing "${title}" has been removed.`,
+                    message:     `Your listing "${title}" has been rejected.${reason ? ` Reason: ${reason}` : ""}`,
                     status:      "unread",
                     timestamp:   admin.firestore.FieldValue.serverTimestamp(),
                     listingId:   req.params.id
                 });
                 await sendMail(
                     email,
-                    `Your listing "${title}" has been removed`,
-                    `<p>Hi ${name},</p><p>Your listing <strong>${title}</strong> has been <strong>removed</strong>.${reason ? ` Reason: ${reason}` : ""}</p>`
+                    `Your listing "${title}" has been rejected`,
+                    `<p>Hi ${name},</p><p>Your listing <strong>${title}</strong> has been <strong>rejected</strong>.${reason ? ` Reason: ${reason}` : ""}</p>`
                 );
             }
         }
     } catch (error) {
         console.error("Remove listing error:", error);
         res.status(500).json({ error: "Failed to remove listing" });
+    }
+});
+
+// ─── Rejected Listings ────────────────────────────────────────────────────────
+router.get("/listings/rejected", async (req, res) => {
+    try {
+        const snapshot = await db.collection("Opportunities")
+            .where("status", "==", "rejected_review")
+            .get();
+        const listings = [];
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            listings.push({
+                id:            doc.id,
+                title:         d.title      || "Untitled",
+                company:       d.company    || "Unknown",
+                type:          d.type       || "-",
+                location:      d.location   || "-",
+                providerID:    d.providerID || null,
+                createdAt:     d.createdAt  || null,
+                removalReason: d.removalReason || null,
+                status:        d.status
+            });
+        });
+        res.json(listings);
+    } catch (error) {
+        console.error("Rejected listings error:", error);
+        res.status(500).json({ error: "Failed to fetch rejected listings" });
     }
 });
 

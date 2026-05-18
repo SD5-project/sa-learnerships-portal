@@ -10,15 +10,39 @@ const router = express.Router();
 // ─── Submit Opportunity (providers and admins only) ───────────────────────────
 router.post("/api/opportunities/submit", verifyToken, guard('/create-opportunity'), async (req, res) => {
     try {
+        const { type, verificationStatus, saqaId } = req.body;
+
+        // Duplicate check (skip internships with no saqaId)
+        if (saqaId) {
+            const dupSnap = await db.collection("Opportunities")
+                .where("providerID", "==", req.user.uid)
+                .where("saqaId",     "==", saqaId)
+                .get();
+            const activeDup = dupSnap.docs.find(doc => doc.data().status !== "rejected_review");
+            if (activeDup) {
+                return res.status(409).json({ error: "You already have an active listing for this qualification." });
+            }
+        }
+
+        // Determine status
+        let status;
+        if (type === "internship") {
+            status = "in_for_review";
+        } else if (verificationStatus === "verified") {
+            status = "auto_approved";
+        } else {
+            status = "in_for_review";
+        }
+
         const opportunityData = {
             ...req.body,
             providerID: req.user.uid,
-            status:     "pending-review",
+            status,
             createdAt:  new Date().toISOString(),
             updatedAt:  new Date().toISOString()
         };
         const docRef = await db.collection("Opportunities").add(opportunityData);
-        res.status(201).json({ message: "Opportunity submitted successfully", id: docRef.id });
+        res.status(201).json({ message: "Opportunity submitted successfully", id: docRef.id, status });
     } catch (error) {
         console.error("Submit opportunity error:", error);
         res.status(500).json({ error: "Failed to submit opportunity" });
@@ -31,9 +55,12 @@ router.get('/api/listings', verifyToken, async (req, res) => {
         return res.status(403).json({ error: "Unauthorized" });
     }
     try {
-        const snapshot = await db.collection('Opportunities')
-            .where('status', '==', 'approved')
-            .get();
+        const [snap1, snap2] = await Promise.all([
+            db.collection('Opportunities').where('status', '==', 'auto_approved').get(),
+            db.collection('Opportunities').where('status', '==', 'review_accepted').get()
+        ]);
+        const allDocs = [...snap1.docs, ...snap2.docs];
+        const snapshot = { forEach: (fn) => allDocs.forEach(fn) };
         const opportunities = [];
         snapshot.forEach(doc => {
             const d = doc.data();

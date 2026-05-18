@@ -1,9 +1,32 @@
-const express         = require('express');
-const { admin, db }   = require('../firebaseAdmin');
-const { verifyToken } = require('../auth');
+const express               = require('express');
+const { admin, db }         = require('../firebaseAdmin');
+const { verifyToken }       = require('../auth');
+const cloudinary            = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const multer                = require('multer');
 const {
-    applicantsCol, providersCol, lookupUser
+    applicantsCol, providersCol, applicantRef, providerRef, lookupUser
 } = require('../userPaths');
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary,
+    params: (req, file) => ({
+        folder:          "cvs",
+        allowed_formats: ["pdf", "doc", "docx"],
+        resource_type:   "raw",
+        public_id:       file.originalname.replace(/\.[^/.]+$/, ""),
+        use_filename:    true,
+        unique_filename: false
+    })
+});
+
+const upload = multer({ storage });
 
 const router = express.Router();
 
@@ -12,11 +35,8 @@ router.get("/api/check-email", async (req, res) => {
     const email = (req.query.email || "").trim().toLowerCase();
     if (!email) return res.status(400).json({ error: "Email is required" });
     try {
-        // Firebase Auth is the source of truth — check it first
         try {
             const authUser = await admin.auth().getUserByEmail(email);
-            // If the account has no role claim it's an incomplete signup — clean it up
-            // so the user can re-register with the same email.
             if (!authUser.customClaims?.role) {
                 await admin.auth().deleteUser(authUser.uid);
             } else {
@@ -25,7 +45,6 @@ router.get("/api/check-email", async (req, res) => {
         } catch (authErr) {
             if (authErr.code !== 'auth/user-not-found') throw authErr;
         }
-        // Fall back to Firestore subcollections
         const [aSnap, pSnap] = await Promise.all([
             applicantsCol().where("email", "==", email).limit(1).get(),
             providersCol().where("email",  "==", email).limit(1).get()
@@ -66,6 +85,51 @@ router.get("/api/check-phone", async (req, res) => {
     } catch (error) {
         console.error("Phone check error:", error.message);
         res.status(500).json({ error: "Failed to check phone number" });
+    }
+});
+
+// ─── Signup: Applicant ────────────────────────────────────────────────────────
+router.post("/signup/applicant", verifyToken, upload.single("cv"), async (req, res) => {
+    const { uid, firstname, lastname, email, phonenumber, idNumber, qualifications } = req.body;
+    const cvUrl      = req.file ? req.file.path         : null;
+    const cvFilename = req.file ? req.file.originalname : null;
+
+    if (!email) return res.status(400).json({ error: "Email is required" });
+    try {
+        await admin.auth().setCustomUserClaims(uid, { role: "applicant" });
+        await applicantRef(uid).set({
+            firstname:      (firstname   || "").trim(),
+            lastname:       (lastname    || "").trim(),
+            email:          (email       || "").trim(),
+            phonenumber:    (phonenumber || "").trim(),
+            ...(idNumber ? { idNumber: idNumber.trim() } : {}),
+            ...(cvUrl    ? { cv: cvUrl, cvFilename }     : {}),
+            qualifications: qualifications || [],
+            role: "applicant", status: "active", createdAt: new Date().toISOString()
+        });
+        res.status(201).json({ message: "Applicant created successfully" });
+    } catch (error) {
+        console.error("Applicant signup error:", error.message);
+        res.status(500).json({ error: "Failed to create applicant" });
+    }
+});
+
+// ─── Signup: Provider ─────────────────────────────────────────────────────────
+router.post("/signup/provider", verifyToken, async (req, res) => {
+    const { uid, organization, email, phonenumber } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+    try {
+        await admin.auth().setCustomUserClaims(uid, { role: "provider" });
+        await providerRef(uid).set({
+            organization: (organization || "").trim(),
+            email:        (email        || "").trim(),
+            phonenumber:  (phonenumber  || "").trim(),
+            role: "provider", status: "active", createdAt: new Date().toISOString()
+        });
+        res.status(201).json({ message: "Provider created successfully" });
+    } catch (error) {
+        console.error("Provider signup error:", error.message);
+        res.status(500).json({ error: "Failed to create provider" });
     }
 });
 
@@ -112,6 +176,42 @@ router.post("/api/set-role-claim", verifyToken, async (req, res) => {
     } catch (error) {
         console.error("Set role claim error:", error);
         res.status(500).json({ error: "Failed to set custom claim" });
+    }
+});
+
+// ─── Upload CV ────────────────────────────────────────────────────────────────
+router.post("/api/upload-cv", verifyToken, upload.single("cv"), async (req, res) => {
+    try {
+        const uid    = req.body.uid || req.user.uid;
+        const cvUrl  = req.file ? req.file.path         : null;
+        const cvName = req.file ? req.file.originalname : null;
+        if (!cvUrl) return res.status(400).json({ error: "No file uploaded" });
+        await applicantRef(uid).update({ cv: cvUrl, cvFilename: cvName });
+        res.json({ message: "CV uploaded successfully", cv: cvUrl });
+    } catch (error) {
+        console.error("CV upload error:", error);
+        res.status(500).json({ error: "Failed to upload CV" });
+    }
+});
+
+// ─── Save Qualifications ──────────────────────────────────────────────────────
+router.patch("/api/profile/qualifications", verifyToken, async (req, res) => {
+    try {
+        const { qualifications } = req.body;
+        if (!Array.isArray(qualifications)) {
+            return res.status(400).json({ error: "qualifications must be an array" });
+        }
+        if (qualifications.length > 8) {
+            return res.status(400).json({ error: "A maximum of 8 qualifications is allowed" });
+        }
+        await applicantRef(req.user.uid).set({
+            qualifications,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+        res.json({ message: "Qualifications updated" });
+    } catch (error) {
+        console.error("Qualifications update error:", error);
+        res.status(500).json({ error: "Failed to update qualifications" });
     }
 });
 

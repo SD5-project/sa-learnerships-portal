@@ -1,5 +1,5 @@
 // ─── Imports (MUST be at top for ES modules) ────────────────────────────────
-import { auth } from "./firebase.js";
+/*import { auth } from "./firebase.js";
 import { 
     createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -139,7 +139,19 @@ const applicantConfirmPassword = document.getElementById("applicantConfirmPasswo
 const applicantEmail           = document.getElementById("applicantEmail");
 const applicantPhone           = document.getElementById("applicantPhone");
 const applicantAreaCode        = document.getElementById("applicantAreaCode");
+const applicantCv = document.getElementById("cv");
+const cvLabel = document.getElementById("file-name-display");
 
+if(applicantCv && cvLabel){
+    applicantCv.addEventListener('change', function () {
+        if(this.files && this.files.length > 0){
+            cvLabel.textContent = this.files[0].name;
+            cvLabel.title = this.file[0].name;
+        } else {
+            cvLabel.textContent = "No file chosen";
+        }
+    });
+}
 if (applicantPassword) {
     applicantPassword.addEventListener("input", () => {
         validatePassword(applicantPassword.value, applicantEmail.value,
@@ -217,7 +229,6 @@ if (signupBtn) {
             ? document.getElementById("applicantConfirmPassword").value
             : document.getElementById("providerConfirmPassword").value;
 
-        // ── Validate before doing anything ───────────────────────────────────────
         if (!email || !password) {
             alert("Please fill in your email and password.");
             return;
@@ -233,10 +244,8 @@ if (signupBtn) {
 
         const file = document.getElementById("cv")?.files[0];
 
-        // ── Check if coming from Google login (already authenticated) ────────────
         let user = auth.currentUser;
 
-        // ── If NOT Google user, create Firebase Auth account first ───────────────
         if (!user) {
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -257,45 +266,39 @@ if (signupBtn) {
             }
         }
 
-        // ── Get REAL uid from Firebase — NOT hardcoded ────────────────────────────
         const uid   = user.uid;
         const token = await user.getIdToken();
         localStorage.setItem("token", token);
-
-        let cvUrl = null;
-        if (file) {
-            cvUrl = await uploadCV(file, uid);
-        }
-
-        if (file && !cvUrl) {
-            alert("CV upload failed. Please try again.");
-            return;
-        }
 
         console.log("✅ Signing up with real Firebase UID:", uid);
 
         // ── Build payload ─────────────────────────────────────────────────────────
         let endpoint = "";
-        let payload  = {};
+        let body;
+        let headers = { "Authorization": `Bearer ${token}` };
 
         if (role === "Applicant") {
             endpoint = "/signup/applicant";
-            payload  = {
-                uid,
-                firstname:   document.getElementById("firstName").value,
-                lastname:    document.getElementById("lastName").value,
-                email,
-                username:    document.getElementById("username").value,
-                institution: document.getElementById("institution").value,
-                city:        document.getElementById("city").value,
-                phonenumber: document.getElementById("applicantAreaCode").value +
-                             document.getElementById("applicantPhone").value,
-                cv:          cvUrl
-            };
-            console.log("CV URL:", cvUrl);
+
+            const formData = new FormData();
+            formData.append("uid",         uid);
+            formData.append("firstname",   document.getElementById("firstName").value);
+            formData.append("lastname",    document.getElementById("lastName").value);
+            formData.append("email",       email);
+            formData.append("username",    document.getElementById("username").value);
+            formData.append("institution", document.getElementById("institution").value);
+            formData.append("city",        document.getElementById("city").value);
+            formData.append("phonenumber", document.getElementById("applicantAreaCode").value +
+                                           document.getElementById("applicantPhone").value);
+            if (file) formData.append("cv", file);
+
+            body = formData;
+            // ⚠️ No Content-Type header for FormData
+
         } else if (role === "Provider") {
             endpoint = "/signup/provider";
-            payload  = {
+            headers["Content-Type"] = "application/json";
+            body = JSON.stringify({
                 uid,
                 organization: document.getElementById("org").value,
                 email,
@@ -303,18 +306,15 @@ if (signupBtn) {
                 phonenumber:  document.getElementById("providerAreaCode").value +
                               document.getElementById("providerPhone").value,
                 username:     document.getElementById("orgUsername").value
-            };
+            });
         }
 
         // ── POST to backend ───────────────────────────────────────────────────────
         try {
             const response = await fetch(endpoint, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
+                headers,
+                body
             });
 
             const data = await response.json();
@@ -323,7 +323,7 @@ if (signupBtn) {
                 console.log("✅ Firestore document created for UID:", uid);
                 document.getElementById("successConfirm").classList.remove("hidden");
 
-                // Force token refresh to get new role claim from backend
+                await new Promise(resolve => setTimeout(resolve, 2000)); 
                 await user.getIdToken(true);
                 const idTokenResult = await user.getIdTokenResult();
                 const userRole = idTokenResult.claims.role;
@@ -499,4 +499,4 @@ auth.onAuthStateChanged((user) => {
         }
         loadApplications(user.uid);
     }
-});
+}); */

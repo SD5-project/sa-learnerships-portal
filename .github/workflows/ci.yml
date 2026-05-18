@@ -54,10 +54,10 @@ jobs:
 
       # ── Codecov upload ────────────────────────────────────────────────────────
       - name: Upload to Codecov
-        if: always()  # <─── CRITICAL: This forces it to run even if Jest failed/exited with 1!
+        if: always()  # Keeps running even if Jest fails
         uses: codecov/codecov-action@v4
         with:
-          use_oidc: true
+          token: ${{ secrets.CODECOV_TOKEN }} # Uses the secret we just created
           files: ./coverage/lcov.info
           fail_ci_if_error: false
           verbose: true

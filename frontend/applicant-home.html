@@ -204,6 +204,61 @@
             color: #ccc;
             font-style: italic;
         }
+        
+        /* NOTIFICATIONS SECTION */
+        .notifications-section {
+            background-color: #545454;
+            border: 2px solid #ffcc00; /* Distinct border for updates */
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+        }
+
+        .notifications-section h2 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            background: #444;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #ffcc00;
+            font-size: 14px;
+        }
+
+        .notification-item.unread {
+            background: #4d4d4d;
+            border-left: 4px solid #00ff88; /* Green for new unread status */
+        }
+
+        .notification-time {
+            display: block;
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        .no-notifications {
+            font-style: italic;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        /* Scrollbar styling */
+        .notification-list::-webkit-scrollbar { width: 5px; }
+        .notification-list::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -284,13 +339,18 @@
                     </div>
                 </div>
             </div>
-
+            <div class="notifications-section">
+                <h2><span>🔔</span> Recent Updates</h2>
+                <div id="notificationList" class="notification-list">
+                    <p class="loading-indicator">Checking for updates...</p>
+                </div>
+            </div>
         </div>
     </div>
     <script type="module" src="script.js"></script>
     <script type="module">
-        import { auth } from "./firebase.js";
-
+        import { auth, db } from "./firebase.js";
+        import { query, collection, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         const token = localStorage.getItem("token");
 
         if (!token) {
@@ -298,7 +358,7 @@
             window.location.href = "/";
         }
 
-        // ── Load profile from Firestore via backend ─────────────────────────────
+        //── Load profile from Firestore via backend ─────────────────────────────
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = "/";
@@ -364,6 +424,49 @@
         document.getElementById("myApplicationsBtn").addEventListener("click", () => {
                     window.location.href = '/applications-page.html';
                     });
+
+        //Notifications
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                const q = query(
+                    collection(db, "notifications"),
+                    where("recipientId", "==", user.uid),
+                    orderBy("timestamp", "desc")
+                );
+
+                onSnapshot(q, (snapshot) => {
+                    const notifications = [];
+                    snapshot.forEach((doc) => {
+                        notifications.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderNotifications(notifications);
+                }, (error) => {
+                    console.error("Notification listener error:", error);
+                    document.getElementById("notificationList").innerHTML = `<p class="no-notifications">Could not load notifications.</p>`;
+                });
+            }
+        });
+
+        function renderNotifications(data) {
+            const listContainer = document.getElementById("notificationList");
+            
+            if (data.length === 0) {
+                listContainer.innerHTML = `<p class="no-notifications" style="color: #ccc; font-style: italic;">No new updates at this time.</p>`;
+                return;
+            }
+
+            listContainer.innerHTML = data.map(n => {
+                const date = n.timestamp ? new Date(n.timestamp.seconds * 1000).toLocaleString() : "Just now";
+                const isUnread = n.status === 'unread' ? 'unread' : '';
+
+                return `
+                    <div class="notification-item ${isUnread}">
+                        <strong style="color: #ccc;">Update:</strong> ${n.message}
+                        <span class="notification-time">${date}</span>
+                    </div>
+                `;
+            }).join('');
+        }
     </script>
 </body>
 </html>

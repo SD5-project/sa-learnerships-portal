@@ -15,7 +15,6 @@ app.use(express.json());
 require('dotenv').config();
 const nodemailer  = require('nodemailer');
 
-// Use Gmail App Password — generate at myaccount.google.com/apppasswords
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth:    { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
@@ -46,7 +45,7 @@ async function sendMail(to, subject, html) {
     }
 }
 
-// ─── Guard Middleware (role-based route protection) ───────────────────────────
+// ─── Guard Middleware ─────────────────────────────────────────────────────────
 function guard(route) {
     return (req, res, next) => {
         if (req.user && authorize(req.user, route)) return next();
@@ -88,9 +87,15 @@ app.get('/admin-dashboard', (req, res) =>
 app.get('/provider-home', (req, res) =>
     res.sendFile(path.join(__dirname, '..', 'frontend', 'provider-home.html')));
 
-// ─── Health Check (temporary — remove after Firebase is confirmed working) ────
+app.get('/listings', (req, res) =>
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'listings.html')));
+
+app.get('/', (req, res) =>
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html')));
+
+// ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/api/health', async (req, res) => {
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY || "";
+    const privateKey      = process.env.FIREBASE_PRIVATE_KEY || "";
     const keyAfterReplace = privateKey.replace(/\\n/g, '\n');
 
     let firestoreWorking = false;
@@ -103,38 +108,29 @@ app.get('/api/health', async (req, res) => {
     }
 
     res.json({
-        status:            "running",
-        hasProjectId:      !!process.env.FIREBASE_PROJECT_ID,
-        hasClientEmail:    !!process.env.FIREBASE_CLIENT_EMAIL,
-        hasPrivateKey:     !!process.env.FIREBASE_PRIVATE_KEY,
-        keyLength:         privateKey.length,
-        keyHasNewlines:    keyAfterReplace.includes('\n'),
-        keyStartsCorrect:  privateKey.startsWith("-----BEGIN"),
+        status:           "running",
+        hasProjectId:     !!process.env.FIREBASE_PROJECT_ID,
+        hasClientEmail:   !!process.env.FIREBASE_CLIENT_EMAIL,
+        hasPrivateKey:    !!process.env.FIREBASE_PRIVATE_KEY,
+        keyLength:        privateKey.length,
+        keyHasNewlines:   keyAfterReplace.includes('\n'),
+        keyStartsCorrect: privateKey.startsWith("-----BEGIN"),
         firestoreWorking,
         firestoreError,
-        nodeEnv:           process.env.NODE_ENV || "not set"
+        nodeEnv:          process.env.NODE_ENV || "not set"
     });
 });
 
-app.get('/listings', (req, res) =>
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'listings.html')));
-
-app.get('/', (req, res) =>
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html')));
-
 // =============================================================================
-// NQF LEVELS  — fetched from Firestore; falls back to hardcoded list
+// NQF LEVELS
 // =============================================================================
+
 app.get('/nqf-levels', async (req, res) => {
     try {
         const snapshot = await db.collection("NQFLevels").orderBy("level").get();
         const levels   = [];
         snapshot.forEach(doc => levels.push(doc.data()));
-
-        if (levels.length > 0) {
-            return res.json({ levels });
-        }
-        // Firestore collection empty — use hardcoded fallback
+        if (levels.length > 0) return res.json({ levels });
         throw new Error("Empty collection");
     } catch {
         res.json({ levels: [
@@ -192,7 +188,6 @@ app.post("/signup/provider", async (req, res) => {
 // OPPORTUNITIES
 // =============================================================================
 
-// Submit — providers and admins only; always starts as "pending-review"
 app.post("/api/opportunities/submit", verifyToken, guard('/create-opportunity'), async (req, res) => {
     try {
         const opportunityData = {
@@ -290,21 +285,23 @@ app.post("/validate-application", async (req, res) => {
 // APPLICATIONS
 // =============================================================================
 
-// Check if already applied
 app.get("/applicant/hasApplied", async (req, res) => {
     const { applicantID, listingID } = req.query;
+    if (!applicantID || !listingID) {
+        return res.status(400).json({ error: "Missing applicantID or listingID" });
+    }
     try {
         const snapshot = await db.collection("applications")
             .where("applicantID", "==", applicantID)
             .where("listingID",   "==", listingID)
             .get();
-        res.json({ hasApplied: !snapshot.empty });
+        res.status(200).json({ hasApplied: !snapshot.empty });
     } catch (error) {
+        console.error("Error checking application status:", error);
         res.status(500).json({ error: "Failed to check application" });
     }
 });
 
-// Submit application
 app.post("/applicant/apply", async (req, res) => {
     const { applicantID, listingID, status } = req.body;
     if (!applicantID || !listingID) {
@@ -333,7 +330,6 @@ app.post("/applicant/apply", async (req, res) => {
     }
 });
 
-// Applicant's own applications
 app.get("/api/applications", verifyToken, async (req, res) => {
     try {
         const applicantID = req.query.applicantID || req.user.uid;
@@ -373,8 +369,12 @@ app.patch("/api/applicants/:applicationID/status", verifyToken, async (req, res)
         const listingDoc = await db.collection("Opportunities").doc(appData.listingID).get();
         if (!listingDoc.exists) return res.status(404).json({ error: "Listing not found" });
 
-        if (req.user.role !== "admin" && listingDoc.data().providerID !== req.user.uid) {
-            return res.status(403).json({ error: "You are not authorized to update this application" });
+        // Providers can only update their own listings; admins can update any
+        if (req.user.role !== "admin") {
+            const storedProviderID = listingDoc.data().providerID || listingDoc.data().ProviderID;
+            if (storedProviderID !== req.user.uid) {
+                return res.status(403).json({ error: "You are not authorized to update this application" });
+            }
         }
 
         await db.collection("applications").doc(applicationID).update({
@@ -382,7 +382,7 @@ app.patch("/api/applicants/:applicationID/status", verifyToken, async (req, res)
         });
         res.json({ message: "Status updated", applicationID, status });
 
-        // Non-blocking: notify applicant
+        // Non-blocking notifications after response
         const listingTitle = listingDoc.data().title || "Opportunity";
         await db.collection("notifications").add({
             recipientId:   appData.applicantID,
@@ -483,7 +483,6 @@ app.get("/api/applicants", verifyToken, async (req, res) => {
 // US-07 — LISTING MODERATION (Admin only)
 // =============================================================================
 
-// Pending queue
 app.get("/api/admin/listings/pending", verifyToken, adminOnly, async (req, res) => {
     try {
         const snapshot = await db.collection("Opportunities")
@@ -493,15 +492,15 @@ app.get("/api/admin/listings/pending", verifyToken, adminOnly, async (req, res) 
         snapshot.forEach(doc => {
             const d = doc.data();
             listings.push({
-                id:        doc.id,
-                title:     d.title      || "Untitled",
-                company:   d.company    || "Unknown",
-                type:      d.type       || "-",
-                location:  d.location   || "-",
-                stipend:   d.stipend    ?? null,
-                providerID:d.providerID || null,
-                createdAt: d.createdAt  || null,
-                status:    d.status
+                id:         doc.id,
+                title:      d.title      || "Untitled",
+                company:    d.company    || "Unknown",
+                type:       d.type       || "-",
+                location:   d.location   || "-",
+                stipend:    d.stipend    ?? null,
+                providerID: d.providerID || null,
+                createdAt:  d.createdAt  || null,
+                status:     d.status
             });
         });
         res.json(listings);
@@ -511,7 +510,6 @@ app.get("/api/admin/listings/pending", verifyToken, adminOnly, async (req, res) 
     }
 });
 
-// All listings (admin overview — any status)
 app.get("/api/admin/listings", verifyToken, adminOnly, async (req, res) => {
     try {
         const snapshot = await db.collection("Opportunities").get();
@@ -519,15 +517,15 @@ app.get("/api/admin/listings", verifyToken, adminOnly, async (req, res) => {
         snapshot.forEach(doc => {
             const d = doc.data();
             listings.push({
-                id:        doc.id,
-                title:     d.title      || "Untitled",
-                company:   d.company    || "Unknown",
-                type:      d.type       || "-",
-                location:  d.location   || "-",
-                stipend:   d.stipend    ?? null,
-                providerID:d.providerID || null,
-                createdAt: d.createdAt  || null,
-                status:    d.status     || "unknown"
+                id:         doc.id,
+                title:      d.title      || "Untitled",
+                company:    d.company    || "Unknown",
+                type:       d.type       || "-",
+                location:   d.location   || "-",
+                stipend:    d.stipend    ?? null,
+                providerID: d.providerID || null,
+                createdAt:  d.createdAt  || null,
+                status:     d.status     || "unknown"
             });
         });
         res.json(listings);
@@ -537,7 +535,6 @@ app.get("/api/admin/listings", verifyToken, adminOnly, async (req, res) => {
     }
 });
 
-// Approve listing
 app.patch("/api/admin/listings/:id/approve", verifyToken, adminOnly, async (req, res) => {
     try {
         const listingRef = db.collection("Opportunities").doc(req.params.id);
@@ -547,7 +544,6 @@ app.patch("/api/admin/listings/:id/approve", verifyToken, adminOnly, async (req,
         await listingRef.update({ status: "approved", updatedAt: new Date().toISOString() });
         res.json({ message: "Listing approved", id: req.params.id });
 
-        // Notify provider (non-blocking — after response)
         const d          = listingDoc.data();
         const providerID = d.providerID;
         if (providerID) {
@@ -563,8 +559,7 @@ app.patch("/api/admin/listings/:id/approve", verifyToken, adminOnly, async (req,
                     timestamp:   admin.firestore.FieldValue.serverTimestamp(),
                     listingId:   req.params.id
                 });
-                await sendMail(
-                    email,
+                await sendMail(email,
                     `Your listing "${title}" has been approved`,
                     `<p>Hi ${name},</p><p>Your listing <strong>${title}</strong> has been <strong>approved</strong> and is now visible to applicants.</p>`
                 );
@@ -576,7 +571,6 @@ app.patch("/api/admin/listings/:id/approve", verifyToken, adminOnly, async (req,
     }
 });
 
-// Remove listing
 app.patch("/api/admin/listings/:id/remove", verifyToken, adminOnly, async (req, res) => {
     try {
         const { reason } = req.body;
@@ -591,7 +585,6 @@ app.patch("/api/admin/listings/:id/remove", verifyToken, adminOnly, async (req, 
         });
         res.json({ message: "Listing removed", id: req.params.id });
 
-        // Notify provider (non-blocking — after response)
         const d          = listingDoc.data();
         const providerID = d.providerID;
         if (providerID) {
@@ -607,8 +600,7 @@ app.patch("/api/admin/listings/:id/remove", verifyToken, adminOnly, async (req, 
                     timestamp:   admin.firestore.FieldValue.serverTimestamp(),
                     listingId:   req.params.id
                 });
-                await sendMail(
-                    email,
+                await sendMail(email,
                     `Your listing "${title}" has been removed`,
                     `<p>Hi ${name},</p><p>Your listing <strong>${title}</strong> has been <strong>removed</strong>.${reason ? ` Reason: ${reason}` : ""}</p>`
                 );
@@ -624,7 +616,6 @@ app.patch("/api/admin/listings/:id/remove", verifyToken, adminOnly, async (req, 
 // US-08 — USER ACCOUNT MANAGEMENT (Admin only)
 // =============================================================================
 
-// List all users (paginated, filterable, no sensitive fields)
 app.get("/api/admin/users", verifyToken, adminOnly, async (req, res) => {
     try {
         const { role, page = 1, limit = 20 } = req.query;
@@ -671,7 +662,6 @@ app.get("/api/admin/users", verifyToken, adminOnly, async (req, res) => {
     }
 });
 
-// Suspend user
 app.patch("/api/admin/users/:uid/suspend", verifyToken, adminOnly, async (req, res) => {
     try {
         const { uid } = req.params;
@@ -682,7 +672,6 @@ app.patch("/api/admin/users/:uid/suspend", verifyToken, adminOnly, async (req, r
         if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
 
         const userData = userDoc.data();
-
         await admin.auth().updateUser(uid, { disabled: true });
         await db.collection("users").doc(uid).update({
             status:      "suspended",
@@ -691,26 +680,20 @@ app.patch("/api/admin/users/:uid/suspend", verifyToken, adminOnly, async (req, r
         });
         res.json({ message: "User suspended", uid });
 
-        // Email user (non-blocking — after response is already sent)
         const name = userData.firstname || userData.organization || "User";
-        await sendMail(
-            userData.email,
+        await sendMail(userData.email,
             "Your SkillsConnect account has been suspended",
             `<p>Hi ${name},</p>
              <p>Your SkillsConnect account has been <strong>suspended</strong> by an administrator.</p>
-             <p>You will not be able to log in while your account is suspended.</p>
-             <p>If you believe this is a mistake, please contact support at 
-                <a href="mailto:${process.env.EMAIL_USER}">${process.env.EMAIL_USER}</a>.
-             </p>`
+             <p>If you believe this is a mistake, please contact support at
+                <a href="mailto:${process.env.EMAIL_USER}">${process.env.EMAIL_USER}</a>.</p>`
         );
-
     } catch (error) {
         console.error("Suspend error:", error);
         res.status(500).json({ error: "Failed to suspend user" });
     }
 });
 
-// Reactivate user
 app.patch("/api/admin/users/:uid/reactivate", verifyToken, adminOnly, async (req, res) => {
     try {
         const { uid } = req.params;
@@ -718,7 +701,6 @@ app.patch("/api/admin/users/:uid/reactivate", verifyToken, adminOnly, async (req
         if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
 
         const userData = userDoc.data();
-
         await admin.auth().updateUser(uid, { disabled: false });
         await db.collection("users").doc(uid).update({
             status:        "active",
@@ -727,24 +709,19 @@ app.patch("/api/admin/users/:uid/reactivate", verifyToken, adminOnly, async (req
         });
         res.json({ message: "User reactivated", uid });
 
-        // Email user (non-blocking — after response is already sent)
         const name = userData.firstname || userData.organization || "User";
-        await sendMail(
-            userData.email,
+        await sendMail(userData.email,
             "Your SkillsConnect account has been reactivated",
             `<p>Hi ${name},</p>
-             <p>Good news — your SkillsConnect account has been <strong>reactivated</strong>.</p>
-             <p>You can now log in and access the platform again.</p>
-             <p><a href="${process.env.APP_URL || "https://skillsconnect.azurewebsites.net"}">Click here to log in</a></p>`
+             <p>Your SkillsConnect account has been <strong>reactivated</strong>.</p>
+             <p><a href="${process.env.APP_URL || "https://skillsconnect-eqdgb0fxdxa8geap.southafricanorth-01.azurewebsites.net"}">Click here to log in</a></p>`
         );
-
     } catch (error) {
         console.error("Reactivate error:", error);
         res.status(500).json({ error: "Failed to reactivate user" });
     }
 });
 
-// Delete user (Firebase Auth + Firestore)
 app.delete("/api/admin/users/:uid", verifyToken, adminOnly, async (req, res) => {
     try {
         const { uid } = req.params;

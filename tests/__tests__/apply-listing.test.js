@@ -245,16 +245,47 @@ describe("US-04: Role-based access control (access-logic)", () => {
 // =============================================================================
 // hasApplied endpoint
 // =============================================================================
+// ... (keep the rest of your file as is)
+
+// =============================================================================
+// Check application status endpoint
+// =============================================================================
 describe("hasApplied endpoint", () => {
+    // Import the mocked db inside the describe block to ensure it's available
+    const { db } = require("../../backend/firebaseAdmin");
 
     test("✅ Returns hasApplied: false when no application exists", async () => {
-        // mockWhereGet already defaults to { empty: true } → hasApplied = false
+        // We need to force the 'where' chain to return empty: true
+        const mockWhere = jest.spyOn(db, 'collection').mockReturnValue({
+            where: jest.fn().mockReturnThis(),
+            get: jest.fn().mockResolvedValue({ empty: true })
+        });
+
         const res = await request(app)
             .get("/applicant/hasApplied")
             .query({ applicantID: "user_001", listingID: "listing_001" });
 
         expect(res.status).toBe(200);
         expect(res.body.hasApplied).toBe(false);
+        
+        mockWhere.mockRestore(); // Clean up
+    });
+
+    test("✅ Returns hasApplied: true when application exists", async () => {
+        // We need to force the 'where' chain to return empty: false
+        const mockWhere = jest.spyOn(db, 'collection').mockReturnValue({
+            where: jest.fn().mockReturnThis(),
+            get: jest.fn().mockResolvedValue({ empty: false })
+        });
+
+        const res = await request(app)
+            .get("/applicant/hasApplied")
+            .query({ applicantID: "user_001", listingID: "listing_001" });
+
+        expect(res.status).toBe(200);
+        expect(res.body.hasApplied).toBe(true);
+        
+        mockWhere.mockRestore(); // Clean up
     });
 
     test("✅ Returns hasApplied: true when application exists", async () => {

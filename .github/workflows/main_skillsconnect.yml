@@ -40,15 +40,13 @@ jobs:
         env:
           NODE_ENV: test
 
-      # ── Codecov upload ────────────────────────────────────────────────────────
       - name: Upload to Codecov
-        if: always()  # <─── CRITICAL: This forces it to run even if Jest failed/exited with 1!
+        if: always()
         uses: codecov/codecov-action@v4
         with:
-          use_oidc: true
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
           fail_ci_if_error: false
-          verbose: true
 
   # ── Job 2: Build ─────────────────────────────────────────────────────────────
   build:

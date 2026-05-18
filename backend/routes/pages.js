@@ -28,6 +28,7 @@ router.get('/provider-signup-dept-internships',            page('provider-signup
 router.get('/listing-info',                                page('listing-info.html'));
 router.get('/create-opportunity',                          page('create-opportunity.html'));
 router.get('/applicant-home',                              page('applicant-home.html'));
+router.get('/applicant-qualifications',                    page('applicant-qualifications.html'));
 router.get('/applications-page',                           page('applications-page.html'));
 router.get('/applicants',                                  page('applicants.html'));
 router.get('/admin-dashboard',                             page('admin-dashboard.html'));

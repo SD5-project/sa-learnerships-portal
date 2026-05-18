@@ -1,0 +1,230 @@
+
+<style>
+#cd { padding: 8px 0; }
+#cd svg { width: 100% !important; height: auto !important; }
+body { background: transparent; margin: 0; }
+</style>
+<div id="cd"></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: 'sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '12px',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+    primaryColor: dark ? '#3C3489' : '#EEEDFE',
+    primaryTextColor: dark ? '#CECBF6' : '#3C3489',
+    primaryBorderColor: dark ? '#7F77DD' : '#534AB7',
+    secondaryColor: dark ? '#085041' : '#E1F5EE',
+    secondaryTextColor: dark ? '#9FE1CB' : '#085041',
+    secondaryBorderColor: dark ? '#1D9E75' : '#0F6E56',
+    tertiaryColor: dark ? '#712B13' : '#FAECE7',
+    tertiaryTextColor: dark ? '#F5C4B3' : '#712B13',
+    tertiaryBorderColor: dark ? '#D85A30' : '#993C1D',
+    noteBkgColor: dark ? '#444441' : '#F1EFE8',
+    noteTextColor: dark ? '#D3D1C7' : '#2C2C2A',
+  },
+});
+
+const diagram = `classDiagram
+  class Client {
+    <<interface>>
+    +String externalId
+    +String authProvider
+    +String email
+    +String phoneNumber
+    +login() void
+    +logout() void
+  }
+
+  class Applicant {
+    +String firstName
+    +String lastName
+    +String idNumber
+    +String cvUrl
+    +DateTime cvUploadedAt
+    +List~Qualification~ qualifications
+    +applyForOpportunity(opportunityId) void
+    +trackApplications() List~Application~
+    +updateProfile() void
+    +acceptOffer(applicationId) void
+    +declineOffer(applicationId) void
+  }
+
+  class Qualification {
+    +String institutionName
+    +String nameOfQualification
+    +String dateObtained
+    +NQFReference nqfLevel
+    +Map~String,int~ subjectMarks
+  }
+
+  class NQFReference {
+    +String nqfLevel
+    +String qualificationType
+    +String saqaId
+    +String description
+  }
+
+  class Provider {
+    +String institutionName
+    +List~Department~ departments
+    +addDepartment(dept) void
+    +getDepartments() List~Department~
+    +postOpportunity(opp) void
+    +reviewApplication(appId) Application
+    +shortlistApplicant(appId) void
+    +rejectApplicant(appId) void
+    +makeOffer(appId) void
+  }
+
+  class Admin {
+    +String adminId
+    +approveOpportunity(oppId) void
+    +removeOpportunity(oppId) void
+    +suspendUser(userId) void
+    +reinstateUser(userId) void
+    +viewAnalytics() Report
+  }
+
+  class Department {
+    <<abstract>>
+    +String departmentName
+    +List~Opportunity~ opportunities
+    +postOpportunity(opp) void
+    +getOpportunities() List~Opportunity~
+  }
+
+  class InternshipDept {
+    +postOpportunity(opp) void
+    +listInternships() List~Opportunity~
+  }
+
+  class LearnershipDept {
+    +String dhetNumber
+    +postOpportunity(opp) void
+    +listLearnerships() List~Opportunity~
+    +validateDHET() boolean
+  }
+
+  class ApprenticeshipDept {
+    +String dhetNumber
+    +postOpportunity(opp) void
+    +listApprenticeships() List~Opportunity~
+    +validateDHET() boolean
+  }
+
+  class Opportunity {
+    +String opportunityId
+    +String title
+    +String detailedDescription
+    +String location
+    +int minAge
+    +int maxAge
+    +int duration
+    +String monthlyStipend
+    +NQFReference requiredNQF
+    +List~String~ requiredSkills
+    +String closingDate
+    +OpportunityStatus status
+  }
+
+  class OpportunityStatus {
+    <<enumeration>>
+    PENDING_APPROVAL
+    ACTIVE
+    CLOSED
+  }
+
+  class Application {
+    +String applicationId
+    +String applicantId
+    +String opportunityId
+    +ApplicationStatus status
+    +DateTime createdAt
+    +DateTime updatedAt
+  }
+
+  class ApplicationStatus {
+    <<enumeration>>
+    RECEIVED
+    SHORTLISTED
+    REJECTED
+    OFFERED
+    ACCEPTED
+    DECLINED
+  }
+
+  class Notification {
+    +String notificationId
+    +String recipientId
+    +NotificationType type
+    +NotificationChannel channel
+    +String message
+    +DateTime sentAt
+    +DateTime readAt
+    +markAsRead() void
+  }
+
+  class NotificationType {
+    <<enumeration>>
+    APPLICATION_STATUS_CHANGE
+    NEW_MATCHING_OPPORTUNITY
+    CLOSING_DATE_REMINDER
+  }
+
+  class NotificationChannel {
+    <<enumeration>>
+    IN_APP
+    EMAIL
+  }
+
+  class Report {
+    +String reportId
+    +String title
+    +ReportType type
+    +DateTime generatedAt
+    +generate() void
+    +exportCSV() File
+    +exportPDF() File
+  }
+
+  class ReportType {
+    <<enumeration>>
+    APPLICATION_VOLUME
+    PLACEMENT_SUCCESS_RATE
+    CUSTOM
+  }
+
+  Client <|.. Applicant : implements
+  Client <|.. Provider : implements
+  Applicant "1" o-- "0..*" Qualification : has
+  Applicant "1" o-- "0..*" Application : submits
+  Applicant "1" o-- "0..*" Notification : receives
+  Qualification --> NQFReference : references
+  Opportunity --> NQFReference : requires
+  Opportunity --> OpportunityStatus : has
+  Provider "1" o-- "1..*" Department : owns
+  Provider "1" o-- "0..*" Notification : receives
+  Department <|-- InternshipDept : extends
+  Department <|-- LearnershipDept : extends
+  Department <|-- ApprenticeshipDept : extends
+  Department "1" o-- "0..*" Opportunity : holds
+  Application --> Opportunity : references
+  Application --> ApplicationStatus : has
+  Notification --> NotificationType : has
+  Notification --> NotificationChannel : via
+  Admin --> Opportunity : manages
+  Admin --> Report : generates
+  Report --> ReportType : has
+`;
+
+const { svg } = await mermaid.render('cd-svg', diagram);
+document.getElementById('cd').innerHTML = svg;
+</script>

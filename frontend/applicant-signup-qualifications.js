@@ -59,13 +59,13 @@ function renderQualifications() {
             </div>
             <div class="field-row">
                 <div class="signup-field">
-                    <label>Institution</label>
+                    <label>Institution *</label>
                     <input type="text" placeholder="e.g. University of Johannesburg"
                         value="${escHtml(q.institution)}"
                         oninput="updateQual(${i}, 'institution', this.value)">
                 </div>
                 <div class="signup-field">
-                    <label>Qualification name</label>
+                    <label>Qualification name *</label>
                     <input type="text" placeholder="e.g. BSc Computer Science"
                         value="${escHtml(q.name)}"
                         oninput="updateQual(${i}, 'name', this.value)">
@@ -73,7 +73,7 @@ function renderQualifications() {
             </div>
             <div class="field-row">
                 <div class="signup-field">
-                    <label>NQF level</label>
+                    <label>NQF level *</label>
                     <select onchange="updateQual(${i}, 'nqfLevel', this.value)">
                         ${nqfOptionsHtml().replace(
                             `value="${q.nqfLevel}"`,
@@ -82,7 +82,7 @@ function renderQualifications() {
                     </select>
                 </div>
                 <div class="signup-field">
-                    <label>Date obtained</label>
+                    <label>Date obtained *</label>
                     <input type="month" value="${q.dateObtained}"
                         onchange="updateQual(${i}, 'dateObtained', this.value)">
                 </div>
@@ -116,7 +116,13 @@ window.clampMark = (input, qi, si) => {
     qualifications[qi].subjects[si].mark = val;
 };
 
-window.updateQual    = (i, field, value) => { qualifications[i][field] = value; };
+window.updateQual = (i, field, value) => {
+    qualifications[i][field] = value;
+    // Clear the card-level error highlight as soon as the user edits
+    const card = document.getElementById(`qual-card-${i}`);
+    if (card) card.style.borderColor = '';
+    errorBox.classList.remove('visible');
+};
 window.removeQualification = i => { qualifications.splice(i, 1); renderQualifications(); };
 window.addSubject    = i => {
     if (qualifications[i].subjects.length >= MAX_SUBJECTS) return;
@@ -134,7 +140,35 @@ addBtn.addEventListener('click', () => {
 });
 
 nextBtn.addEventListener('click', () => {
+    errorBox.textContent = '';
     errorBox.classList.remove('visible');
+
+    // Validate every qualification that has been added
+    let firstBadCard = -1;
+    qualifications.forEach((q, i) => {
+        const missing = [];
+        if (!q.institution?.trim()) missing.push('Institution');
+        if (!q.name?.trim())        missing.push('Qualification name');
+        if (!q.nqfLevel)            missing.push('NQF level');
+        if (!q.dateObtained)        missing.push('Date obtained');
+
+        if (missing.length > 0) {
+            if (firstBadCard === -1) firstBadCard = i;
+            const card = document.getElementById(`qual-card-${i}`);
+            if (card) card.style.borderColor = '#f87171';
+        } else {
+            const card = document.getElementById(`qual-card-${i}`);
+            if (card) card.style.borderColor = '';
+        }
+    });
+
+    if (firstBadCard !== -1) {
+        errorBox.textContent = 'Please fill in all required fields (marked *) for each qualification. Subjects are optional.';
+        errorBox.classList.add('visible');
+        document.getElementById(`qual-card-${firstBadCard}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
     builder.setQualifications(qualifications);
     window.location.href = 'applicant-signup-cv.html';
 });

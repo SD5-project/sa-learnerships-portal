@@ -112,7 +112,6 @@ function showSuspendedBanner(email) {
 
 // ── Show a simple inline error ────────────────────────────────────────────────
 function showError(msg) {
-    // Try to find or create an error element inside the form
     let el = document.getElementById("login-error-msg");
     if (!el) {
         el = document.createElement("p");
@@ -121,19 +120,20 @@ function showError(msg) {
         const form = document.querySelector("form");
         if (form) form.appendChild(el);
     }
-    el.textContent = msg;
+    el.textContent    = msg;
+    el.style.display  = "block";
 }
 
 function clearError() {
     const el     = document.getElementById("login-error-msg");
     const banner = document.getElementById("suspended-banner");
-    if (el)     el.textContent = "";
+    if (el)     { el.textContent = ""; el.style.display = "none"; }
     if (banner) banner.remove();
 }
 
 function redirectByRole(role) {
     const r = (role || "").toLowerCase();
-    if      (r === "applicant") window.location.href = "/listings";
+    if      (r === "applicant") window.location.href = "/applicant-home";
     else if (r === "provider")  window.location.href = "/provider-home";
     else if (r === "admin")     window.location.href = "/admin-dashboard";
     else showError("Unknown role '" + role + "'. Please contact support.");

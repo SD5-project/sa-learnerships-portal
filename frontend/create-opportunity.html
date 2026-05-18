@@ -464,7 +464,7 @@
                     </div>
                 </div>
 
-                <div class="grid-3">
+                <div class="grid-2">
                     <div class="form-group">
                         <label>Duration (Months) <span class="req">*</span></label>
                         <input type="number" id="duration" min="1" max="24" placeholder="e.g. 12">
@@ -475,13 +475,7 @@
                         <input type="date" id="closing-date">
                         <span class="field-error" id="err-closing">Please set a closing date.</span>
                     </div>
-                    <div class="form-group">
-                        <label>Required NQF Level <span class="req">*</span></label>
-                        <select id="min-nqf">
-                            <option value="">Select NQF Level</option>
-                        </select>
-                        <span class="field-error" id="err-nqf">Please select an NQF level.</span>
-                    </div>
+                    <select id="min-nqf" style="display:none;"></select>
                 </div>
 
                 <div class="grid-2">
@@ -618,8 +612,11 @@
     // ── Qualification search (debounced) ──────────────────────────────────────
     window.onQualSearch = function(value) {
         clearTimeout(qualSearchTimer);
-        const term = value.trim();
-        if (!term) { hideDropdown(); return; }
+        const raw = value.trim();
+        if (!raw) { hideDropdown(); return; }
+        const term = raw.split(" ").map(function(w) {
+            return w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : "";
+        }).join(" ");
         qualSearchTimer = setTimeout(() => searchQualifications(term), 300);
     };
 
@@ -644,7 +641,11 @@
             }
 
             dropdown.innerHTML = "";
+            const seen = new Set();
             snap.forEach(doc => {
+                const normId = String(doc.data().saqa_id || doc.id).replace(/.0$/, "");
+                if (seen.has(normId)) return;
+                seen.add(normId);
                 const d    = doc.data();
                 const item = document.createElement("div");
                 item.className = "qual-dropdown-item";
@@ -662,8 +663,19 @@
     }
 
     window.selectQualification = function(id, data) {
-        selectedSaqaId = data.saqa_id || id;
+        selectedSaqaId = String(data.saqa_id || id).replace(/.0$/, "");
         hideDropdown();
+
+        // Auto-set NQF level from qualification (e.g. "NQF Level 4" → "4")
+        const nqfMatch = (data.nqf_level || "").match(/\d+/);
+        if (nqfMatch) {
+            const sel = document.getElementById("min-nqf");
+            const opt = document.createElement("option");
+            opt.value = nqfMatch[0];
+            opt.selected = true;
+            sel.innerHTML = "";
+            sel.appendChild(opt);
+        }
 
         document.getElementById("qual-search-input").classList.add("hidden");
         document.getElementById("qual-title-display").textContent   = data.title;
@@ -704,6 +716,7 @@
     };
 
     async function runAccreditationCheck(providerName) {
+        const normalizedInput = providerName.toLowerCase();
         const btn = document.getElementById("verify-btn");
         btn.disabled = true;
         btn.textContent = "Verifying…";
@@ -717,15 +730,19 @@
             const q = query(
                 collection(db, "accredited_providers"),
                 where("qual_id",          "==", selectedSaqaId),
-                where("provider_name",    "==", providerName),
                 where("opportunity_type", "==", selectedType),
                 where("status",           "==", "Active"),
-                limit(1)
+                limit(50)
             );
             const snap = await getDocs(q);
 
-            if (!snap.empty) {
-                const d = snap.docs[0].data();
+            // Case-insensitive match on provider_name
+            const matchDoc = snap.docs.find(doc =>
+                doc.data().provider_name.toLowerCase() === normalizedInput
+            );
+
+            if (matchDoc) {
+                const d = matchDoc.data();
                 verificationStatus = "verified";
                 const banner = document.getElementById("accred-success");
                 banner.innerHTML = `
@@ -733,6 +750,16 @@
                     Accreditation #: <strong>${d.accreditation_number ?? "—"}</strong> &nbsp;·&nbsp;
                     SETA: <strong>${d.seta ?? "—"}</strong> &nbsp;·&nbsp;
                     Province: <strong>${d.province ?? "—"}</strong>
+                `;
+                banner.classList.remove("hidden");
+            } else if (!snap.empty) {
+                // qual_id matched but provider name didn't — give a helpful message
+                verificationStatus = "unverified";
+                const banner = document.getElementById("accred-warning");
+                banner.innerHTML = `
+                    ⚠️ <strong>Organisation not found for this qualification.</strong><br>
+                    Check your organisation name matches exactly how it's registered with the SETA.
+                    Your listing will be submitted for admin review before going live. You may still proceed.
                 `;
                 banner.classList.remove("hidden");
             } else {
@@ -814,12 +841,24 @@
             });
 
             if (res.ok) {
-                document.getElementById("successBanner").classList.remove("hidden");
+                const data   = await res.json();
+                const isLive = data.status === "auto_approved";
+                const banner = document.getElementById("successBanner");
+                banner.innerHTML = isLive
+                    ? "✅ Opportunity submitted and <strong>automatically approved</strong> — it is now live for applicants."
+                    : "✅ Opportunity submitted successfully! It has been sent to an admin for review before going live.";
+                banner.classList.remove("hidden");
                 window.scrollTo({ top: 0, behavior: "smooth" });
                 document.getElementById("submitBtn").textContent = "Submitted ✓";
+                // Redirect to dashboard after 3 seconds
+                setTimeout(() => { window.location.href = "/provider-home"; }, 3000);
             } else {
                 const data = await res.json();
-                alert("Submission failed: " + (data.error || res.status));
+                if (res.status === 409) {
+                    alert(data.error);
+                } else {
+                    alert("Submission failed: " + (data.error || res.status));
+                }
                 btn.disabled = false;
                 btn.textContent = "Submit for Review";
             }
@@ -887,7 +926,6 @@
     }
 
     window.onload = () => {
-        loadNQFLevels();
         const today = new Date().toISOString().split("T")[0];
         // closing-date is inside form-body — set min once it's visible
         document.getElementById("closing-date").min = today;
@@ -966,8 +1004,16 @@
         const closing = document.getElementById("closing-date").value;
         showErr("closing", !closing); if (!closing) valid = false;
 
-        const nqf = document.getElementById("min-nqf").value;
-        showErr("nqf", !nqf); if (!nqf) valid = false;
+        const industry = document.querySelector(".industry-chip.selected");
+        if (!industry) {
+            const grid = document.getElementById("industry-grid");
+            grid.style.outline = "2px solid #f87171";
+            grid.style.borderRadius = "8px";
+            grid.scrollIntoView({ behavior: "smooth", block: "center" });
+            valid = false;
+        } else {
+            document.getElementById("industry-grid").style.outline = "";
+        }
 
         if (!valid) window.scrollTo({ top: 0, behavior: "smooth" });
         return valid;

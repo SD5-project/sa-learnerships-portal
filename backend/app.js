@@ -31,7 +31,9 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 const { verifyToken } = require("./auth");
 const { db, admin }   = require("./firebaseAdmin");
 const { authorize }   = require('./access-logic');
+const { applicantRef } = require('./userPaths');
 
+app.use('/', require('./routes/pages'));
 app.use('/', require('./routes/auth'));
 
 // ─── Email helper ─────────────────────────────────────────────────────────────
@@ -77,6 +79,9 @@ app.get('/create-opportunity', (req, res) =>
 
 app.get('/applicant-home', (req, res) =>
     res.sendFile(path.join(__dirname, '..', 'frontend', 'applicant-home.html')));
+
+app.get('/applicant-qualifications', (req, res) =>
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'applicant-qualifications.html')));
 
 app.get('/applications-page', (req, res) =>
     res.sendFile(path.join(__dirname, '..', 'frontend', 'applications-page.html')));
@@ -166,9 +171,37 @@ app.post("/signup/provider", async (req, res) => {
 // OPPORTUNITIES
 // =============================================================================
 
-// Submit — providers and admins only; always starts as "pending-review"
+// Submit — providers and admins only
 app.post("/api/opportunities/submit", verifyToken, guard('/create-opportunity'), async (req, res) => {
     try {
+        const { type, verificationStatus, saqaId } = req.body;
+
+        // ── Duplicate check (skip for internships with no saqaId) ──────────────
+        if (saqaId) {
+            const dupSnap = await db.collection("Opportunities")
+                .where("providerID", "==", req.user.uid)
+                .where("saqaId",     "==", saqaId)
+                .get();
+            const activeDup = dupSnap.docs.find(
+                doc => doc.data().status !== "rejected_review"
+            );
+            if (activeDup) {
+                return res.status(409).json({
+                    error: "You already have an active listing for this qualification."
+                });
+            }
+        }
+
+        // ── Determine status ───────────────────────────────────────────────────
+        let status;
+        if (type === "internship") {
+            status = "in_for_review";
+        } else if (verificationStatus === "verified") {
+            status = "auto_approved";
+        } else {
+            status = "in_for_review";
+        }
+
         const providerDoc = await db.collection("users").doc(req.user.uid).get();
         const company = providerDoc.exists ? (providerDoc.data().organization || null) : null;
 
@@ -176,12 +209,12 @@ app.post("/api/opportunities/submit", verifyToken, guard('/create-opportunity'),
             ...req.body,
             company,
             providerID: req.user.uid,
-            status:     "pending-review",
+            status,
             createdAt:  new Date().toISOString(),
             updatedAt:  new Date().toISOString()
         };
         const docRef = await db.collection("Opportunities").add(opportunityData);
-        res.status(201).json({ message: "Opportunity submitted successfully", id: docRef.id });
+        res.status(201).json({ message: "Opportunity submitted successfully", id: docRef.id, status });
     } catch (error) {
         console.error("Submit opportunity error:", error);
         res.status(500).json({ error: "Failed to submit opportunity" });
@@ -194,9 +227,11 @@ app.get('/api/listings', verifyToken, async (req, res) => {
         return res.status(403).json({ error: "Unauthorized" });
     }
     try {
-        const snapshot = await db.collection('Opportunities')
-            .where('status', '==', 'approved')
-            .get();
+        const [snap1, snap2] = await Promise.all([
+            db.collection('Opportunities').where('status', '==', 'auto_approved').get(),
+            db.collection('Opportunities').where('status', '==', 'review_accepted').get()
+        ]);
+        const snapshot = { forEach: (fn) => { snap1.forEach(fn); snap2.forEach(fn); } };
         const opportunities = [];
         snapshot.forEach(doc => {
             const d = doc.data();
@@ -474,11 +509,11 @@ app.get("/api/applicants", verifyToken, async (req, res) => {
 // US-07 — LISTING MODERATION (Admin only)
 // =============================================================================
 
-// Pending queue
+// Pending queue (in_for_review)
 app.get("/api/admin/listings/pending", verifyToken, adminOnly, async (req, res) => {
     try {
         const snapshot = await db.collection("Opportunities")
-            .where("status", "==", "pending-review")
+            .where("status", "==", "in_for_review")
             .get();
         const listings = [];
         snapshot.forEach(doc => {
@@ -499,6 +534,34 @@ app.get("/api/admin/listings/pending", verifyToken, adminOnly, async (req, res) 
     } catch (error) {
         console.error("Pending listings error:", error);
         res.status(500).json({ error: "Failed to fetch pending listings" });
+    }
+});
+
+// Rejected listings
+app.get("/api/admin/listings/rejected", verifyToken, adminOnly, async (req, res) => {
+    try {
+        const snapshot = await db.collection("Opportunities")
+            .where("status", "==", "rejected_review")
+            .get();
+        const listings = [];
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            listings.push({
+                id:            doc.id,
+                title:         d.title      || "Untitled",
+                company:       d.company    || "Unknown",
+                type:          d.type       || "-",
+                location:      d.location   || "-",
+                providerID:    d.providerID || null,
+                createdAt:     d.createdAt  || null,
+                removalReason: d.removalReason || null,
+                status:        d.status
+            });
+        });
+        res.json(listings);
+    } catch (error) {
+        console.error("Rejected listings error:", error);
+        res.status(500).json({ error: "Failed to fetch rejected listings" });
     }
 });
 
@@ -535,7 +598,7 @@ app.patch("/api/admin/listings/:id/approve", verifyToken, adminOnly, async (req,
         const listingDoc = await listingRef.get();
         if (!listingDoc.exists) return res.status(404).json({ error: "Listing not found" });
 
-        await listingRef.update({ status: "approved", updatedAt: new Date().toISOString() });
+        await listingRef.update({ status: "review_accepted", updatedAt: new Date().toISOString() });
         res.json({ message: "Listing approved", id: req.params.id });
 
         // Notify provider (non-blocking — after response)
@@ -576,11 +639,11 @@ app.patch("/api/admin/listings/:id/remove", verifyToken, adminOnly, async (req, 
         if (!listingDoc.exists) return res.status(404).json({ error: "Listing not found" });
 
         await listingRef.update({
-            status:        "removed",
+            status:        "rejected_review",
             removalReason: reason || null,
             updatedAt:     new Date().toISOString()
         });
-        res.json({ message: "Listing removed", id: req.params.id });
+        res.json({ message: "Listing rejected", id: req.params.id });
 
         // Notify provider (non-blocking — after response)
         const d          = listingDoc.data();
@@ -767,6 +830,26 @@ app.get("/api/user-profile", verifyToken, async (req, res) => {
     } catch (error) {
         console.error("Profile fetch error:", error);
         res.status(500).json({ error: "Failed to fetch profile" });
+    }
+});
+
+app.patch("/api/profile/qualifications", verifyToken, async (req, res) => {
+    try {
+        const { qualifications } = req.body;
+        if (!Array.isArray(qualifications)) {
+            return res.status(400).json({ error: "qualifications must be an array" });
+        }
+        if (qualifications.length > 8) {
+            return res.status(400).json({ error: "A maximum of 8 qualifications is allowed" });
+        }
+        await applicantRef(req.user.uid).set({
+            qualifications,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+        res.json({ message: "Qualifications updated" });
+    } catch (error) {
+        console.error("Qualifications update error:", error);
+        res.status(500).json({ error: "Failed to update qualifications" });
     }
 });
 

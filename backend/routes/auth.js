@@ -1,5 +1,5 @@
 const express         = require('express');
-const { admin }       = require('../firebaseAdmin');
+const { admin, db }   = require('../firebaseAdmin');
 const { verifyToken } = require('../auth');
 const {
     applicantsCol, providersCol, lookupUser
@@ -72,10 +72,14 @@ router.get("/api/check-phone", async (req, res) => {
 // ─── Get User Profile ─────────────────────────────────────────────────────────
 router.get("/api/user-profile", verifyToken, async (req, res) => {
     try {
-        const uid        = req.query.uid || req.user.uid;
-        const { snap }   = await lookupUser(uid);
-        if (!snap || !snap.exists) return res.status(404).json({ error: "User not found" });
-        res.json(snap.data());
+        const uid      = req.query.uid || req.user.uid;
+        const { snap } = await lookupUser(uid);
+        if (snap && snap.exists) return res.json(snap.data());
+
+        // Fallback: profile may be in the flat users collection (older signup flow)
+        const flatDoc = await db.collection("users").doc(uid).get();
+        if (!flatDoc.exists) return res.status(404).json({ error: "User not found" });
+        res.json(flatDoc.data());
     } catch (error) {
         console.error("Profile fetch error:", error);
         res.status(500).json({ error: "Failed to fetch profile" });

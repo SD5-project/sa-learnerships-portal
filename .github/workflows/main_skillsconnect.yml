@@ -40,6 +40,12 @@ jobs:
         env:
           NODE_ENV: test
 
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+
   # ── Job 2: Build ─────────────────────────────────────────────────────────────
   build:
     runs-on: ubuntu-latest

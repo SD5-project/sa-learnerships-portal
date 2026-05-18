@@ -14,16 +14,16 @@ app.use(express.json());
 
 require('dotenv').config();
 const nodemailer  = require('nodemailer');
+
+// Use Gmail App Password — generate at myaccount.google.com/apppasswords
 const transporter = nodemailer.createTransport({
-    host:   process.env.EMAIL_HOST,
-    port:   587,
-    secure: false,
-    auth:   { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    tls:    { rejectUnauthorized: false }
+    service: "gmail",
+    auth:    { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    tls:     { rejectUnauthorized: false }
 });
 transporter.verify((error) => {
-    if (error) console.error("Email Transporter Error:", error);
-    else       console.log("Email Server ready");
+    if (error) console.error("❌ Email Transporter Error:", error.message);
+    else       console.log("✅ Email Server ready — connected as:", process.env.EMAIL_USER);
 });
 
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
@@ -87,6 +87,34 @@ app.get('/admin-dashboard', (req, res) =>
 
 app.get('/provider-home', (req, res) =>
     res.sendFile(path.join(__dirname, '..', 'frontend', 'provider-home.html')));
+
+// ─── Health Check (temporary — remove after Firebase is confirmed working) ────
+app.get('/api/health', async (req, res) => {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY || "";
+    const keyAfterReplace = privateKey.replace(/\\n/g, '\n');
+
+    let firestoreWorking = false;
+    let firestoreError   = null;
+    try {
+        await db.collection("users").limit(1).get();
+        firestoreWorking = true;
+    } catch (err) {
+        firestoreError = err.message;
+    }
+
+    res.json({
+        status:            "running",
+        hasProjectId:      !!process.env.FIREBASE_PROJECT_ID,
+        hasClientEmail:    !!process.env.FIREBASE_CLIENT_EMAIL,
+        hasPrivateKey:     !!process.env.FIREBASE_PRIVATE_KEY,
+        keyLength:         privateKey.length,
+        keyHasNewlines:    keyAfterReplace.includes('\n'),
+        keyStartsCorrect:  privateKey.startsWith("-----BEGIN"),
+        firestoreWorking,
+        firestoreError,
+        nodeEnv:           process.env.NODE_ENV || "not set"
+    });
+});
 
 app.get('/listings', (req, res) =>
     res.sendFile(path.join(__dirname, '..', 'frontend', 'listings.html')));
@@ -777,17 +805,7 @@ app.post("/api/set-role-claim", verifyToken, async (req, res) => {
         res.status(500).json({ error: "Failed to set custom claim" });
     }
 });
-// =============================================================================
-// Deployment temp
-// =============================================================================
-app.get("/api/health", (req, res) => {
-    res.json({
-        hasProjectId:   !!process.env.FIREBASE_PROJECT_ID,
-        hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
-        hasPrivateKey:  !!process.env.FIREBASE_PRIVATE_KEY,
-        keyLength:      process.env.FIREBASE_PRIVATE_KEY?.length || 0
-    });
-});
+
 // =============================================================================
 // EXPORT
 // =============================================================================

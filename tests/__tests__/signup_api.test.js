@@ -51,20 +51,19 @@ const app = require("../../backend/app");
 
 beforeEach(() => {
     jest.clearAllMocks();
-    mockVerifyIdToken.mockResolvedValue({ uid: "test-uid", role: "applicant" });
     mockSet.mockResolvedValue();
     mockSetCustomClaims.mockResolvedValue();
 });
 
 describe("TC-01: Applicant Role Assignment", () => {
-    it("should assign 'applicant' role in Firestore and as a custom claim", async () => {
+    it("assigns 'applicant' role in Firestore and as a custom claim", async () => {
         let savedData = {}, savedClaims = {};
         mockSet.mockImplementationOnce((data) => { savedData = data; return Promise.resolve(); });
         mockSetCustomClaims.mockImplementationOnce((uid, claims) => { savedClaims = claims; return Promise.resolve(); });
 
         const res = await request(app)
             .post("/signup/applicant")
-            .send({ uid: "test_uid_001", email: "applicant@test.com", firstname: "John", lastname: "Doe" });
+            .send({ uid: "uid_001", email: "applicant@test.com", firstname: "John", lastname: "Doe" });
 
         expect(res.statusCode).toBe(201);
         expect(savedData.role).toBe("applicant");
@@ -73,14 +72,14 @@ describe("TC-01: Applicant Role Assignment", () => {
 });
 
 describe("TC-02: Provider Role Assignment", () => {
-    it("should assign 'provider' role in Firestore and as a custom claim", async () => {
+    it("assigns 'provider' role in Firestore and as a custom claim", async () => {
         let savedData = {}, savedClaims = {};
         mockSet.mockImplementationOnce((data) => { savedData = data; return Promise.resolve(); });
         mockSetCustomClaims.mockImplementationOnce((uid, claims) => { savedClaims = claims; return Promise.resolve(); });
 
         const res = await request(app)
             .post("/signup/provider")
-            .send({ uid: "test_uid_002", email: "hr@company.com", organization: "SkillUp Academy" });
+            .send({ uid: "uid_002", email: "hr@company.com", organization: "SkillUp Academy" });
 
         expect(res.statusCode).toBe(201);
         expect(savedData.role).toBe("provider");
@@ -89,7 +88,7 @@ describe("TC-02: Provider Role Assignment", () => {
 });
 
 describe("TC-03: Role Spoofing Attempt", () => {
-    it("should overwrite spoofed 'admin' role and assign 'applicant' instead", async () => {
+    it("overwrites spoofed 'admin' role and assigns 'applicant' instead", async () => {
         let savedData = {}, savedClaims = {};
         mockSet.mockImplementationOnce((data) => { savedData = data; return Promise.resolve(); });
         mockSetCustomClaims.mockImplementationOnce((uid, claims) => { savedClaims = claims; return Promise.resolve(); });
@@ -105,14 +104,10 @@ describe("TC-03: Role Spoofing Attempt", () => {
     });
 });
 
-describe("TC-04: Missing UID — Firebase fails", () => {
-    it("should return 500 when Firebase claim setting fails", async () => {
+describe("TC-04: Missing UID", () => {
+    it("returns 500 when Firebase claim setting fails", async () => {
         mockSetCustomClaims.mockRejectedValueOnce(new Error("UID is required by Firebase"));
-
-        const res = await request(app)
-            .post("/signup/applicant")
-            .send({ email: "error@test.com" });
-
+        const res = await request(app).post("/signup/applicant").send({ email: "error@test.com" });
         expect(res.statusCode).toBe(500);
         expect(res.body.error).toBe("Failed to create applicant");
     });

@@ -1,5 +1,25 @@
 const request = require("supertest");
 
+jest.mock("../../backend/helpers", () => ({
+    sendMail:  jest.fn().mockResolvedValue(),
+    guard:     (route) => (req, res, next) => {
+        if (req.user && ["provider","admin"].includes(req.user.role)) return next();
+        res.status(403).json({ error: "Forbidden" });
+    },
+    adminOnly: (req, res, next) => {
+        if (req.user && req.user.role === "admin") return next();
+        res.status(403).json({ error: "Forbidden: Admins only." });
+    }
+}));
+
+jest.mock("nodemailer", () => ({
+    createTransport: jest.fn().mockReturnValue({
+        verify:   jest.fn((cb) => cb(null, true)),
+        sendMail: jest.fn().mockResolvedValue({ messageId: "mock" })
+    })
+}));
+
+
 // ─── Hoisted mock variables ───────────────────────────────────────────────────
 let mockVerifyIdToken;
 let mockSetCustomClaims;

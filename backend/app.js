@@ -37,7 +37,7 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 const { verifyToken } = require("./auth");
 const { db, admin }   = require("./firebaseAdmin");
 const { sendMail, guard, adminOnly } = require('./helpers');
-const { applicantRef, providerRef, applicantsCol, providersCol, lookupUser } = require('./userPaths');
+const { applicantRef, providerRef, adminRef, applicantsCol, providersCol, adminsCol, lookupUser } = require('./userPaths');
 
 // =============================================================================
 // STATIC PAGE ROUTES
@@ -137,13 +137,12 @@ app.post("/signup/applicant", async (req, res) => {
     if (!email) return res.status(400).json({ error: "Email is required" });
     try {
         await admin.auth().setCustomUserClaims(uid, { role: "applicant" });
-        // Write to both flat users collection (for admin queries) and subcollection
         const userData = {
             firstname, lastname, email, username, institution, city, phonenumber, cv,
             role: "applicant", status: "active", createdAt: new Date().toISOString()
         };
-        await db.collection("users").doc(uid).set(userData);
         await applicantRef(uid).set(userData);
+        try { await db.collection("users").doc(uid).set(userData); } catch (_) {}
         res.status(201).json({ message: "Applicant created successfully" });
     } catch (error) {
         console.error("Applicant signup error:", error.message);
@@ -156,13 +155,12 @@ app.post("/signup/provider", async (req, res) => {
     if (!email) return res.status(400).json({ error: "Email is required" });
     try {
         await admin.auth().setCustomUserClaims(uid, { role: "provider" });
-        // Write to both flat users collection and subcollection
         const userData = {
             organization, email, city, phonenumber, username,
             role: "provider", status: "active", createdAt: new Date().toISOString()
         };
-        await db.collection("users").doc(uid).set(userData);
         await providerRef(uid).set(userData);
+        try { await db.collection("users").doc(uid).set(userData); } catch (_) {}
         res.status(201).json({ message: "Provider created successfully" });
     } catch (error) {
         console.error("Provider signup error:", error.message);
@@ -780,6 +778,80 @@ app.post("/api/set-role-claim", verifyToken, async (req, res) => {
     } catch (error) {
         console.error("Set role claim error:", error);
         res.status(500).json({ error: "Failed to set custom claim" });
+    }
+});
+
+// =============================================================================
+// DUPLICATE CHECK ENDPOINTS (used during signup)
+// =============================================================================
+
+// Check if email already exists in either subcollection
+app.get("/api/check-email", async (req, res) => {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+    try {
+        const [aSnap, pSnap] = await Promise.all([
+            applicantsCol().where("email", "==", email).limit(1).get(),
+            providersCol().where("email",  "==", email).limit(1).get()
+        ]);
+        res.json({ exists: !aSnap.empty || !pSnap.empty });
+    } catch (error) {
+        console.error("Check email error:", error);
+        res.status(500).json({ error: "Failed to check email" });
+    }
+});
+
+// Check if SA ID number already exists
+app.get("/api/check-idnumber", async (req, res) => {
+    const { idNumber } = req.query;
+    if (!idNumber) return res.status(400).json({ error: "ID number is required" });
+    try {
+        const snap = await applicantsCol().where("idNumber", "==", idNumber).limit(1).get();
+        res.json({ exists: !snap.empty });
+    } catch (error) {
+        console.error("Check ID number error:", error);
+        res.status(500).json({ error: "Failed to check ID number" });
+    }
+});
+
+// Check if phone number already exists
+app.get("/api/check-phone", async (req, res) => {
+    const { phone } = req.query;
+    if (!phone) return res.status(400).json({ error: "Phone number is required" });
+    try {
+        const snap = await applicantsCol().where("phonenumber", "==", phone).limit(1).get();
+        res.json({ exists: !snap.empty });
+    } catch (error) {
+        console.error("Check phone error:", error);
+        res.status(500).json({ error: "Failed to check phone number" });
+    }
+});
+
+// =============================================================================
+// PROFILE — QUALIFICATIONS
+// =============================================================================
+
+app.patch("/api/profile/qualifications", verifyToken, async (req, res) => {
+    try {
+        const { qualifications } = req.body;
+
+        if (!Array.isArray(qualifications)) {
+            return res.status(400).json({ error: "qualifications must be an array" });
+        }
+
+        if (qualifications.length > 8) {
+            return res.status(400).json({ error: "A maximum of 8 qualifications is allowed" });
+        }
+
+        await applicantRef(req.user.uid).set(
+            { qualifications, updatedAt: new Date().toISOString() },
+            { merge: true }
+        );
+
+        res.json({ message: "Qualifications updated", count: qualifications.length });
+    } catch (error) {
+        console.error("Update qualifications error:", error);
+        res.status(500).json({ error: "Failed to update qualifications" });
     }
 });
 

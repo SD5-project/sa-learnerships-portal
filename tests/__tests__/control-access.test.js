@@ -1,59 +1,41 @@
+// Mocha test — uses require directly, no mocks needed
 const { authorize } = require('../../backend/access-logic');
 
 describe('Access Control Tests', () => {
-    
-    test('authorize_applicant_accessToAdminDenied', () => {
-        const user = { role: 'applicant' };
-        const route = '/admin-dashboard';
 
-        const result = authorize(user, route);
-
-        // 2. Change assert.strictEqual to expect().toBe()
-        expect(result).toBe(false); 
+    it('authorize_applicant_accessToAdminDenied', () => {
+        expect(authorize({ role: 'applicant' }, '/admin-dashboard')).toBe(false);
     });
 
-    test('authorize_applicant_accessToProviderDenied', () => {
-        const user = { role: 'applicant' };
-        const route = '/provider-home';
-        expect(authorize(user, route)).toBe(false); 
+    it('authorize_applicant_accessToProviderDenied', () => {
+        expect(authorize({ role: 'applicant' }, '/provider-home')).toBe(false);
     });
 
-    test('authorize_provider_accessToApplicantDenied', () => {
-        const user = { role: 'provider' };
-        const route = '/applicant-home';
-        expect(authorize(user, route)).toBe(false); 
-    });
-    
-    test('authorize_provider_accessToAdminDenied', () => {
-        const user = { role: 'provider' };
-        const route = '/admin-dashboard';
-        expect(authorize(user, route)).toBe(false); 
+    it('authorize_provider_accessToApplicantDenied', () => {
+        expect(authorize({ role: 'provider' }, '/applicant-home')).toBe(false);
     });
 
-    test('authorize_admin_accessToProviderPageDenied', () => {
-        const user = { role: 'admin' };
-        const route = '/provider-home';
-        expect(authorize(user, route)).toBe(false); 
+    it('authorize_provider_accessToAdminDenied', () => {
+        expect(authorize({ role: 'provider' }, '/admin-dashboard')).toBe(false);
     });
 
-    test('authorize_admin_accessToApplicantPageDenied', () => {
-        const user = { role: 'admin' };
-        const route = '/applicant-home';
-        expect(authorize(user, route)).toBe(false); 
-    });
-    
-    test('authorize_admin_accessToAdminDashboardGranted', () => {
-        const user = { role: 'admin' };
-        expect(authorize(user, '/admin-dashboard')).toBe(true);
+    it('authorize_admin_accessToProviderPageDenied', () => {
+        expect(authorize({ role: 'admin' }, '/provider-home')).toBe(false);
     });
 
-    test('authorize_provider_accessToProviderPageGranted', () => {
-        const user = { role: 'provider' };
-        expect(authorize(user, '/provider-home')).toBe(true);
+    it('authorize_admin_accessToApplicantPageDenied', () => {
+        expect(authorize({ role: 'admin' }, '/applicant-home')).toBe(false);
     });
 
-    test('authorize_applicant_accessToApplicantPageGranted', () => {
-        const user = { role: 'applicant' };
-        expect(authorize(user, '/applicant-home')).toBe(true);
+    it('authorize_admin_accessToAdminDashboardGranted', () => {
+        expect(authorize({ role: 'admin' }, '/admin-dashboard')).toBe(true);
+    });
+
+    it('authorize_provider_accessToProviderPageGranted', () => {
+        expect(authorize({ role: 'provider' }, '/provider-home')).toBe(true);
+    });
+
+    it('authorize_applicant_accessToApplicantPageGranted', () => {
+        expect(authorize({ role: 'applicant' }, '/applicant-home')).toBe(true);
     });
 });

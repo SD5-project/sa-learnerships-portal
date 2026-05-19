@@ -1,22 +1,27 @@
-/**
- * notifications.test.js
- * Tests for application status updates, which trigger in-app notifications and emails.
- */
 const request = require("supertest");
 
-let mockVerifyIdToken;
-let mockAppDocGet;
-let mockAppDocUpdate;
-let mockListingDocGet;
-let mockApplicantDocGet;
-let mockNotificationsAdd;
+let mockVerifyIdToken, mockAppDocGet, mockAppDocUpdate, mockListingDocGet, mockNotificationsAdd;
+
+jest.mock("../../backend/helpers", () => ({
+    sendMail:  jest.fn().mockResolvedValue(),
+    guard:     (route) => (req, res, next) => next(),
+    adminOnly: (req, res, next) => next()
+}));
+
+jest.mock("../../backend/userPaths", () => ({
+    applicantRef:  jest.fn(() => ({ set: jest.fn().mockResolvedValue(), get: jest.fn().mockResolvedValue({ exists: false }) })),
+    providerRef:   jest.fn(() => ({ set: jest.fn().mockResolvedValue(), get: jest.fn().mockResolvedValue({ exists: false }) })),
+    applicantsCol: jest.fn(),
+    providersCol:  jest.fn(),
+    lookupUser:    jest.fn().mockResolvedValue({ snap: null, ref: null, role: null })
+}));
 
 jest.mock("../../backend/firebaseAdmin", () => {
-    mockVerifyIdToken     = jest.fn();
-    mockAppDocGet         = jest.fn();
-    mockAppDocUpdate      = jest.fn().mockResolvedValue();
-    mockListingDocGet     = jest.fn();
-    mockNotificationsAdd  = jest.fn().mockResolvedValue({ id: "notif-id" });
+    mockVerifyIdToken    = jest.fn();
+    mockAppDocGet        = jest.fn();
+    mockAppDocUpdate     = jest.fn().mockResolvedValue();
+    mockListingDocGet    = jest.fn();
+    mockNotificationsAdd = jest.fn().mockResolvedValue({ id: "notif-id" });
 
     return {
         admin: {
@@ -33,20 +38,11 @@ jest.mock("../../backend/firebaseAdmin", () => {
                     },
                     update: (data) => mockAppDocUpdate(data)
                 }),
-                add: (data) => mockNotificationsAdd(data)
+                add:   (data) => mockNotificationsAdd(data),
+                where: () => ({ get: jest.fn().mockResolvedValue({ forEach: () => {} }), where: () => ({ get: jest.fn().mockResolvedValue({ forEach: () => {} }) }) }),
+                get:   jest.fn().mockResolvedValue({ forEach: () => {} })
             })
         }
-    };
-});
-
-jest.mock("../../backend/userPaths", () => {
-    mockApplicantDocGet = jest.fn().mockResolvedValue({ exists: false });
-    return {
-        applicantRef:  jest.fn(() => ({ get: mockApplicantDocGet })),
-        providerRef:   jest.fn(() => ({ get: jest.fn().mockResolvedValue({ exists: false }) })),
-        applicantsCol: jest.fn(),
-        providersCol:  jest.fn(),
-        lookupUser:    jest.fn().mockResolvedValue({ snap: null, ref: null, role: null })
     };
 });
 
@@ -64,49 +60,39 @@ beforeEach(() => {
     mockVerifyIdToken.mockResolvedValue({ uid: "provider-uid", role: "provider" });
     mockAppDocUpdate.mockResolvedValue();
     mockNotificationsAdd.mockResolvedValue({ id: "notif-id" });
-    mockApplicantDocGet.mockResolvedValue({ exists: false });
 });
 
 describe("PATCH /api/applicants/:applicationID/status", () => {
 
-    test("should return 400 for invalid status", async () => {
+    test("returns 400 for invalid status", async () => {
         const res = await request(app)
             .patch("/api/applicants/app789/status")
             .set("Authorization", "Bearer mock-token")
             .send({ status: "invalid-status-name" });
-
         expect(res.status).toBe(400);
         expect(res.body.error).toBe("Invalid status");
     });
 
-    test("should return 401 when unauthenticated", async () => {
-        const res = await request(app)
-            .patch("/api/applicants/app789/status")
-            .send({ status: "shortlisted" });
-
+    test("returns 401 when unauthenticated", async () => {
+        const res = await request(app).patch("/api/applicants/app789/status").send({ status: "shortlisted" });
         expect(res.status).toBe(401);
     });
 
-    test("should return 403 when applicant tries to update status", async () => {
+    test("returns 403 when applicant tries to update status", async () => {
         mockVerifyIdToken.mockResolvedValue({ uid: "applicant-uid", role: "applicant" });
         const res = await request(app)
             .patch("/api/applicants/app789/status")
             .set("Authorization", "Bearer mock-token")
             .send({ status: "shortlisted" });
-
         expect(res.status).toBe(403);
     });
 
-    test("should update status successfully", async () => {
+    test("updates status successfully for provider on own listing", async () => {
         mockVerifyIdToken.mockResolvedValue({ uid: "provider-uid", role: "provider" });
-
-        // Application exists and is currently shortlisted (so accepted is valid)
         mockAppDocGet.mockResolvedValue({
             exists: true,
             data: () => ({ listingID: "list123", applicantID: "user456", status: "shortlisted" })
         });
-
-        // Listing exists and belongs to this provider
         mockListingDocGet.mockResolvedValue({
             exists: true,
             data: () => ({ title: "Dev Role", providerID: "provider-uid" })
@@ -121,19 +107,17 @@ describe("PATCH /api/applicants/:applicationID/status", () => {
         expect(res.body.message).toContain("Status updated");
     });
 
-    test("should return 404 when application does not exist", async () => {
+    test("returns 404 when application does not exist", async () => {
         mockAppDocGet.mockResolvedValue({ exists: false });
-
         const res = await request(app)
             .patch("/api/applicants/ghost-app/status")
             .set("Authorization", "Bearer mock-token")
             .send({ status: "shortlisted" });
-
         expect(res.status).toBe(404);
         expect(res.body.error).toBe("Application not found");
     });
 
-    test("should return 400 when accepting without shortlist", async () => {
+    test("returns 400 when accepting without prior shortlist", async () => {
         mockAppDocGet.mockResolvedValue({
             exists: true,
             data: () => ({ listingID: "list123", applicantID: "user456", status: "pending" })
@@ -142,12 +126,10 @@ describe("PATCH /api/applicants/:applicationID/status", () => {
             exists: true,
             data: () => ({ title: "Dev Role", providerID: "provider-uid" })
         });
-
         const res = await request(app)
             .patch("/api/applicants/app789/status")
             .set("Authorization", "Bearer mock-token")
             .send({ status: "accepted" });
-
         expect(res.status).toBe(400);
         expect(res.body.error).toBe("Applicant must be shortlisted before accepting");
     });

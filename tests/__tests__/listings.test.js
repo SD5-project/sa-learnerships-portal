@@ -28,6 +28,7 @@ jest.mock("../../backend/firebaseAdmin", () => {
                 get:   mockGet,
                 add:   mockAdd,
                 where: () => ({ get: mockGet }),
+                orderBy: () => ({get: mockGet }),
                 doc: () => ({
                     get:    mockDocGet,
                     set:    mockSet,
@@ -218,6 +219,27 @@ describe("US-05: Provider views applicants", () => {
 // NQF Levels endpoint
 // =============================================================================
 describe("NQF Levels", () => {
+
+    beforeEach(() => {
+    const fakeDocs = [
+        { data: () => ({ level: 1, name: "Grade 9" }) },
+        { data: () => ({ level: 2, name: "Grade 10" }) },
+        { data: () => ({ level: 3, name: "Grade 11" }) },
+        { data: () => ({ level: 4, name: "Matric" }) },
+        { data: () => ({ level: 5, name: "Higher Certificate" }) },
+        { data: () => ({ level: 6, name: "Diploma" }) },
+        { data: () => ({ level: 7, name: "Bachelor Degree" }) },
+        { data: () => ({ level: 8, name: "Honours" }) },
+        { data: () => ({ level: 9, name: "Masters" }) },
+        { data: () => ({ level: 10, name: "Doctorate" }) }
+    ];
+
+    mockGet.mockResolvedValue({
+        forEach: (callback) => {
+            fakeDocs.forEach(callback);
+        }
+    });
+});
 
     test("✅ Returns 10 NQF levels", async () => {
         const res = await request(app).get("/nqf-levels");

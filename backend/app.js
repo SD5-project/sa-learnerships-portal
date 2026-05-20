@@ -168,23 +168,6 @@ app.post("/signup/applicant", async (req, res) => {
     }
 });
 
-app.post("/signup/provider", async (req, res) => {
-    const { uid, organization, email, city, phonenumber, username } = req.body;
-    if (!email) return res.status(400).json({ error: "Email is required" });
-    try {
-        await admin.auth().setCustomUserClaims(uid, { role: "provider" });
-        const userData = {
-            organization, email, city, phonenumber, username,
-            role: "provider", status: "active", createdAt: new Date().toISOString()
-        };
-        await providerRef(uid).set(userData);
-        try { await db.collection("users").doc(uid).set(userData); } catch (_) {}
-        res.status(201).json({ message: "Provider created successfully" });
-    } catch (error) {
-        console.error("Provider signup error:", error.message);
-        res.status(500).json({ error: "Failed to create provider" });
-    }
-});
 
 // =============================================================================
 // OPPORTUNITIES

@@ -131,22 +131,28 @@ export class ApplicantSignup extends SignupBuilder {
         let user            = auth.currentUser;
         let createdFirebase = false;
 
-        // Email/password path — create the Firebase account now, atomically with Firestore.
+        // Email/password path — account is created on the password page (after email verification).
+        // If auth.currentUser is already set, reuse it; otherwise create it now as a fallback.
         if (this._data.authMethod === 'email') {
-            try {
-                const credential = await createUserWithEmailAndPassword(
-                    auth, this._data.email, this._data._password
-                );
-                user            = credential.user;
-                createdFirebase = true;
-            } catch (authErr) {
-                const messages = {
-                    'auth/email-already-in-use': 'An account with this email already exists. Please log in instead.',
-                    'auth/weak-password':        'Password is too weak. Please go back and choose a stronger one.',
-                    'auth/invalid-email':        'Invalid email address.',
-                    'auth/network-request-failed': 'Network error. Please check your connection and try again.'
-                };
-                throw new Error(messages[authErr.code] || authErr.message);
+            if (auth.currentUser) {
+                user            = auth.currentUser;
+                createdFirebase = true; // mark for rollback if Firestore write fails
+            } else {
+                try {
+                    const credential = await createUserWithEmailAndPassword(
+                        auth, this._data.email, this._data._password
+                    );
+                    user            = credential.user;
+                    createdFirebase = true;
+                } catch (authErr) {
+                    const messages = {
+                        'auth/email-already-in-use': 'An account with this email already exists. Please log in instead.',
+                        'auth/weak-password':        'Password is too weak. Please go back and choose a stronger one.',
+                        'auth/invalid-email':        'Invalid email address.',
+                        'auth/network-request-failed': 'Network error. Please check your connection and try again.'
+                    };
+                    throw new Error(messages[authErr.code] || authErr.message);
+                }
             }
         }
 
@@ -192,8 +198,8 @@ export class ProviderSignup extends SignupBuilder {
         }
     }
 
-    setDetails({ organization, phonenumber }) {
-        Object.assign(this._data, { organization, phonenumber });
+    setDetails({ organization, city, phonenumber }) {
+        Object.assign(this._data, { organization, city, phonenumber });
         this._persist();
         return this;
     }
@@ -203,20 +209,25 @@ export class ProviderSignup extends SignupBuilder {
         let createdFirebase = false;
 
         if (this._data.authMethod === 'email') {
-            try {
-                const credential = await createUserWithEmailAndPassword(
-                    auth, this._data.email, this._data._password
-                );
-                user            = credential.user;
+            if (auth.currentUser) {
+                user            = auth.currentUser;
                 createdFirebase = true;
-            } catch (authErr) {
-                const messages = {
-                    'auth/email-already-in-use': 'An account with this email already exists. Please log in instead.',
-                    'auth/weak-password':        'Password is too weak. Please go back and choose a stronger one.',
-                    'auth/invalid-email':        'Invalid email address.',
-                    'auth/network-request-failed': 'Network error. Please check your connection and try again.'
-                };
-                throw new Error(messages[authErr.code] || authErr.message);
+            } else {
+                try {
+                    const credential = await createUserWithEmailAndPassword(
+                        auth, this._data.email, this._data._password
+                    );
+                    user            = credential.user;
+                    createdFirebase = true;
+                } catch (authErr) {
+                    const messages = {
+                        'auth/email-already-in-use': 'An account with this email already exists. Please log in instead.',
+                        'auth/weak-password':        'Password is too weak. Please go back and choose a stronger one.',
+                        'auth/invalid-email':        'Invalid email address.',
+                        'auth/network-request-failed': 'Network error. Please check your connection and try again.'
+                    };
+                    throw new Error(messages[authErr.code] || authErr.message);
+                }
             }
         }
 
@@ -228,6 +239,7 @@ export class ProviderSignup extends SignupBuilder {
                 body: JSON.stringify({
                     uid:          user.uid,
                     organization: this._data.organization,
+                    city:         this._data.city,
                     email:        this._data.email,
                     phonenumber:  this._data.phonenumber
                 })

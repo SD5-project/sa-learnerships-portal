@@ -70,6 +70,15 @@ app.get('/provider-home', (req, res) =>
 app.get('/listings', (req, res) =>
     res.sendFile(path.join(__dirname, '..', 'frontend', 'listings.html')));
 
+app.get('/email-verified', (req, res) =>
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'email-verified.html')));
+
+app.get('/applicant-qualifications', (req, res) =>
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'applicant-qualifications.html')));
+
+app.get('/applicant-cv', (req, res) =>
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'edit-cv.html')));
+
 app.get('/', (req, res) =>
     res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html')));
 
@@ -794,16 +803,32 @@ app.post("/api/set-role-claim", verifyToken, async (req, res) => {
 // DUPLICATE CHECK ENDPOINTS (used during signup)
 // =============================================================================
 
-// Check if email already exists in either subcollection
+// Check if email already exists in either subcollection.
+// Also detects and cleans up ghost Firebase Auth accounts left behind by
+// abandoned signups (account created on the password page but signup never completed).
 app.get("/api/check-email", async (req, res) => {
-    const { email } = req.query;
+    const email = (req.query.email || "").trim().toLowerCase();
     if (!email) return res.status(400).json({ error: "Email is required" });
     try {
+        // 1. Firestore check — a record here means signup was fully completed.
         const [aSnap, pSnap] = await Promise.all([
             applicantsCol().where("email", "==", email).limit(1).get(),
             providersCol().where("email",  "==", email).limit(1).get()
         ]);
-        res.json({ exists: !aSnap.empty || !pSnap.empty });
+        if (!aSnap.empty || !pSnap.empty) return res.json({ exists: true });
+
+        // 2. Firebase Auth check — if an account exists here but NOT in Firestore,
+        //    it is a ghost from an abandoned signup. Delete it so the user can retry.
+        try {
+            const fbUser = await admin.auth().getUserByEmail(email);
+            await admin.auth().deleteUser(fbUser.uid);
+            console.log(`[check-email] Deleted ghost account for ${email}`);
+        } catch (authErr) {
+            if (authErr.code !== 'auth/user-not-found') throw authErr;
+            // Not found in Firebase Auth either — clean slate.
+        }
+
+        res.json({ exists: false });
     } catch (error) {
         console.error("Check email error:", error);
         res.status(500).json({ error: "Failed to check email" });

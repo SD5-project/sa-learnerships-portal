@@ -131,6 +131,65 @@
     </div>
    
     
-    <script type="module" src="script.js"></script>
+    <script type="module">
+        import { auth } from "./firebase.js";
+
+        const token = localStorage.getItem("token");
+        if (!token) { window.location.href = "/"; }
+
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) { window.location.href = "/"; return; }
+            await loadApplications(user);
+        });
+
+        async function loadApplications(user) {
+            const tbody = document.getElementById("applications-list");
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#ccc;padding:30px;">Loading…</td></tr>`;
+
+            try {
+                const freshToken = await user.getIdToken();
+
+                const appsRes = await fetch(`/api/applications?applicantID=${user.uid}`, {
+                    headers: { Authorization: `Bearer ${freshToken}` }
+                });
+                if (!appsRes.ok) throw new Error("Failed to fetch applications");
+                const applications = await appsRes.json();
+
+                if (applications.length === 0) {
+                    tbody.innerHTML = `
+                        <tr class="empty-row">
+                            <td colspan="4">You have not applied to any positions yet.</td>
+                        </tr>`;
+                    return;
+                }
+
+                const enriched = await Promise.all(applications.map(async (app) => {
+                    try {
+                        const oppRes = await fetch(`/api/opportunities/${app.listingID}`, {
+                            headers: { Authorization: `Bearer ${freshToken}` }
+                        });
+                        if (!oppRes.ok) return { ...app, title: "Listing no longer available", company: "—" };
+                        const opp = await oppRes.json();
+                        return { ...opp, ...app };
+                    } catch {
+                        return { ...app, title: "Listing no longer available", company: "—" };
+                    }
+                }));
+
+                tbody.innerHTML = enriched.map(app => `
+                    <tr>
+                        <td>${app.title   || "—"}</td>
+                        <td>${app.company || "—"}</td>
+                        <td>${app.createdAt ? new Date(app.createdAt).toLocaleDateString("en-ZA") : "—"}</td>
+                        <td><span class="status ${app.status || ""}">${app.status || "unknown"}</span></td>
+                    </tr>
+                `).join("");
+
+            } catch (err) {
+                console.error("Failed to load applications:", err);
+                tbody.innerHTML = `<tr class="empty-row"><td colspan="4">Failed to load applications. Please try again.</td></tr>`;
+            }
+        }
+    </script>
 </body>
 </html>

@@ -189,8 +189,10 @@
                 }
 
                 try {
-                    const response = await fetch(`/applicant/hasApplied?applicantID=${user.uid}&listingID=${listingID}`);
-                    const data = await response.json();
+                  const token = await user.getIdToken(true); // user is available here
+                  const response = await fetch(`/applicant/hasApplied?applicantID=${user.uid}&listingID=${listingID}`, {
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });;
 
                     if (data.hasApplied) {
                         applyBtn.remove();
@@ -202,29 +204,34 @@
                 }
             });
 
-            applyBtn.addEventListener("click", async () => {
-                if (!auth.currentUser) {
-                    alert("You must be logged in to apply.");
-                    return;
-                }
-                try {
-                    const uid = auth.currentUser.uid;
-                    const response = await fetch("/applicant/apply", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ applicantID: uid, listingID, status: "pending" })
-                    });
-                    const data = await response.json();
-                    if (response.ok) {
-                        alert("Application successful!");
-                        applyBtn.remove();
-                    } else {
-                        alert("Application failed: " + data.error);
-                    }
-                } catch (error) {
-                    alert("Could not reach server.");
-                }
-            });
+           applyBtn.addEventListener("click", async () => {
+    if (!auth.currentUser) {
+        alert("You must be logged in to apply.");
+        return;
+    }
+    try {
+        const uid = auth.currentUser.uid;
+        const token = await auth.currentUser.getIdToken(true); // get fresh token
+
+        const response = await fetch("/applicant/apply", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}` // add token
+            },
+            body: JSON.stringify({ applicantID: uid, listingID, status: "pending" })
+        });
+        const data = await response.json();
+        if (response.ok) {
+            alert("Application successful!");
+            applyBtn.remove();
+        } else {
+            alert("Application failed: " + data.error);
+        }
+    } catch (error) {
+        alert("Could not reach server.");
+    }
+});
         }
     </script>
 

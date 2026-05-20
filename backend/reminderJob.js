@@ -1,7 +1,24 @@
+/**
+ * reminderJob.js
+ * Scheduled cron job that sends closing-date reminders to eligible applicants.
+ *
+ * Runs every day at 08:00 AM. For each approved listing closing within 3 days,
+ * it finds applicants whose NQF level meets the minimum requirement, checks that
+ * they haven't already applied or received a reminder, then sends an in-app
+ * notification and an email. Failures per applicant are caught individually so
+ * one bad record does not stop the entire job.
+ *
+ * Exported functions are unit-tested in backend/__tests__/reminderJob.test.js.
+ */
 
 const { db, admin } = require("./firebaseAdmin");
 
-// ── GET LISTINGS CLOSING WITHIN 3 DAYS ──────────
+/**
+ * Fetches all approved opportunity listings whose closing date falls
+ * within the next 3 days (inclusive of today).
+ *
+ * @returns {Promise<Array<{ id: string, [key: string]: any }>>}
+ */
 async function getClosingListings() {
     const now     = new Date();
     const in3Days = new Date();
@@ -26,7 +43,7 @@ async function getClosingListings() {
 async function getEligibleApplicants(minimumNQFLevel) {
     const snapshot = await db.collection("users")
         .where("role",            "==", "applicant")
-        .where("highestNQFLevel", ">=", minimumNQFLevel)
+        .where("nqfLevel", ">=", minimumNQFLevel)
         .get();
 
     const applicants = [];
@@ -39,8 +56,8 @@ async function getEligibleApplicants(minimumNQFLevel) {
  // ── CHECK IF APPLICANT ALREADY APPLIED ──────────
 async function hasAlreadyApplied(applicantId, listingId) {
     const snapshot = await db.collection("applications")
-        .where("applicantId",  "==", applicantId)
-        .where("opportunityId","==", listingId)
+        .where("applicantID", "==", applicantId)
+        .where("listingID","==", listingId)
         .get();
 
     return !snapshot.empty; // true = already applied
@@ -48,7 +65,7 @@ async function hasAlreadyApplied(applicantId, listingId) {
  // ── CHECK IF REMINDER ALREADY SENT ──────────────
 async function reminderAlreadySent(applicantId, listingId) {
     const snapshot = await db.collection("reminderLogs")
-        .where("applicantId", "==", applicantId)
+        .where("applicantID", "==", applicantId)
         .where("listingId",   "==", listingId)
         .get();
 
@@ -145,7 +162,7 @@ async function runReminderJob() {
 
                 // Step 7: Log that reminder was sent
                 await db.collection("reminderLogs").add({
-                    applicantId: applicant.id,
+                    applicantID: applicant.id,
                     listingId:   listing.id,
                     sentAt:      admin.firestore.FieldValue.serverTimestamp()
                 });

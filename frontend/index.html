@@ -1,19 +1,21 @@
-
 <!DOCTYPE html>
 <html>
     <head>
         <title>Login Page</title>
         <link rel="stylesheet" href="style.css"/>
     </head>
-    <body> 
+    <body>
         <section class="wrapper">
-            
-        <form>
-            <img src="SkillsConnect Logo 2.PNG" /> 
+
+        <form id="login-form">
+            <img src="SkillsConnect Logo 2.PNG" />
             <h2 class="login-heading" >Login</h2>
-            <h4>New? <a href="signup.html">Sign up</a></h4>
-            <label>Username or Email Adress:</label>
-            <input type="text" name="username"></input>
+            <h4>New? <a href="signup-role-select.html">Sign up</a></h4>
+
+            <p id="login-error-msg" style="color:#f87171;font-size:13px;margin:4px 0;display:none;"></p>
+
+            <label>Email Address:</label>
+            <input type="email" name="email" autocomplete="email">
             <label>Password:</label>
             <input type="password" name="password"></input>
             <a href="forgotPassword.html">Forgot your password?</a>
@@ -23,29 +25,165 @@
             </section>
 
             <section class="form-bottom">
-                <section class="form-socials">
-                    <button type="button" id="google-login-btn" class="form-btn form-btn--social">
-                        <img src="google.svg" class="btn-icon" alt="Google login">
-                    </button>
-                    <button class="">
-                        <img src="apple.svg" class="btn-icon" alt="social icon">
-                    </button>
-                    <button class="form-btn form-btn--social">
-                        <img src="facebook.svg" class="btn-icon" alt="social icon">
+                <section class="form-socials" style="display:flex; justify-content:center;">
+                    <button type="button" id="google-login-btn" class="form-btn form-btn--social"
+                        style="display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:10px 16px; font-size:14px; font-weight:500;">
+                        <img src="google.svg" class="btn-icon" alt="Google" style="width:20px; height:20px;">
+                        Continue with Google
                     </button>
             </section>
            <section>
             <button type="submit" class="login">Login</button>
         </form>
         </section>
+        <!-- Password verification modal for Google sign-in -->
+        <style>
+            #google-password-modal {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.65);
+                z-index: 1000;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(3px);
+            }
+            #gpm-card {
+                background: #545454;
+                border: 2px solid white;
+                border-radius: 12px;
+                padding: 36px 30px 28px;
+                width: 100%;
+                max-width: 340px;
+                box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+            }
+            #gpm-card h3 {
+                margin: 0 0 6px;
+                font-size: 20px;
+                color: white;
+                border-left: 5px solid white;
+                padding-left: 10px;
+                font-family: serif;
+            }
+            #gpm-card p.gpm-sub {
+                margin: 0 0 20px;
+                font-size: 13px;
+                color: #ccc;
+                font-family: serif;
+            }
+            #gpm-error {
+                display: none;
+                background: rgba(239,68,68,0.15);
+                border: 1px solid #f87171;
+                border-radius: 6px;
+                padding: 8px 12px;
+                color: #fca5a5;
+                font-size: 13px;
+                margin-bottom: 14px;
+                font-family: serif;
+            }
+            #gpm-card label {
+                font-family: serif;
+                font-weight: bold;
+                color: white;
+                font-size: 13px;
+                text-transform: capitalize;
+                margin-bottom: 6px;
+            }
+            #gpm-password {
+                width: 100%;
+                box-sizing: border-box;
+                padding: 10px 12px;
+                border: 2px solid white;
+                border-radius: 8px;
+                background: #666;
+                color: white;
+                font-size: 14px;
+                margin-bottom: 22px;
+                outline: none;
+                transition: border-color 0.2s;
+            }
+            #gpm-password::placeholder { color: #aaa; }
+            #gpm-password:focus { border-color: #ccc; background: #5a5a5a; }
+            #gpm-actions {
+                display: flex;
+                gap: 10px;
+            }
+            #gpm-cancel {
+                flex: 1;
+                padding: 9px;
+                border: 2px solid white;
+                border-radius: 10px;
+                background: transparent;
+                color: white;
+                font-size: 14px;
+                text-transform: uppercase;
+                cursor: pointer;
+                margin-top: 0;
+                transition: background 0.2s, color 0.2s;
+            }
+            #gpm-cancel:hover { background: white; color: #545454; }
+            #gpm-submit {
+                flex: 1;
+                padding: 9px;
+                border: 2px solid white;
+                border-radius: 10px;
+                background: white;
+                color: #545454;
+                font-size: 14px;
+                font-weight: bold;
+                text-transform: uppercase;
+                cursor: pointer;
+                margin-top: 0;
+                transition: background 0.2s, color 0.2s;
+            }
+            #gpm-submit:hover { background: #ddd; }
+        </style>
+        <div id="google-password-modal">
+            <div id="gpm-card">
+                <h3>Confirm Password</h3>
+                <p class="gpm-sub">Enter the password you set when you signed up.</p>
+                <div id="gpm-error"></div>
+                <label for="gpm-password">Password</label>
+                <input id="gpm-password" type="password" placeholder="Enter your password">
+                <div id="gpm-actions">
+                    <button id="gpm-cancel" type="button">Cancel</button>
+                    <button id="gpm-submit" type="button">Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            #global-error {
+                display: none;
+                position: fixed;
+                bottom: 28px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #3a3a3a;
+                border: 2px solid #f87171;
+                border-radius: 10px;
+                padding: 12px 22px;
+                color: #fca5a5;
+                font-family: serif;
+                font-size: 14px;
+                box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+                z-index: 2000;
+                white-space: nowrap;
+                animation: slideUp 0.25s ease;
+            }
+            #global-error.visible { display: block; }
+            @keyframes slideUp {
+                from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+                to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+        </style>
+        <div id="global-error"></div>
+
         <script type="module" src="login.js"></script>
         <script type="module" src="/login-email.js"></script>
         </body>
-       
-        
-
 </html>
-
-
-
-

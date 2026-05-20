@@ -1,0 +1,751 @@
+/* ─── Multi-step signup — extends style.css, same dark theme ─────────────────── */
+
+/* Page wrapper */
+.signup-page {
+    min-height: 100vh;
+    background-color: #666666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    box-sizing: border-box;
+}
+
+/* Card — matches existing <form> style but wider */
+.signup-card {
+    background-color: #545454;
+    border: 2px solid white;
+    padding: 36px 40px;
+    width: 100%;
+    max-width: 560px;
+    box-sizing: border-box;
+    color: white;
+}
+
+/* Logo */
+.signup-logo {
+    display: block;
+    margin: 0 auto 24px;
+    max-width: 160px;
+}
+
+/* ─── Progress dots ──────────────────────────────────────────────────────────── */
+.signup-step-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+}
+
+.step-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.step-dot.completed {
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.step-dot.active {
+    width: 26px;
+    border-radius: 5px;
+    background: white;
+}
+
+/* ─── Headings ───────────────────────────────────────────────────────────────── */
+.signup-heading {
+    border-left: 5px solid white;
+    padding-left: 10px;
+    color: white;
+    font-size: 1.3rem;
+    margin: 0 0 6px 0;
+}
+
+.signup-subheading {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.85rem;
+    margin: 0 0 22px 15px;
+    line-height: 1.5;
+}
+
+/* ─── Form fields ────────────────────────────────────────────────────────────── */
+.signup-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 14px;
+}
+
+/* Match existing label style */
+.signup-field label {
+    margin-top: 10px;
+    text-transform: capitalize;
+    font-family: serif;
+    font-weight: bold;
+    color: white;
+    font-size: 0.95rem;
+}
+
+/* Match existing input style */
+.signup-field input,
+.signup-field select {
+    margin-top: 6px;
+    height: 32px;
+    font-size: 14px;
+    padding: 0 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.signup-field input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.signup-field input:focus,
+.signup-field select:focus {
+    outline: none;
+    border-color: white;
+}
+
+.signup-field select option {
+    background: #545454;
+    color: white;
+}
+
+/* Two-column layout */
+.field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* Phone number group */
+.phone-input-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.phone-input-group select {
+    width: 86px;
+    flex-shrink: 0;
+    height: 32px;
+    font-size: 14px;
+    padding: 0 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    margin-top: 0;
+}
+
+.phone-input-group input {
+    flex: 1;
+    margin-top: 0;
+}
+
+/* Error messages */
+.field-error {
+    display: none;
+    color: #ff9090;
+    font-size: 0.76rem;
+    margin-top: 4px;
+}
+
+.field-error.visible {
+    display: block;
+}
+
+.global-error {
+    background: rgba(180, 40, 40, 0.2);
+    border: 1px solid rgba(255, 100, 100, 0.5);
+    color: #ffaaaa;
+    padding: 10px 12px;
+    font-size: 0.84rem;
+    margin-bottom: 16px;
+    display: none;
+    line-height: 1.4;
+}
+
+.global-error.visible {
+    display: block;
+}
+
+/* ─── Navigation buttons ─────────────────────────────────────────────────────── */
+.signup-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+    gap: 12px;
+}
+
+/* Match existing button style */
+.btn-next {
+    background-color: transparent;
+    display: inline-block;
+    padding: 8px 24px;
+    border: 2px solid white;
+    text-transform: uppercase;
+    border-radius: 10px;
+    font-size: 15px;
+    color: white;
+    cursor: pointer;
+    margin: 0;
+    transition: 0.2s;
+    letter-spacing: 0.3px;
+}
+
+.btn-next:hover:not(:disabled) {
+    color: #545454;
+    background-color: white;
+}
+
+.btn-next:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.btn-back {
+    background-color: transparent;
+    display: inline-block;
+    padding: 8px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 10px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    margin: 0;
+    transition: 0.2s;
+    text-decoration: none;
+}
+
+.btn-back:hover {
+    border-color: white;
+    color: white;
+    background-color: transparent;
+}
+
+.back-to-login {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.back-to-login a {
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    margin: 0;
+}
+
+.back-to-login a:hover {
+    color: white;
+}
+
+/* ─── Role select page ───────────────────────────────────────────────────────── */
+.role-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 22px;
+}
+
+.role-card {
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    padding: 28px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+    background: transparent;
+    color: white;
+    text-decoration: none;
+    display: block;
+}
+
+.role-card:hover {
+    border-color: white;
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+.role-card-icon {
+    font-size: 2.2rem;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.role-card-title {
+    font-size: 1rem;
+    font-weight: bold;
+    font-family: serif;
+    margin-bottom: 8px;
+    text-transform: capitalize;
+    color: white;
+}
+
+.role-card-desc {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.45;
+    margin: 0;
+}
+
+/* ─── Identity / social login page ──────────────────────────────────────────── */
+.identity-providers {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 22px;
+}
+
+.btn-social {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: transparent;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    border-radius: 10px;
+}
+
+.btn-social:hover:not(.disabled) {
+    border-color: white;
+    background: rgba(255, 255, 255, 0.08);
+    color: #545454;
+    background-color: white;
+}
+
+.btn-social:hover:not(.disabled) .social-label {
+    color: #545454;
+}
+
+.btn-social img {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.social-label {
+    flex: 1;
+    text-transform: uppercase;
+    font-size: 13px;
+    letter-spacing: 0.4px;
+}
+
+.soon-badge {
+    font-size: 0.68rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: rgba(255, 255, 255, 0.45);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.btn-social.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* ─── Qualifications page ────────────────────────────────────────────────────── */
+.qualification-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 14px;
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.qualification-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.qualification-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.qualification-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.qualification-card {
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.qualification-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.qualification-number {
+    font-family: serif;
+    font-weight: bold;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.65);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-remove-qual {
+    background: transparent;
+    border: 1px solid rgba(200, 70, 70, 0.6);
+    color: rgba(220, 100, 100, 0.9);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    margin: 0;
+    transition: 0.15s;
+    text-transform: uppercase;
+}
+
+.btn-remove-qual:hover {
+    background: rgba(200, 70, 70, 0.15);
+}
+
+/* Subjects */
+.subjects-section {
+    margin-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding-top: 12px;
+}
+
+.subjects-heading {
+    font-family: serif;
+    font-weight: bold;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 10px;
+    text-transform: capitalize;
+}
+
+.subject-row {
+    display: grid;
+    grid-template-columns: 1fr 70px 28px;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.subject-row input {
+    height: 28px;
+    font-size: 13px;
+    padding: 0 7px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: white;
+    box-sizing: border-box;
+    margin: 0;
+    width: 100%;
+}
+
+.subject-row input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.subject-row input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.btn-remove-subject {
+    background: transparent;
+    border: none;
+    color: rgba(200, 80, 80, 0.7);
+    font-size: 1rem;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+}
+
+.btn-remove-subject:hover {
+    color: rgba(220, 80, 80, 1);
+}
+
+.btn-add-subject {
+    background: transparent;
+    border: 1px dashed rgba(255, 255, 255, 0.28);
+    color: rgba(255, 255, 255, 0.55);
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    margin: 8px 0 0 0;
+    width: 100%;
+    box-sizing: border-box;
+    transition: 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.btn-add-subject:hover:not(:disabled) {
+    border-color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.btn-add-subject:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.btn-add-qualification {
+    background: transparent;
+    border: 2px dashed rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 12px;
+    font-size: 0.88rem;
+    cursor: pointer;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    transition: 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.btn-add-qualification:hover:not(:disabled) {
+    border-color: white;
+    color: white;
+}
+
+.btn-add-qualification:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+/* ─── Portfolio selection page ───────────────────────────────────────────────── */
+.portfolio-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.portfolio-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: 0.2s;
+    background: transparent;
+}
+
+.portfolio-option.selected {
+    border-color: white;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.portfolio-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-top: 4px;
+    cursor: pointer;
+    accent-color: white;
+}
+
+.portfolio-option-text strong {
+    display: block;
+    font-family: serif;
+    font-size: 0.95rem;
+    margin-bottom: 3px;
+    color: white;
+    text-transform: capitalize;
+}
+
+.portfolio-option-text span {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.4;
+}
+
+/* ─── CV upload page ─────────────────────────────────────────────────────────── */
+.cv-upload-area {
+    border: 2px dashed rgba(255, 255, 255, 0.35);
+    padding: 36px 20px;
+    text-align: center;
+    margin: 20px 0 8px;
+    transition: 0.2s;
+    cursor: pointer;
+    position: relative;
+}
+
+.cv-upload-area:hover {
+    border-color: rgba(255, 255, 255, 0.7);
+}
+
+.cv-upload-area.has-file {
+    border-color: rgba(150, 220, 150, 0.6);
+    background: rgba(100, 180, 100, 0.06);
+}
+
+.cv-upload-area input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.cv-upload-icon {
+    font-size: 2.2rem;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.cv-upload-label {
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-family: serif;
+    font-weight: bold;
+}
+
+.cv-upload-hint {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 6px;
+}
+
+.cv-file-selected {
+    font-size: 0.82rem;
+    color: rgba(160, 230, 160, 0.9);
+    min-height: 20px;
+    text-align: center;
+}
+
+.cv-optional-note {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.78rem;
+    margin-top: 6px;
+}
+
+/* ─── DHET page ──────────────────────────────────────────────────────────────── */
+.dhet-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 6px;
+}
+
+.dhet-input-row input {
+    flex: 1;
+    height: 32px;
+    font-size: 14px;
+    padding: 0 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.dhet-input-row input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.dhet-input-row input:focus {
+    outline: none;
+    border-color: white;
+}
+
+.btn-verify {
+    height: 32px;
+    padding: 0 16px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    background: transparent;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin: 0;
+    transition: 0.2s;
+}
+
+.btn-verify:hover:not(:disabled) {
+    border-color: white;
+    background: white;
+    color: #545454;
+}
+
+.btn-verify:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.verify-status {
+    font-size: 0.78rem;
+    margin-top: 5px;
+    min-height: 18px;
+    display: none;
+    font-family: serif;
+}
+
+.verify-status.success {
+    display: block;
+    color: #90ee90;
+}
+
+.verify-status.error {
+    display: block;
+    color: #ff9090;
+}
+
+/* ─── Department detail page ─────────────────────────────────────────────────── */
+.or-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.82rem;
+}
+
+.or-divider::before,
+.or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.dept-info-note {
+    border-left: 3px solid rgba(255, 255, 255, 0.35);
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 20px;
+    line-height: 1.5;
+    background: rgba(255, 255, 255, 0.04);
+}

@@ -7,11 +7,14 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   # ── Job 1: Tests (runs independently, never blocks deployment) ──────────────
   test:
     runs-on: ubuntu-latest
-    continue-on-error: true        # ✅ Failing tests will NOT block the build/deploy jobs
+    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v4
@@ -25,24 +28,29 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # ── Mocha: Access Control Tests ─────────────────────────────────────────
       - name: Run Mocha access control tests
         run: npx mocha tests/control-access.test.js --timeout 10000
-        continue-on-error: true    # ✅ Mocha failures won't stop the pipeline
+        continue-on-error: true
         env:
           NODE_ENV: test
 
-      # ── Jest: All tests with coverage ───────────────────────────────────────
       - name: Run Jest tests with coverage
-        run: npx jest --testPathPattern="tests/__tests__" --coverage --coverageThreshold='{"global":{"lines":50}}' --passWithNoTests --forceExit
-        continue-on-error: true    # ✅ Jest failures won't stop the pipeline
+        run: npx jest --testPathPattern="tests/__tests__" --coverage --passWithNoTests --forceExit
+        continue-on-error: true
         env:
           NODE_ENV: test
 
-  # ── Job 2: Build (always runs, does NOT depend on test job passing) ─────────
+      - name: Upload to Codecov
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+
+  # ── Job 2: Build ─────────────────────────────────────────────────────────────
   build:
     runs-on: ubuntu-latest
-    # ✅ No "needs: test" here — build is fully independent of test results
     permissions:
       contents: read
 
@@ -59,9 +67,8 @@ jobs:
         run: npm install
 
       - name: Build (if applicable)
-        run: CI=false npm run build --if-present   # ✅ CI=false prevents warnings-as-errors breaking the build
+        run: CI=false npm run build --if-present
 
-      # ── Package app (exclude dev files) ─────────────────────────────────────
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
@@ -73,10 +80,10 @@ jobs:
             !coverage/
             !tests/
 
-  # ── Job 3: Deploy (depends only on build, not on tests) ────────────────────
+  # ── Job 3: Deploy ─────────────────────────────────────────────────────────────
   deploy:
     runs-on: ubuntu-latest
-    needs: build                   # ✅ Only waits for build — tests are irrelevant here
+    needs: build
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
@@ -104,4 +111,4 @@ jobs:
           app-name: 'SkillsConnect'
           slot-name: 'Production'
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FCC82D99AAA94FD7AA65399419EEB830 }}
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}

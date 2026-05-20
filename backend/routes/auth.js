@@ -114,24 +114,23 @@ router.get("/api/check-phone", async (req, res) => {
 });
 
 // ─── Signup: Applicant ────────────────────────────────────────────────────────
-router.post("/signup/applicant", verifyToken, upload.single("cv"), async (req, res) => {
-    const { uid, firstname, lastname, email, phonenumber, idNumber, qualifications } = req.body;
-    const cvUrl      = req.file ? req.file.path         : null;
-    const cvFilename = req.file ? req.file.originalname : null;
-
+router.post("/signup/applicant", async (req, res) => {
+    const { uid, firstname, lastname, email, phonenumber, idNumber, qualifications, cv } = req.body;
     if (!email) return res.status(400).json({ error: "Email is required" });
     try {
         await admin.auth().setCustomUserClaims(uid, { role: "applicant" });
-        await applicantRef(uid).set({
-            firstname:      (firstname   || "").trim(),
-            lastname:       (lastname    || "").trim(),
-            email:          (email       || "").trim(),
-            phonenumber:    (phonenumber || "").trim(),
-            ...(idNumber ? { idNumber: idNumber.trim() } : {}),
-            ...(cvUrl    ? { cv: cvUrl, cvFilename }     : {}),
+        const userData = {
+            firstname:      firstname      || null,
+            lastname:       lastname       || null,
+            email:          email          || null,
+            phonenumber:    phonenumber    || null,
+            idNumber:       idNumber       || null,
             qualifications: qualifications || [],
+            cv:             cv             || null,
             role: "applicant", status: "active", createdAt: new Date().toISOString()
-        });
+        };
+        await db.collection("users").doc(uid).set(userData);
+        await applicantRef(uid).set(userData);
         res.status(201).json({ message: "Applicant created successfully" });
     } catch (error) {
         console.error("Applicant signup error:", error.message);
@@ -210,8 +209,15 @@ router.post("/api/upload-cv", verifyToken, upload.single("cv"), async (req, res)
         const uid    = req.body.uid || req.user.uid;
         const cvUrl  = req.file ? req.file.path         : null;
         const cvName = req.file ? req.file.originalname : null;
+
         if (!cvUrl) return res.status(400).json({ error: "No file uploaded" });
-        await applicantRef(uid).update({ cv: cvUrl, cvFilename: cvName });
+
+        // Update both flat collection and subcollection
+        await Promise.all([
+            applicantRef(uid).update({ cv: cvUrl, cvFilename: cvName }),
+            db.collection("users").doc(uid).update({ cv: cvUrl, cvFilename: cvName })
+        ]);
+
         res.json({ message: "CV uploaded successfully", cv: cvUrl });
     } catch (error) {
         console.error("CV upload error:", error);
@@ -240,4 +246,17 @@ router.patch("/api/profile/qualifications", verifyToken, async (req, res) => {
     }
 });
 
+router.delete("/api/delete-cv", verifyToken, async (req, res) => {
+    try {
+        const uid = req.user.uid;
+        await Promise.all([
+            applicantRef(uid).update({ cv: null, cvFilename: null }),
+            db.collection("users").doc(uid).update({ cv: null, cvFilename: null })
+        ]);
+        res.json({ message: "CV deleted successfully" });
+    } catch (error) {
+        console.error("CV delete error:", error);
+        res.status(500).json({ error: "Failed to delete CV" });
+    }
+});
 module.exports = router;

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My CV</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:        #3a3a3a;
+            --surface:   #545454;
+            --surface2:  #606060;
+            --border:    #ffffff;
+            --border2:   rgba(255,255,255,0.5);
+            --text:      #ffffff;
+            --muted:     rgba(255,255,255,0.75);
+            --hint:      rgba(255,255,255,0.5);
+            --danger:    #ff6b6b;
+            --danger-bg: rgba(255,107,107,0.15);
+            --danger-bd: rgba(255,107,107,0.4);
+            --accent:    #ffffff;
+            --radius:    10px;
+            --radius-sm: 8px;
+        }
+
+        body {
+            font-family: serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 3rem 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 540px;
+        }
+
+        /* ── Back button ── */
+        .btn-back {
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+            font-family: serif;
+            font-size: 14px;
+            padding: 5px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .btn-back:hover {
+            background: white;
+            color: #545454;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: normal;
+            letter-spacing: -0.5px;
+            color: white;
+            border-left: 5px solid white;
+            padding-left: 10px;
+            margin-bottom: 0.75rem;
+        }
+
+        .page-header p {
+            font-size: 14px;
+            color: var(--muted);
+            font-family: serif;
+            line-height: 1.5;
+            padding-left: 15px;
+        }
+
+        /* ── Error box ── */
+        .global-error {
+            display: none;
+            background: var(--danger-bg);
+            border: 2px solid var(--danger-bd);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-size: 13px;
+            font-family: serif;
+            color: var(--danger);
+            margin-bottom: 1.5rem;
+        }
+
+        .global-error.visible { display: block; }
+
+        /* ── Upload zone ── */
+        #no-cv-section  { display: none; }
+        #has-cv-section { display: none; }
+
+        .upload-label-wrap { cursor: pointer; display: block; }
+
+        .upload-zone {
+            border: 2px dashed rgba(255,255,255,0.5);
+            border-radius: var(--radius);
+            padding: 3rem 2rem;
+            text-align: center;
+            background: var(--surface);
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: white;
+            background: var(--surface2);
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 1rem;
+            line-height: 1;
+        }
+
+        .upload-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0.4rem;
+            font-family: serif;
+        }
+
+        .upload-hint {
+            font-size: 13px;
+            color: var(--hint);
+            font-family: serif;
+        }
+
+        input[type="file"] { display: none; }
+
+        .selected-file-name {
+            font-size: 13px;
+            color: var(--muted);
+            font-family: serif;
+            text-align: center;
+            margin-top: 0.75rem;
+            min-height: 20px;
+        }
+
+        .optional-note {
+            font-size: 13px;
+            color: var(--hint);
+            font-family: serif;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        /* ── CV card ── */
+        .cv-card {
+            background: var(--surface);
+            border: 2px solid white;
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .cv-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--surface2);
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .cv-meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .cv-filename {
+            font-size: 15px;
+            color: white;
+            font-family: serif;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+        }
+
+        .cv-subtitle {
+            font-size: 12px;
+            color: var(--hint);
+            font-family: serif;
+        }
+
+        .cv-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            font-size: 13px;
+            font-family: serif;
+            padding: 5px 16px;
+            border-radius: 10px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background 0.12s, color 0.12s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: white;
+            color: #545454;
+        }
+
+        .btn:active { transform: scale(0.98); }
+
+        .btn-danger {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-primary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+            margin-top: 1.25rem;
+            width: 100%;
+            padding: 10px;
+            font-size: 15px;
+            border-radius: 10px;
+            text-transform: uppercase;
+        }
+
+        .btn-primary:hover {
+            background: white;
+            color: #545454;
+        }
+
+        /* ── Divider ── */
+        .divider {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            margin: 2rem 0;
+        }
+
+        .format-note {
+            font-size: 12px;
+            color: var(--hint);
+            font-family: serif;
+            text-align: center;
+        }
+
+        /* ── Toast ── */
+        .toast {
+            display: none;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-size: 13px;
+            font-family: serif;
+            color: white;
+            margin-bottom: 1.5rem;
+        }
+
+        .toast.visible { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <button class="btn-back" onclick="window.history.back()">← Back</button>
+
+        <div class="page-header">
+            <h1>My CV</h1>
+            <p>Upload your CV so providers can review it when you apply to listings.</p>
+        </div>
+
+        <div id="global-error" class="global-error"></div>
+        <div id="toast" class="toast"></div>
+
+        <!-- ── No CV uploaded ── -->
+        <div id="no-cv-section">
+            <label class="upload-label-wrap" for="cv-input">
+                <div class="upload-zone" id="upload-area">
+                    <span class="upload-icon">📄</span>
+                    <p class="upload-title">Click to browse or drag your CV here</p>
+                    <p class="upload-hint">PDF, DOC, or DOCX &nbsp;·&nbsp; Max 10 MB</p>
+                </div>
+            </label>
+            <input type="file" id="cv-input" accept=".pdf,.doc,.docx">
+            <p class="selected-file-name" id="file-name"></p>
+            <button class="btn btn-primary" id="upload-btn" style="display:none;">Upload CV</button>
+            <p class="optional-note">You can skip this for now and add your CV later.</p>
+        </div>
+
+        <!-- ── CV uploaded ── -->
+        <div id="has-cv-section">
+            <div class="cv-card">
+                <div class="cv-icon">📄</div>
+                <div class="cv-meta">
+                    <p class="cv-filename" id="cv-filename">CV.pdf</p>
+                    <p class="cv-subtitle">Uploaded successfully</p>
+                </div>
+                <div class="cv-actions">
+                    <button class="btn" id="replace-btn">Replace</button>
+                    <button class="btn btn-danger" id="delete-btn">Delete</button>
+                </div>
+            </div>
+            <input type="file" id="replace-input" accept=".pdf,.doc,.docx" style="display:none;">
+        </div>
+
+        <hr class="divider">
+        <p class="format-note">Accepted: PDF, DOC, DOCX &nbsp;·&nbsp; Max 10 MB</p>
+
+    </div>
+
+    <script>
+        const token = localStorage.getItem("token");
+
+        if (!token) { window.location.href = "/"; }
+
+        async function loadCVState() {
+            try {
+                const res  = await fetch("/api/user-profile", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.cv) {
+                    showHasCV(data.cvFilename || data.cv.split("/").pop());
+                } else {
+                    showNoCV();
+                }
+            } catch (err) {
+                console.error("Failed to load CV state:", err);
+                showNoCV();
+            }
+        }
+
+        function showNoCV() {
+            document.getElementById("no-cv-section").style.display = "block";
+            document.getElementById("has-cv-section").style.display = "none";
+        }
+
+        function showHasCV(filename) {
+            document.getElementById("no-cv-section").style.display = "none";
+            document.getElementById("has-cv-section").style.display = "block";
+            document.getElementById("cv-filename").textContent = filename;
+        }
+
+        function showError(msg) {
+            const el = document.getElementById("global-error");
+            el.textContent = msg;
+            el.classList.add("visible");
+        }
+
+        function showToast(msg) {
+            const el = document.getElementById("toast");
+            el.textContent = msg;
+            el.classList.add("visible");
+            setTimeout(() => el.classList.remove("visible"), 3000);
+        }
+
+        const cvInput   = document.getElementById("cv-input");
+        const fileLabel = document.getElementById("file-name");
+        const uploadBtn = document.getElementById("upload-btn");
+
+        cvInput.addEventListener("change", function() {
+            const file = this.files[0];
+            if (file) {
+                fileLabel.textContent   = `Selected: ${file.name}`;
+                uploadBtn.style.display = "block";
+            }
+        });
+
+        uploadBtn.addEventListener("click", async function() {
+            const file = cvInput.files[0];
+            if (!file) return;
+            uploadBtn.disabled    = true;
+            uploadBtn.textContent = "Uploading…";
+            try {
+                const formData = new FormData();
+                formData.append("cv", file);
+                const res = await fetch("/api/upload-cv", {
+                    method:  "POST",
+                    headers: { "Authorization": `Bearer ${token}` },
+                    body:    formData
+                });
+                if (!res.ok) throw new Error("Upload failed");
+                showHasCV(file.name);
+                showToast("CV uploaded successfully.");
+            } catch (err) {
+                showError("Upload failed. Please try again.");
+                uploadBtn.disabled    = false;
+                uploadBtn.textContent = "Upload CV";
+            }
+        });
+
+        const uploadArea = document.getElementById("upload-area");
+
+        uploadArea.addEventListener("dragover",  (e) => { e.preventDefault(); uploadArea.classList.add("drag-over"); });
+        uploadArea.addEventListener("dragleave", ()  => { uploadArea.classList.remove("drag-over"); });
+        uploadArea.addEventListener("drop", (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove("drag-over");
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                cvInput.files           = e.dataTransfer.files;
+                fileLabel.textContent   = `Selected: ${file.name}`;
+                uploadBtn.style.display = "block";
+            }
+        });
+
+        const replaceInput = document.getElementById("replace-input");
+
+        document.getElementById("replace-btn").addEventListener("click", () => replaceInput.click());
+
+        replaceInput.addEventListener("change", async function() {
+            const file = this.files[0];
+            if (!file) return;
+            try {
+                const formData = new FormData();
+                formData.append("cv", file);
+                const res = await fetch("/api/upload-cv", {
+                    method:  "POST",
+                    headers: { "Authorization": `Bearer ${token}` },
+                    body:    formData
+                });
+                if (!res.ok) throw new Error("Replace failed");
+                showHasCV(file.name);
+                showToast("CV replaced successfully.");
+            } catch (err) {
+                showError("Replace failed. Please try again.");
+            }
+        });
+
+        document.getElementById("delete-btn").addEventListener("click", async function() {
+            if (!confirm("Are you sure you want to delete your CV?")) return;
+            try {
+                const res = await fetch("/api/delete-cv", {
+                    method:  "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error("Delete failed");
+                showNoCV();
+                showToast("CV deleted.");
+            } catch (err) {
+                showError("Delete failed. Please try again.");
+            }
+        });
+
+        loadCVState();
+    </script>
+</body>
+</html>

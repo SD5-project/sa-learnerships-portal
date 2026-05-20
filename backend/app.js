@@ -73,6 +73,9 @@ app.get('/listings', (req, res) =>
 app.get('/', (req, res) =>
     res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html')));
 
+app.get('/applicant-cv', (req, res) =>
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'edit-cv.html')));
+
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/api/health', async (req, res) => {
     const privateKey      = process.env.FIREBASE_PRIVATE_KEY || "";
@@ -133,16 +136,22 @@ app.get('/nqf-levels', async (req, res) => {
 // =============================================================================
 
 app.post("/signup/applicant", async (req, res) => {
-    const { uid, firstname, lastname, email, username, institution, city, phonenumber, cv } = req.body;
+    const { uid, firstname, lastname, email, phonenumber, idNumber, qualifications, cv } = req.body;
     if (!email) return res.status(400).json({ error: "Email is required" });
     try {
         await admin.auth().setCustomUserClaims(uid, { role: "applicant" });
         const userData = {
-            firstname, lastname, email, username, institution, city, phonenumber, cv,
+            firstname:      firstname      || null,
+            lastname:       lastname       || null,
+            email:          email          || null,
+            phonenumber:    phonenumber    || null,
+            idNumber:       idNumber       || null,
+            qualifications: qualifications || [],
+            cv:             cv             || null,
             role: "applicant", status: "active", createdAt: new Date().toISOString()
         };
+        await db.collection("users").doc(uid).set(userData);
         await applicantRef(uid).set(userData);
-        try { await db.collection("users").doc(uid).set(userData); } catch (_) {}
         res.status(201).json({ message: "Applicant created successfully" });
     } catch (error) {
         console.error("Applicant signup error:", error.message);
@@ -854,6 +863,14 @@ app.patch("/api/profile/qualifications", verifyToken, async (req, res) => {
         res.status(500).json({ error: "Failed to update qualifications" });
     }
 });
+
+app.use('/', require('./routes/auth'));
+app.use('/', require('./routes/pages'));
+app.use('/', require('./routes/nqf'));
+app.use('/', require('./routes/opportunities'));
+app.use('/', require('./routes/applications'));
+app.use('/', require('./routes/provider'));
+app.use('/api/admin', require('./routes/admin'));
 
 // =============================================================================
 // EXPORT

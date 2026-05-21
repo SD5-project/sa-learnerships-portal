@@ -5,298 +5,312 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Available Opportunities | SkillsConnect</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <style>
+        /* ── PAGE LAYOUT ── */
         .page-wrapper {
             min-height: 100vh;
-            background-color: #666666;
             display: flex;
             flex-direction: column;
+            background-color: var(--bg-main);
         }
 
-        /* NAVBAR */
-        .navbar {
-            background-color: #444444;
-            padding: 15px 30px;
+        /* ── NAVBAR ── */
+        .dashboard-navbar {
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-soft);
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid white;
         }
 
-        .navbar h1 {
-            color: white;
-            font-size: 20px;
-            margin: 0;
-            cursor: pointer;
+        .navbar-logo {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+            display: block;
         }
 
-        .navbar-right {
+        .navbar-actions {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 16px;
         }
 
-        .nav-link-btn {
-            background-color: transparent;
-            color: white;
-            border: 2px solid white;
+        .btn-nav-dashboard {
+            background: rgba(56,189,248,0.1);
+            color: var(--accent-blue);
+            border: 1px solid rgba(56,189,248,0.2);
             padding: 8px 16px;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 14px;
-            margin-top: 0;
-            text-transform: uppercase;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-nav-dashboard:hover {
+            background: var(--accent-blue);
+            color: #000;
+            box-shadow: 0 0 16px rgba(56,189,248,0.3);
         }
 
-        .nav-link-btn:hover {
-            background-color: white;
-            color: #444;
-        }
-
-        .logout-btn {
-            background-color: crimson;
-            color: white;
-            border: none;
+        .btn-nav-logout {
+            background: rgba(239,68,68,0.1);
+            color: #fca5a5;
+            border: 1px solid rgba(239,68,68,0.2);
             padding: 8px 16px;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 14px;
-            margin-top: 0;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-nav-logout:hover {
+            background: #ef4444;
+            color: #fff;
         }
 
-        .logout-btn:hover {
-            opacity: 0.85;
-        }
-
-        /* LISTINGS AREA */
-        .listings-area {
-            padding: 30px;
+        /* ── MAIN CONTENT ── */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            width: 100%;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 28px;
         }
 
-        .listings-header {
-            color: white;
+        /* ── PAGE HEADER ── */
+        .page-header {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
-        .listings-header h2 {
-            margin: 0 0 6px;
-            font-size: 24px;
-            border-left: 5px solid white;
-            padding-left: 10px;
-        }
-
-        .listings-header p {
+        .page-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-main);
             margin: 0;
-            color: #ccc;
-            font-size: 14px;
-            padding-left: 15px;
+            letter-spacing: -0.02em;
         }
 
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* ── LISTINGS GRID ── */
         .listings-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
         }
 
+        /* ── LISTING CARD ── */
         .listing-card {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 20px;
-            color: white;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            padding: 24px;
             cursor: pointer;
-            transition: background 0.2s, transform 0.15s;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .listing-card:hover {
-            background-color: #6a6a6a;
             transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.12);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
         }
 
         .provider-name {
-            font-size: 12px;
-            color: #bbb;
-            font-style: normal;
+            font-size: 11px;
+            color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.07em;
+            font-style: normal;
+            font-weight: 600;
         }
 
         .listing-card h2 {
-            margin: 6px 0 10px;
-            font-size: 18px;
+            margin: 0;
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--text-main);
+            line-height: 1.35;
         }
 
-        .listing-card .description {
-            font-size: 14px;
-            color: #ccc;
-            margin: 0 0 14px;
+        .listing-description {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.55;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
 
-        .meta-info {
+        .listing-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .listing-meta span {
             font-size: 13px;
-            color: #bbb;
-            margin-bottom: 10px;
+            color: var(--text-muted);
         }
 
-        .meta-info address {
-            font-style: normal;
+        .listing-stipend {
+            border-top: 1px solid var(--border-soft);
+            padding-top: 12px;
+            margin-top: auto;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-blue);
         }
 
-        .price-tag {
-            border-top: 1px solid rgba(255,255,255,0.2);
-            padding-top: 10px;
-            font-size: 15px;
-            color: #7dd3fc;
-        }
-
-        .error-msg {
-            color: #f87171;
+        /* ── STATES ── */
+        .state-msg {
+            color: var(--text-muted);
             text-align: center;
-            margin-top: 40px;
+            padding: 60px 20px;
+            font-size: 14px;
+            grid-column: 1 / -1;
         }
 
-        .empty-msg {
-            color: #ccc;
-            text-align: center;
-            margin-top: 40px;
+        .state-msg.error { color: #f87171; }
+
+        .state-msg a {
+            color: var(--accent-blue);
+            text-decoration: none;
         }
+        .state-msg a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <div class="page-wrapper">
+<div class="page-wrapper">
 
-        <!-- NAVBAR -->
-        <nav class="navbar">
-            <h1 id="brandTitle" onclick="goToDashboard()">SkillsConnect</h1>
-            <div class="navbar-right">
-                <button class="nav-link-btn" id="dashboardBtn" onclick="goToDashboard()">🏠 Dashboard</button>
-                <button class="logout-btn" id="logoutBtn">Logout</button>
-            </div>
-        </nav>
+    <!-- NAVBAR -->
+    <nav class="dashboard-navbar">
+        <img src="SkillsConnect Logo 2.PNG" alt="SkillsConnect Logo" class="navbar-logo">
+        <div class="navbar-actions">
+            <button class="btn-nav-dashboard" id="dashboardBtn" onclick="goToDashboard()">🏠 Dashboard</button>
+            <button class="btn-nav-logout" id="logoutBtn">Logout</button>
+        </div>
+    </nav>
 
-        <!-- LISTINGS AREA -->
-        <div class="listings-area">
-            <div class="listings-header">
-                <h2>Available Opportunities</h2>
-                <p>Learnerships, internships and apprenticeships across South Africa</p>
-            </div>
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
 
-            <div id="listings-grid" class="listings-grid">
-                <p class="empty-msg">Loading opportunities...</p>
-            </div>
+        <div class="page-header">
+            <h1 class="page-title">Available Opportunities</h1>
+            <p class="page-subtitle">Learnerships, internships and apprenticeships across South Africa</p>
         </div>
 
-    </div>
+        <div id="listings-grid" class="listings-grid">
+            <p class="state-msg">Loading opportunities…</p>
+        </div>
 
-    <script type="module">
-        import { auth } from "./firebase.js";
+    </main>
+</div>
 
-        // ── Determine dashboard URL by role ─────────────────────────────────────
-        function getDashboardUrl(role) {
-            if (!role) return "/";
-            const r = role.toLowerCase();
-            if (r === "applicant") return "/applicant-home";
-            if (r === "provider")  return "/provider-home";
-            if (r === "admin")     return "/admin-dashboard";
-            return "/";
-        }
+<script type="module">
+    import { auth } from "./firebase.js";
 
-        window.goToDashboard = function() {
-            const role = localStorage.getItem("userRole");
-            window.location.href = getDashboardUrl(role);
-        };
+    function getDashboardUrl(role) {
+        if (!role) return "/";
+        const r = role.toLowerCase();
+        if (r === "applicant") return "/applicant-home";
+        if (r === "provider")  return "/provider-home";
+        if (r === "admin")     return "/admin-dashboard";
+        return "/";
+    }
 
-        // ── Auth guard & role detection ─────────────────────────────────────────
-        auth.onAuthStateChanged(async (user) => {
-            if (!user) {
-                window.location.href = "/";
-                return;
+    window.goToDashboard = function() {
+        const role = localStorage.getItem("userRole");
+        window.location.href = getDashboardUrl(role);
+    };
+
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = "/"; return; }
+        const idTokenResult = await user.getIdTokenResult();
+        const role = idTokenResult.claims.role;
+        if (role) localStorage.setItem("userRole", role);
+        fetchListings();
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+        try { await auth.signOut(); } catch (e) { console.error(e); }
+        localStorage.clear();
+        window.location.href = "/";
+    });
+
+    async function fetchListings() {
+        const container = document.getElementById("listings-grid");
+
+        try {
+            const user = auth.currentUser;
+            if (!user) { window.location.href = "/"; return; }
+
+            const token = await user.getIdToken(true);
+            localStorage.setItem("token", token);
+
+            const response = await fetch("/api/listings", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const listings = await response.json();
+                renderListings(listings);
+            } else if (response.status === 401 || response.status === 403) {
+                container.innerHTML = `<p class="state-msg error">Session expired. Please <a href="/">log in again</a>.</p>`;
+            } else {
+                container.innerHTML = `<p class="state-msg error">Could not load opportunities. Please try again.</p>`;
             }
+        } catch (err) {
+            console.error("fetchListings error:", err);
+            container.innerHTML = `<p class="state-msg error">Error loading data. Check your connection.</p>`;
+        }
+    }
 
-            const idTokenResult = await user.getIdTokenResult();
-            const role = idTokenResult.claims.role;
-            if (role) localStorage.setItem("userRole", role);
-            fetchListings();
-        });
+    function renderListings(data) {
+        const container = document.getElementById("listings-grid");
 
-        // ── Logout ──────────────────────────────────────────────────────────────
-        document.getElementById("logoutBtn").addEventListener("click", async () => {
-            try { await auth.signOut(); } catch (e) { console.error(e); }
-            localStorage.clear();
-            window.location.href = "/";
-        });
-
-        // ── Fetch and render listings ───────────────────────────────────────────
-        async function fetchListings() {
-    const container = document.getElementById("listings-grid");
-
-    try {
-        const user = auth.currentUser;
-        if (!user) {
-            window.location.href = "/";
+        if (!data || data.length === 0) {
+            container.innerHTML = `<p class="state-msg">No opportunities are available at the moment.</p>`;
             return;
         }
 
-        const token = await user.getIdToken(true); // force refresh
-        localStorage.setItem("token", token);
+        container.innerHTML = data.map(item => `
+            <article class="listing-card" data-id="${item.id}">
+                <cite class="provider-name">${item.provider || "Unknown Provider"}</cite>
+                <h2>${item.title || "Untitled"}</h2>
+                <p class="listing-description">${item.description || "No description available."}</p>
+                <div class="listing-meta">
+                    <span>📍 ${item.location || "Location not specified"}</span>
+                    <span>🏷 ${item.type || "Type not specified"}</span>
+                </div>
+                <div class="listing-stipend">Stipend: R${item.price ?? "N/A"}</div>
+            </article>
+        `).join("");
 
-        const response = await fetch("/api/listings", {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-
-        if (response.ok) {
-            const listings = await response.json();
-            renderListings(listings);
-        } else if (response.status === 401 || response.status === 403) {
-            container.innerHTML = `<p class="error-msg">Session expired. Please <a href="/" style="color:#7dd3fc;">log in again</a>.</p>`;
-        } else {
-            container.innerHTML = `<p class="error-msg">Could not load opportunities.</p>`;
-        }
-    } catch (err) {
-        console.error("fetchListings error:", err);
-        container.innerHTML = `<p class="error-msg">Error loading data. Check your connection.</p>`;
-    }
-}
-
-        function renderListings(data) {
-            const container = document.getElementById("listings-grid");
-
-            if (!data || data.length === 0) {
-                container.innerHTML = "<p class='empty-msg'>No opportunities found.</p>";
-                return;
-            }
-
-            container.innerHTML = data.map(item => `
-                <article class="listing-card" data-id="${item.id}">
-                    <cite class="provider-name">${item.provider || "Unknown Provider"}</cite>
-                    <h2>${item.title || "Untitled"}</h2>
-                    <p class="description">${item.description || "No description available."}</p>
-                    <div class="meta-info">
-                        <address>📍 ${item.location || "Location not specified"}</address>
-                        <small>🏷 ${item.type || "Type not specified"}</small>
-                    </div>
-                    <div class="price-tag">
-                        <strong>Stipend: R${item.price ?? "N/A"}</strong>
-                    </div>
-                </article>
-            `).join("");
-
-            // Attach click listeners
-            document.querySelectorAll(".listing-card").forEach(card => {
-                card.addEventListener("click", () => {
-                    const listingID = card.dataset.id;
-                    window.location.href = `/listing-info?listingID=${listingID}`;
-                });
+        document.querySelectorAll(".listing-card").forEach(card => {
+            card.addEventListener("click", () => {
+                window.location.href = `/listing-info?listingID=${card.dataset.id}`;
             });
-        }
-
-       
-    </script>
+        });
+    }
+</script>
 </body>
 </html>

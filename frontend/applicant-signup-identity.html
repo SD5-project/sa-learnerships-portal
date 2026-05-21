@@ -5,13 +5,161 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up — Step 1 | SkillsConnect</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="signup.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        /* ── SIGNUP PAGE SHELL ── */
+        .signup-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            box-sizing: border-box;
+            background-color: var(--bg-main);
+        }
+
+        /* ── CARD ── */
+        .signup-card {
+            width: 100%;
+            max-width: 420px;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3), 0 10px 10px -5px rgba(0,0,0,0.2);
+            box-sizing: border-box;
+        }
+
+        /* ── LOGO ── */
+        .signup-logo {
+            height: 64px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            margin-bottom: 24px;
+        }
+
+        /* ── STEP INDICATOR ── */
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 28px;
+        }
+
+        .step-dot {
+            height: 4px;
+            border-radius: 2px;
+            background: var(--border-soft);
+            transition: all 0.25s ease;
+            flex: 1;
+        }
+        .step-dot.active    { background: var(--accent-blue); flex: 2; }
+        .step-dot.completed { background: rgba(56,189,248,0.35); }
+
+        /* ── HEADINGS ── */
+        .signup-heading {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0 0 6px;
+            letter-spacing: -0.02em;
+        }
+
+        .signup-subheading {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin: 0 0 28px;
+            line-height: 1.5;
+        }
+
+        /* ── GLOBAL ERROR ── */
+        .global-error {
+            display: none;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #fca5a5;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .global-error:not(:empty) { display: block; }
+
+        /* ── GOOGLE BUTTON ── */
+        .btn-social {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background-color: rgba(255,255,255,0.03);
+            color: var(--text-main);
+            border: 1px solid var(--border-soft);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-social:hover { background-color: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+        .btn-social img { width: 18px; height: 18px; }
+
+        /* ── OR DIVIDER ── */
+        .or-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        .or-divider::before,
+        .or-divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-soft); }
+
+        /* ── PRIMARY BUTTON ── */
+        .btn-next {
+            width: 100%;
+            background-color: var(--accent-blue);
+            color: #0f172a;
+            border: none;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        .btn-next:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
+        .btn-next:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* ── BACK / FOOTER LINK ── */
+        .back-to-login {
+            margin: 24px 0 0;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .back-to-login a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        .back-to-login a:hover { color: var(--accent-hover); text-decoration: underline; }
+    </style>
 </head>
 <body class="signup-page">
     <div class="signup-card">
+
         <img src="SkillsConnect Logo 2.PNG" class="signup-logo" alt="SkillsConnect">
 
-        <div class="signup-step-indicator">
+        <!-- 5-step indicator: step 1 active -->
+        <div class="step-indicator">
             <div class="step-dot active"></div>
             <div class="step-dot"></div>
             <div class="step-dot"></div>
@@ -26,16 +174,14 @@
 
         <button class="btn-social" id="google-btn">
             <img src="google.svg" alt="Google">
-            <span class="social-label">Continue with Google</span>
+            Continue with Google
         </button>
 
         <div class="or-divider"><span>or</span></div>
 
-        <button class="btn-next" id="email-btn" style="width: 100%;">
-            Sign up with email
-        </button>
+        <button class="btn-next" id="email-btn">Sign up with email</button>
 
-        <p class="back-to-login" style="margin-top: 24px;">
+        <p class="back-to-login">
             <a href="signup-role-select.html">← Change role</a>
             &nbsp;·&nbsp;
             Already have an account? <a href="index.html">Log in</a>

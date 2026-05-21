@@ -3,59 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Applications</title>
+    <title>My Applications | SkillsConnect</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <style>
+        /* ── PAGE LAYOUT ── */
         .page-wrapper {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 0 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-main);
+        }
+
+        /* ── NAVBAR ── */
+        .dashboard-navbar {
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-soft);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-logo {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-nav-back {
+            background: rgba(255,255,255,0.04);
+            color: var(--text-muted);
+            border: 1px solid var(--border-soft);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-nav-back:hover {
+            background: rgba(255,255,255,0.08);
+            color: var(--text-main);
+            border-color: rgba(255,255,255,0.15);
+        }
+
+        /* ── MAIN CONTENT ── */
+        .main-content {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* ── PAGE HEADER ── */
+        .page-header {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
         .page-title {
-            color: white;
-            font-family: serif;
-            font-size: 28px;
-            font-weight: bold;
-            border-left: 5px solid white;
-            padding-left: 14px;
-            margin-bottom: 30px;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0;
+            letter-spacing: -0.02em;
         }
 
-        .table-wrapper {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 8px;
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* ── TABLE CONTAINER ── */
+        .table-container {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
             overflow: hidden;
         }
 
+        /* ── TABLE ── */
         #myApplications {
             width: 100%;
             border-collapse: collapse;
-            border: none;
+        }
+
+        #myApplications thead tr {
+            border-bottom: 1px solid var(--border-soft);
         }
 
         #myApplications th {
-            background-color: #3a3a3a;
-            color: white;
-            font-family: serif;
-            font-weight: bold;
+            background-color: transparent;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
             text-transform: uppercase;
-            font-size: 13px;
-            letter-spacing: 0.05em;
-            padding: 14px 18px;
+            letter-spacing: 0.06em;
+            padding: 14px 20px;
             text-align: left;
-            border: none;
-            border-bottom: 2px solid white;
         }
 
         #myApplications td {
-            color: white;
-            font-family: serif;
-            padding: 12px 18px;
-            border: none;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
-            font-size: 15px;
+            color: var(--text-main);
+            font-size: 14px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-soft);
         }
 
         #myApplications tbody tr:last-child td {
@@ -63,61 +134,87 @@
         }
 
         #myApplications tbody tr:hover {
-            background-color: rgba(255,255,255,0.08);
+            background-color: rgba(255,255,255,0.03);
         }
 
+        /* ── STATUS BADGES ── */
         .status {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
             padding: 4px 12px;
-            border-radius: 20px;
+            border-radius: 9999px;
             font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
+            font-weight: 600;
+            text-transform: capitalize;
+            letter-spacing: 0.03em;
         }
 
         .status.pending {
-            background-color: rgba(255, 193, 7, 0.2);
-            color: #ffc107;
-            border: 1px solid #ffc107;
+            background: rgba(251,191,36,0.12);
+            color: #fbbf24;
+            border: 1px solid rgba(251,191,36,0.25);
         }
 
         .status.reviewing,
         .status.shortlisted {
-            background-color: rgba(13, 202, 240, 0.2);
-            color: #0dcaf0;
-            border: 1px solid #0dcaf0;
+            background: rgba(56,189,248,0.12);
+            color: var(--accent-blue);
+            border: 1px solid rgba(56,189,248,0.25);
         }
 
         .status.accepted {
-            background-color: rgba(25, 135, 84, 0.2);
+            background: rgba(74,222,128,0.12);
             color: #4ade80;
-            border: 1px solid #4ade80;
+            border: 1px solid rgba(74,222,128,0.25);
         }
 
         .status.rejected {
-            background-color: rgba(220, 53, 69, 0.2);
+            background: rgba(248,113,113,0.12);
             color: #f87171;
-            border: 1px solid #f87171;
+            border: 1px solid rgba(248,113,113,0.25);
         }
 
-        .empty-row td {
+        /* ── EMPTY / LOADING STATES ── */
+        .state-row td {
             text-align: center;
-            color: rgba(255,255,255,0.5);
+            color: var(--text-muted);
             font-style: italic;
-            padding: 40px;
+            padding: 48px 20px;
+            font-size: 14px;
+        }
+
+        /* ── ORGANISATION CELL ── */
+        .org-cell {
+            color: var(--text-muted);
+            font-size: 13px;
         }
     </style>
 </head>
 <body>
-    <div class="page-wrapper">
-        <h1 class="page-title">My Applications</h1>
-        <div class="table-wrapper">
+<div class="page-wrapper">
+
+    <!-- NAVBAR -->
+    <nav class="dashboard-navbar">
+        <img src="SkillsConnect Logo 2.PNG" alt="SkillsConnect Logo" class="navbar-logo">
+        <div class="navbar-actions">
+            <a href="javascript:window.history.back()" class="btn-nav-back">← Back</a>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <div class="page-header">
+            <h1 class="page-title">My Applications</h1>
+            <p class="page-subtitle">Track the status of all your submitted applications</p>
+        </div>
+
+        <div class="table-container">
             <table id="myApplications">
                 <thead>
                     <tr>
-                        <th>Title</th>
-                        <th>Organization</th>
+                        <th>Position</th>
+                        <th>Organisation</th>
                         <th>Date Applied</th>
                         <th>Status</th>
                     </tr>
@@ -127,69 +224,66 @@
                 </tbody>
             </table>
         </div>
-         <button class="back-btn" onclick="window.history.back()">← Back</button>
-    </div>
-   
-    
-    <script type="module">
-        import { auth } from "./firebase.js";
 
-        const token = localStorage.getItem("token");
-        if (!token) { window.location.href = "/"; }
+    </main>
+</div>
 
-        auth.onAuthStateChanged(async (user) => {
-            if (!user) { window.location.href = "/"; return; }
-            await loadApplications(user);
-        });
+<script type="module">
+    import { auth } from "./firebase.js";
 
-        async function loadApplications(user) {
-            const tbody = document.getElementById("applications-list");
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#ccc;padding:30px;">Loading…</td></tr>`;
+    const token = localStorage.getItem("token");
+    if (!token) { window.location.href = "/"; }
 
-            try {
-                const freshToken = await user.getIdToken();
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = "/"; return; }
+        await loadApplications(user);
+    });
 
-                const appsRes = await fetch(`/api/applications?applicantID=${user.uid}`, {
-                    headers: { Authorization: `Bearer ${freshToken}` }
-                });
-                if (!appsRes.ok) throw new Error("Failed to fetch applications");
-                const applications = await appsRes.json();
+    async function loadApplications(user) {
+        const tbody = document.getElementById("applications-list");
+        tbody.innerHTML = `<tr class="state-row"><td colspan="4">Loading your applications…</td></tr>`;
 
-                if (applications.length === 0) {
-                    tbody.innerHTML = `
-                        <tr class="empty-row">
-                            <td colspan="4">You have not applied to any positions yet.</td>
-                        </tr>`;
-                    return;
-                }
+        try {
+            const freshToken = await user.getIdToken();
 
-                const enriched = await Promise.all(applications.map(async (app) => {
-                    try {
-                        const oppRes = await fetch(`/api/opportunities/${app.listingID}`, {
-                            headers: { Authorization: `Bearer ${freshToken}` }
-                        });
-                        if (!oppRes.ok) return { ...app, title: "Listing no longer available", company: "—" };
-                        const opp = await oppRes.json();
-                        return { ...opp, ...app };
-                    } catch {
-                        return { ...app, title: "Listing no longer available", company: "—" };
-                    }
-                }));
+            const appsRes = await fetch(`/api/applications?applicantID=${user.uid}`, {
+                headers: { Authorization: `Bearer ${freshToken}` }
+            });
+            if (!appsRes.ok) throw new Error("Failed to fetch applications");
+            const applications = await appsRes.json();
 
-                tbody.innerHTML = enriched.map(app => `
-                    <tr>
-                        <td>${app.title   || "—"}</td>
-                        <td>${app.company || "—"}</td>
-                        <td>${app.createdAt ? new Date(app.createdAt).toLocaleDateString("en-ZA") : "—"}</td>
-                        <td><span class="status ${app.status || ""}">${app.status || "unknown"}</span></td>
-                    </tr>
-                `).join("");
-
-            } catch (err) {
-                console.error("Failed to load applications:", err);
-                tbody.innerHTML = `<tr class="empty-row"><td colspan="4">Failed to load applications. Please try again.</td></tr>`;
+            if (applications.length === 0) {
+                tbody.innerHTML = `<tr class="state-row"><td colspan="4">You haven't applied to any positions yet.</td></tr>`;
+                return;
             }
+
+            const enriched = await Promise.all(applications.map(async (app) => {
+                try {
+                    const oppRes = await fetch(`/api/opportunities/${app.listingID}`, {
+                        headers: { Authorization: `Bearer ${freshToken}` }
+                    });
+                    if (!oppRes.ok) return { ...app, title: "Listing no longer available", company: "—" };
+                    const opp = await oppRes.json();
+                    return { ...opp, ...app };
+                } catch {
+                    return { ...app, title: "Listing no longer available", company: "—" };
+                }
+            }));
+
+            tbody.innerHTML = enriched.map(app => `
+                <tr>
+                    <td>${app.title || "—"}</td>
+                    <td class="org-cell">${app.company || "—"}</td>
+                    <td>${app.createdAt ? new Date(app.createdAt).toLocaleDateString("en-ZA") : "—"}</td>
+                    <td><span class="status ${app.status || ""}">${app.status || "unknown"}</span></td>
+                </tr>
+            `).join("");
+
+        } catch (err) {
+            console.error("Failed to load applications:", err);
+            tbody.innerHTML = `<tr class="state-row"><td colspan="4">Failed to load applications. Please try again.</td></tr>`;
         }
-    </script>
+    }
+</script>
 </body>
 </html>

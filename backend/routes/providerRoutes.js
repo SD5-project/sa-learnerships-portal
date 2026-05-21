@@ -102,7 +102,12 @@ router.get("/applicants", verifyToken, async (req, res) => {
         await Promise.all(applicantUIDs.map(async uid => {
             try {
                 const d = await db.collection("users").doc(uid).get();
-                profiles[uid] = d.exists ? d.data() : {};
+               profiles[uid] =
+    d &&
+    d.exists &&
+    typeof d.data === "function"
+        ? d.data()
+        : {};
             } catch {
                 profiles[uid] = {};
             }

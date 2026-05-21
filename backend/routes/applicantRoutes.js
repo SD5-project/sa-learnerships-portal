@@ -7,6 +7,12 @@ const { db } = require("../firebaseAdmin");
 router.get("/applicant/hasApplied", async (req, res) => {
     const { applicantID, listingID } = req.query;
 
+    if (!applicantID || !listingID) {
+    return res.status(400).json({
+        error: "applicantID and listingID are required"
+    });
+}
+
     try {
         const snapshot = await db.collection("applications")
             .where("applicantID", "==", applicantID)

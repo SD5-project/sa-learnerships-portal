@@ -7,10 +7,10 @@ const { db } = require("../firebaseAdmin");
 router.get("/applications", verifyToken, async (req, res) => {
 
     try {
-
+        const applicantID = req.query.applicantID || req.user.uid;
         const snapshot = await db
             .collection("applications")
-            .where("applicantID", "==", req.user.uid)
+            .where("applicantID", "==", applicantID)
             .get();
 
         const applications = [];
@@ -30,6 +30,31 @@ router.get("/applications", verifyToken, async (req, res) => {
 
         res.status(500).json({
             error: "Failed to fetch applications"
+        });
+    }
+}); 
+
+router.get("/opportunities/:id", verifyToken, async (req, res) => {
+    try {
+        const doc = await db
+            .collection("Opportunities")
+            .doc(req.params.id)
+            .get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ error: "Opportunity not found" });
+        }
+
+        res.json({
+            id: doc.id,
+            ...doc.data()
+        });
+
+    } catch (error) {
+        console.error("Fetch opportunity error:", error);
+
+        res.status(500).json({
+            error: "Failed to fetch opportunity"
         });
     }
 });

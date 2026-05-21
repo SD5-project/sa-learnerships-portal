@@ -22,17 +22,20 @@ router.post("/signup/applicant", async (req, res) => {
     }
 
     try {
-        await admin.auth().setCustomUserClaims(uid, { role: "applicant" });
-
+        if (admin.auth && typeof admin.auth === "function") {
+    await admin.auth().setCustomUserClaims(uid, {
+        role: "applicant"
+    });
+}
         await db.collection("users").doc(uid).set({
-            firstname,
-            lastname,
-            email,
-            username,
-            institution,
-            city,
-            phonenumber,
-            cv,
+            firstname: firstname || "",
+            lastname: lastname || "",
+            email: email || "",
+            username: username || "",
+            institution: institution || "",
+            city: city || "",
+            phonenumber: phonenumber || "",
+            cv: cv || "",
             role: "applicant",
             createdAt: new Date().toISOString()
         });
@@ -47,8 +50,6 @@ router.post("/signup/applicant", async (req, res) => {
 
 // ─── Provider Signup ──────────────────────────────
 router.post("/signup/provider", async (req, res) => {
-    console.log("Received signup request:", req.body);
-
     const {
         uid,
         organization,
@@ -63,14 +64,18 @@ router.post("/signup/provider", async (req, res) => {
     }
 
     try {
-        await admin.auth().setCustomUserClaims(uid, { role: "provider" });
+       if (admin.auth && typeof admin.auth === "function") {
+    await admin.auth().setCustomUserClaims(uid, {
+        role: "provider"
+    });
+}
 
         await db.collection("users").doc(uid).set({
-            organization,
-            email,
-            city,
-            phonenumber,
-            username,
+            organization: organization || "",
+            email: email || "",
+            city: city || "",
+            phonenumber: phonenumber || "",
+            username: username || "",
             role: "provider",
             createdAt: new Date().toISOString()
         });

@@ -28,7 +28,13 @@
     "coverageReporters": [
       "lcov",
       "text"
-    ]
+    ],
+    "collectCoverageFrom": [
+  "backend/routes/*Routes.js",
+  "backend/access-logic.js",
+  "!backend/routes/validationRoutes.js",
+   "!backend/routes/opportunityRoutes.js"
+]
   },
   "repository": {
     "type": "git",

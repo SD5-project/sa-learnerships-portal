@@ -423,17 +423,12 @@
         });
 
         document.getElementById("myApplicationsBtn").addEventListener("click", () => {
-            window.location.href = "/applications-page.html";
+            window.location.href = "/applications-page";
         });
 
-        //Notifications
-        onAuthStateChanged(auth,(user) => {
-            if (user) {
-                const q = query(
-                    collection(db, "notifications"),
-                    where("recipientId", "==", user.uid),
-                    orderBy("timestamp", "desc")
-                );
+        // ── Notifications ────────────────────────────────────────────────────
+        onAuthStateChanged(auth, (user) => {
+            if (!user) return;
 
             const q = query(
                 collection(db, "notifications"),
@@ -455,14 +450,14 @@
         function renderNotifications(data) {
             const container = document.getElementById("notificationList");
 
-            if (data.length === 0) {
+            if (!data || data.length === 0) {
                 container.innerHTML = `<p class="notification-empty">No new updates at this time.</p>`;
                 return;
             }
 
             container.innerHTML = data.map(n => {
-                const date    = n.timestamp ? new Date(n.timestamp.seconds * 1000).toLocaleString() : "Just now";
-                const unread  = n.status === "unread" ? "unread" : "";
+                const date   = n.timestamp ? new Date(n.timestamp.seconds * 1000).toLocaleString() : "Just now";
+                const unread = n.status === "unread" ? "unread" : "";
                 return `
                     <div class="notification-item ${unread}">
                         ${n.message}

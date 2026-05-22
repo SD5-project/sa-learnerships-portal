@@ -190,30 +190,35 @@
 
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
-        /* ── QUAL DROPDOWN ── */
+        /* ── QUALIFICATION SEARCH ── */
+        .qual-search-wrap { position: relative; }
+
         .qual-dropdown {
-            position: absolute; top: 100%; left: 0; right: 0;
+            position: absolute; top: calc(100% + 4px); left: 0; right: 0;
             background: #1e293b;
             border: 1px solid rgba(56,189,248,0.25);
             border-radius: 10px;
-            z-index: 100;
-            max-height: 280px;
+            z-index: 200;
+            max-height: 300px;
             overflow-y: auto;
-            margin-top: 4px;
             box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+            display: none;
         }
+        .qual-dropdown.open { display: block; }
+        .qual-dropdown::-webkit-scrollbar { width: 4px; }
+        .qual-dropdown::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
         .qual-dropdown-item {
             padding: 12px 16px;
             cursor: pointer;
             border-bottom: 1px solid var(--border-soft);
-            font-size: 14px;
-            color: var(--text-main);
             transition: background 0.15s;
         }
         .qual-dropdown-item:last-child { border-bottom: none; }
-        .qual-dropdown-item:hover { background: rgba(56,189,248,0.08); }
-        .qual-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-        .qual-dropdown-empty { padding: 14px 16px; color: var(--text-muted); font-size: 14px; text-align: center; font-style: italic; }
+        .qual-dropdown-item:hover, .qual-dropdown-item.focused { background: rgba(56,189,248,0.08); }
+        .qual-item-title { font-size: 14px; color: var(--text-main); font-weight: 500; margin: 0 0 3px; }
+        .qual-item-meta  { font-size: 12px; color: var(--text-muted); margin: 0; }
+        .qual-dropdown-status { padding: 14px 16px; color: var(--text-muted); font-size: 14px; text-align: center; font-style: italic; }
 
         /* ── CONFIRMED QUAL CARD ── */
         .qual-confirmed-card {
@@ -221,7 +226,7 @@
             border: 1px solid rgba(56,189,248,0.25);
             border-radius: 10px;
             padding: 16px;
-            margin-top: 4px;
+            margin-top: 8px;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -231,7 +236,7 @@
         .qual-name    { font-weight: 600; font-size: 14px; color: var(--text-main); margin-bottom: 6px; }
         .qual-details { font-size: 13px; color: var(--text-muted); line-height: 1.8; }
         .saqa-link    { font-size: 12px; color: var(--accent-blue); margin-top: 6px; display: inline-block; text-decoration: none; }
-        .saqa-link:hover { color: var(--accent-hover); text-decoration: underline; }
+        .saqa-link:hover { text-decoration: underline; }
 
         .btn-change {
             background: rgba(255,255,255,0.05);
@@ -268,7 +273,7 @@
 
         /* ── ACCREDITATION BANNERS ── */
         .accred-banner { border-radius: 10px; padding: 14px 18px; margin-top: 14px; font-size: 14px; line-height: 1.7; }
-        .accred-banner.success { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); color: #4ade80; }
+        .accred-banner.success { background: rgba(34,197,94,0.08);  border: 1px solid rgba(34,197,94,0.25); color: #4ade80; }
         .accred-banner.warning { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); color: #fbbf24; }
         .accred-banner.error   { background: rgba(239,68,68,0.08);  border: 1px solid rgba(239,68,68,0.25);  color: #fca5a5; }
 
@@ -286,7 +291,7 @@
             color: var(--text-muted);
             transition: all 0.2s ease;
         }
-        .skill-chip:hover { border-color: rgba(56,189,248,0.4); color: var(--accent-blue); background: rgba(56,189,248,0.05); }
+        .skill-chip:hover  { border-color: rgba(56,189,248,0.4); color: var(--accent-blue); background: rgba(56,189,248,0.05); }
         .skill-chip.selected { background: rgba(56,189,248,0.15); color: var(--accent-blue); border-color: rgba(56,189,248,0.4); font-weight: 600; }
 
         /* ── SUBMIT AREA ── */
@@ -318,7 +323,7 @@
             font-family: inherit;
             transition: all 0.2s ease;
         }
-        .btn-submit-form:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-submit-form:hover    { background: var(--accent-hover); transform: translateY(-1px); }
         .btn-submit-form:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
         /* ── FIELD ERROR ── */
@@ -350,7 +355,7 @@
     <main class="dashboard-container">
 
         <div class="success-banner hidden" id="successBanner">
-            ✅ Opportunity submitted successfully! It will appear in listings after admin review.
+            ✅ Opportunity submitted successfully!
         </div>
 
         <div class="dashboard-hero">
@@ -384,13 +389,44 @@
         <div class="form-section" id="accreditation-section">
             <div class="form-section-title"><span class="step-num">2</span> Programme Accreditation</div>
             <div id="qual-search-section">
-                <p class="helper-text">Search for the SAQA-registered qualification this opportunity is linked to.</p>
-                <div class="form-group" style="position:relative;">
-                    <label>Qualification Title <span class="req">*</span></label>
-                    <input type="text" id="qual-search-input" placeholder="e.g. National Certificate: Information Technology" autocomplete="off" oninput="onQualSearch(this.value)">
-                    <div id="qual-dropdown" class="qual-dropdown hidden"></div>
+                <p class="helper-text">
+                    Search for the SAQA-registered qualification this opportunity is linked to.
+                    You can search by qualification name, SETA, or SAQA ID.
+                </p>
+
+                <!-- NQF pre-filter + search input side by side -->
+                <div class="grid-2" style="margin-bottom: 0;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>Filter by NQF Level (optional)</label>
+                        <select id="qual-nqf-filter">
+                            <option value="">All NQF Levels</option>
+                            <option value="NQF Level 1">NQF Level 1 — Grade 9</option>
+                            <option value="NQF Level 2">NQF Level 2 — Grade 10</option>
+                            <option value="NQF Level 3">NQF Level 3 — Grade 11</option>
+                            <option value="NQF Level 4">NQF Level 4 — Grade 12 / Matric</option>
+                            <option value="NQF Level 5">NQF Level 5 — Higher Certificate</option>
+                            <option value="NQF Level 6">NQF Level 6 — Diploma</option>
+                            <option value="NQF Level 7">NQF Level 7 — Bachelor's Degree</option>
+                            <option value="NQF Level 8">NQF Level 8 — Honours</option>
+                            <option value="NQF Level 9">NQF Level 9 — Master's Degree</option>
+                            <option value="NQF Level 10">NQF Level 10 — Doctoral Degree</option>
+                        </select>
+                    </div>
+                    <div class="form-group qual-search-wrap" style="margin-bottom:0;" id="qual-search-group">
+                        <label>Qualification Title <span class="req">*</span></label>
+                        <input
+                            type="text"
+                            id="qual-search-input"
+                            placeholder="e.g. Information Technology, Electrical…"
+                            autocomplete="off"
+                        >
+                        <!-- Dropdown attaches here -->
+                        <div id="qual-dropdown" class="qual-dropdown"></div>
+                    </div>
                 </div>
-                <div id="qual-confirmed" class="qual-confirmed-card hidden">
+
+                <!-- Confirmed qualification card (hidden until selection) -->
+                <div id="qual-confirmed" class="qual-confirmed-card hidden" style="margin-top:16px;">
                     <div class="qual-info">
                         <div class="qual-name" id="qual-title-display"></div>
                         <div class="qual-details">
@@ -400,9 +436,11 @@
                         </div>
                         <a class="saqa-link" id="qual-saqa-link" href="#" target="_blank" rel="noopener">View on SAQA ↗</a>
                     </div>
-                    <button type="button" class="btn-change" onclick="resetQualification()">Change</button>
+                    <button type="button" class="btn-change" id="qual-change-btn">Change</button>
                 </div>
             </div>
+
+            <!-- Accreditation verification (hidden until qual is selected) -->
             <div id="accred-check-section" class="hidden">
                 <hr class="accred-divider">
                 <p class="helper-text">Verify your organisation's accreditation for this qualification.</p>
@@ -410,14 +448,14 @@
                     <label>Organisation name (as registered with SETA) <span class="req">*</span></label>
                     <input type="text" id="provider-name-input" placeholder="e.g. SkillsConnect Academy (Pty) Ltd">
                 </div>
-                <button type="button" class="btn-verify" id="verify-btn" onclick="verifyAccreditation()">Verify Accreditation</button>
+                <button type="button" class="btn-verify" id="verify-btn">Verify Accreditation</button>
                 <div id="accred-success" class="accred-banner success hidden"></div>
                 <div id="accred-warning" class="accred-banner warning hidden"></div>
                 <div id="accred-error"   class="accred-banner error   hidden"></div>
             </div>
         </div>
 
-        <!-- STEPS 3–6 + SUBMIT -->
+        <!-- STEPS 3–6 + SUBMIT (hidden until accreditation done) -->
         <div id="form-body" class="hidden">
 
             <!-- STEP 3: DETAILS -->
@@ -430,14 +468,14 @@
                 </div>
                 <div class="form-group">
                     <label>Description <span class="req">*</span></label>
-                    <textarea id="description" rows="5" placeholder="Describe learning outcomes, duties, and what candidates will gain..."></textarea>
+                    <textarea id="description" rows="5" placeholder="Describe learning outcomes, duties, and what candidates will gain…"></textarea>
                     <span class="field-error" id="err-description">Please add a description.</span>
                 </div>
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Location <span class="req">*</span></label>
-                        <input type="text" id="location" placeholder="Start typing an address…" autocomplete="off">
-                        <span class="field-error" id="err-location">Please select a location from the suggestions.</span>
+                        <input type="text" id="location" placeholder="Start typing a city or address…" autocomplete="off">
+                        <span class="field-error" id="err-location">Please enter a location.</span>
                     </div>
                     <div class="form-group">
                         <label>Monthly Stipend (ZAR)</label>
@@ -455,7 +493,6 @@
                         <input type="date" id="closing-date">
                         <span class="field-error" id="err-closing">Please set a closing date.</span>
                     </div>
-                    <select id="min-nqf" style="display:none;"></select>
                 </div>
                 <div class="grid-2">
                     <div class="form-group">
@@ -467,6 +504,8 @@
                         <input type="number" id="max-age" min="15" max="65" placeholder="e.g. 35">
                     </div>
                 </div>
+                <!-- Hidden NQF value set programmatically from selected qualification -->
+                <input type="hidden" id="min-nqf" value="">
             </div>
 
             <!-- STEP 4: SKILLS -->
@@ -474,18 +513,18 @@
                 <div class="form-section-title"><span class="step-num">4</span> Required Skills &amp; Licences</div>
                 <p class="helper-text">Click to toggle. Selected skills will be highlighted.</p>
                 <div class="chips-grid" id="skills-grid">
-                    <div class="skill-chip" onclick="toggleSkill(this)">Communication</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Problem Solving</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Technical Writing</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Physically Fit</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Manual Labour Experience</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Java Development</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">C++ Development</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Web Technologies</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Driver's Licence (Code 8)</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Driver's Licence (Code 10)</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Driver's Licence (Code 14)</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">PDP (Professional Driving Permit)</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Communication</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Problem Solving</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Technical Writing</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Physically Fit</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Manual Labour Experience</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Java Development</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">C++ Development</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Web Technologies</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Driver's Licence (Code 8)</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Driver's Licence (Code 10)</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Driver's Licence (Code 14)</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">PDP (Professional Driving Permit)</div>
                 </div>
             </div>
 
@@ -494,33 +533,33 @@
                 <div class="form-section-title"><span class="step-num">5</span> Target Applicant Disciplines</div>
                 <p class="helper-text">Select the fields of study or backgrounds you are looking for.</p>
                 <div class="chips-grid" id="disciplines-grid">
-                    <div class="skill-chip" onclick="toggleSkill(this)">Information Technology</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Cloud Computing</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Cybersecurity</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Data Science &amp; Analytics</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Software Development</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Accounting &amp; Finance</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Business Administration</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Human Resources</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Marketing &amp; Communications</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Project Management</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Civil Engineering</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Mechanical Engineering</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Electrical Engineering</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Construction &amp; Trades</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Supply Chain &amp; Logistics</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Legal &amp; Compliance</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Healthcare &amp; Nursing</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Education &amp; Training</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Agriculture</div>
-                    <div class="skill-chip" onclick="toggleSkill(this)">Media &amp; Design</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Information Technology</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Cloud Computing</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Cybersecurity</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Data Science &amp; Analytics</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Software Development</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Accounting &amp; Finance</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Business Administration</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Human Resources</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Marketing &amp; Communications</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Project Management</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Civil Engineering</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Mechanical Engineering</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Electrical Engineering</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Construction &amp; Trades</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Supply Chain &amp; Logistics</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Legal &amp; Compliance</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Healthcare &amp; Nursing</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Education &amp; Training</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Agriculture</div>
+                    <div class="skill-chip" onclick="toggleChip(this)">Media &amp; Design</div>
                 </div>
             </div>
 
             <!-- STEP 6: INDUSTRY -->
             <div class="form-section">
                 <div class="form-section-title"><span class="step-num">6</span> Your Industry</div>
-                <p class="helper-text">Select the industry your organisation operates in. Only one selection allowed.</p>
+                <p class="helper-text">Select the industry your organisation operates in.</p>
                 <div class="chips-grid" id="industry-grid">
                     <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Technology &amp; ICT</div>
                     <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Finance &amp; Banking</div>
@@ -538,30 +577,57 @@
                     <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Legal &amp; Professional Services</div>
                     <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Hospitality &amp; Tourism</div>
                 </div>
+                <span class="field-error" id="err-industry" style="margin-top:8px;">Please select an industry.</span>
             </div>
 
             <!-- SUBMIT -->
             <div class="submit-area">
-                <button class="btn-cancel-form" onclick="goBack()">Cancel</button>
+                <button class="btn-cancel-form" onclick="window.history.back()">Cancel</button>
                 <button class="btn-submit-form" id="submitBtn" onclick="submitOpportunity()">Submit for Review</button>
             </div>
 
-        </div>
+        </div><!-- /form-body -->
 
     </main>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MODULE SCRIPT  —  auth guard, qualification search, accreditation, submit
+═══════════════════════════════════════════════════════════════════════════ -->
 <script type="module">
-    import { auth, db } from "./firebase.js";
+    import { auth } from "./firebase.js";
     import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-        collection, query, where,
-        orderBy, startAt, endAt, getDocs, limit
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    let selectedSaqaId = null, verificationStatus = null, qualSearchTimer = null;
+    // ── State ────────────────────────────────────────────────────────────────
+    let currentUser        = null;
+    let selectedSaqaId     = null;   // SAQA ID of chosen qualification
+    let selectedQualData   = null;   // Full qualification object
+    let verificationStatus = null;   // "verified" | "unverified" | "skipped"
+    let qualDebounce       = null;
+    let dropdownResults    = [];
+    let focusedIdx         = -1;
 
-    if (!localStorage.getItem("token")) { window.location.href = "/"; }
+    // ── Auth guard ───────────────────────────────────────────────────────────
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) { window.location.href = "/"; return; }
+        currentUser = user;
+
+        // Force-refresh token so every fetch has a valid bearer
+        const token = await user.getIdToken(true);
+        localStorage.setItem("token", token);
+
+        const idTokenResult = await user.getIdTokenResult();
+        const role = idTokenResult.claims.role;
+        if (role && role !== "provider" && role !== "admin") {
+            alert("Only providers can post opportunities.");
+            window.location.href = "/";
+            return;
+        }
+
+        document.getElementById("dashboardBtn").addEventListener("click", () => {
+            window.location.href = role === "admin" ? "/admin-dashboard" : "/provider-home";
+        });
+    });
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
         try { await signOut(auth); } catch (e) { console.error(e); }
@@ -569,120 +635,293 @@
         window.location.href = "/";
     });
 
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) { window.location.href = "/"; return; }
-        const idTokenResult = await user.getIdTokenResult();
-        const role = idTokenResult.claims.role;
-        if (role && role !== "provider" && role !== "admin") { alert("Only providers can post opportunities."); window.location.href = "/"; return; }
-        const freshToken = await user.getIdToken();
-        localStorage.setItem("token", freshToken);
-        document.getElementById("dashboardBtn").addEventListener("click", () => {
-            window.location.href = role === "admin" ? "/admin-dashboard" : "/provider-home";
-        });
+    // ════════════════════════════════════════════════════════════════════════
+    // QUALIFICATION SEARCH  —  calls /api/qualifications (backend endpoint)
+    // NOT the old Firestore prefix query which only matched exact capitalised
+    // prefixes and silently returned nothing for most searches.
+    // ════════════════════════════════════════════════════════════════════════
+
+    const searchInput  = document.getElementById("qual-search-input");
+    const nqfFilter    = document.getElementById("qual-nqf-filter");
+    const dropdown     = document.getElementById("qual-dropdown");
+    const confirmedCard = document.getElementById("qual-confirmed");
+
+    // Open dropdown when input is focused and has content (or NQF filter set)
+    searchInput.addEventListener("focus", () => {
+        const term = searchInput.value.trim();
+        if (term.length >= 2 || nqfFilter.value) {
+            runSearch(term, nqfFilter.value);
+        } else {
+            showDropdownStatus("Type at least 2 characters to search…");
+            openDropdown();
+        }
     });
 
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-        try { await auth.signOut(); } catch (e) {}
-        localStorage.clear(); window.location.href = "/";
+    searchInput.addEventListener("input", () => {
+        const term = searchInput.value.trim();
+        clearTimeout(qualDebounce);
+        if (!term && !nqfFilter.value) { closeDropdown(); return; }
+        showDropdownStatus("Searching…");
+        openDropdown();
+        // 350ms debounce — don't hammer the API on every keystroke
+        qualDebounce = setTimeout(() => runSearch(term, nqfFilter.value), 350);
     });
 
-    window.onQualSearch = function(value) {
-        clearTimeout(qualSearchTimer);
-        const raw = value.trim();
-        if (!raw) { hideDropdown(); return; }
-        const term = raw.split(" ").map(w => w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : "").join(" ");
-        qualSearchTimer = setTimeout(() => searchQualifications(term), 300);
-    };
+    // Re-search when NQF filter changes
+    nqfFilter.addEventListener("change", () => {
+        const term = searchInput.value.trim();
+        if (nqfFilter.value || term.length >= 2) {
+            runSearch(term, nqfFilter.value);
+        }
+    });
 
-    async function searchQualifications(term) {
-        const dropdown = document.getElementById("qual-dropdown");
-        dropdown.innerHTML = '<div class="qual-dropdown-empty">Searching…</div>';
-        dropdown.classList.remove("hidden");
+    // Close on outside click
+    document.addEventListener("click", (e) => {
+        if (!document.getElementById("qual-search-group").contains(e.target)) {
+            closeDropdown();
+        }
+    });
+
+    // Keyboard navigation
+    searchInput.addEventListener("keydown", (e) => {
+        const items = dropdown.querySelectorAll(".qual-dropdown-item");
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            focusedIdx = Math.min(focusedIdx + 1, items.length - 1);
+            items.forEach((el, i) => el.classList.toggle("focused", i === focusedIdx));
+            if (items[focusedIdx]) items[focusedIdx].scrollIntoView({ block: "nearest" });
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            focusedIdx = Math.max(focusedIdx - 1, 0);
+            items.forEach((el, i) => el.classList.toggle("focused", i === focusedIdx));
+            if (items[focusedIdx]) items[focusedIdx].scrollIntoView({ block: "nearest" });
+        } else if (e.key === "Enter" && focusedIdx >= 0 && dropdownResults[focusedIdx]) {
+            e.preventDefault();
+            chooseQualification(dropdownResults[focusedIdx]);
+        } else if (e.key === "Escape") {
+            closeDropdown();
+        }
+    });
+
+    // ── API call ─────────────────────────────────────────────────────────────
+    async function runSearch(term, nqfLevel) {
+        if (!currentUser) {
+            showDropdownStatus("Not logged in — please refresh the page.");
+            return;
+        }
+
+        // Always get a fresh token — stale tokens cause 401 "Unauthorized" errors
+        let token;
         try {
-            const q = query(collection(db, "qualifications"), orderBy("title"), startAt(term), endAt(term + ""), limit(8));
-            const snap = await getDocs(q);
-            if (snap.empty) { dropdown.innerHTML = '<div class="qual-dropdown-empty">No qualifications found.</div>'; return; }
-            dropdown.innerHTML = "";
-            const seen = new Set();
-            snap.forEach(doc => {
-                const normId = String(doc.data().saqa_id || doc.id).replace(/.0$/, "");
-                if (seen.has(normId)) return; seen.add(normId);
-                const d = doc.data();
-                const item = document.createElement("div");
-                item.className = "qual-dropdown-item";
-                item.innerHTML = `<div>${d.title}</div><div class="qual-meta">NQF ${d.nqf_level} · ${d.seta} · ${d.credits} credits</div>`;
-                item.addEventListener("click", () => selectQualification(doc.id, d));
-                dropdown.appendChild(item);
+            token = await currentUser.getIdToken(true);
+            localStorage.setItem("token", token);
+        } catch (e) {
+            showDropdownStatus("Session error — please refresh.");
+            return;
+        }
+
+        const params = new URLSearchParams();
+        if (term)     params.set("search",    term);
+        if (nqfLevel) params.set("nqf_level", nqfLevel);
+
+        try {
+            const res = await fetch(`/api/qualifications?${params.toString()}`, {
+                headers: { "Authorization": `Bearer ${token}` }
             });
-        } catch (err) { console.error(err); dropdown.innerHTML = '<div class="qual-dropdown-empty">Search failed. Try again.</div>'; }
+
+            if (res.status === 401 || res.status === 403) {
+                showDropdownStatus("Session expired — refreshing…");
+                // Try once more with a force-refreshed token
+                const newToken = await currentUser.getIdToken(true);
+                localStorage.setItem("token", newToken);
+                const retry = await fetch(`/api/qualifications?${params.toString()}`, {
+                    headers: { "Authorization": `Bearer ${newToken}` }
+                });
+                if (!retry.ok) { showDropdownStatus("Authentication error. Please log out and back in."); return; }
+                const retryData = await retry.json();
+                renderDropdown(retryData.qualifications || []);
+                return;
+            }
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                showDropdownStatus(`Error ${res.status}: ${err.error || "Failed to load qualifications"}`);
+                return;
+            }
+
+            const data = await res.json();
+            renderDropdown(data.qualifications || []);
+
+        } catch (err) {
+            console.error("Qualification search error:", err);
+            showDropdownStatus("Network error — check your connection.");
+        }
     }
 
-    window.selectQualification = function(id, data) {
-        selectedSaqaId = String(data.saqa_id || id).replace(/.0$/, "");
-        hideDropdown();
-        const nqfMatch = (data.nqf_level || "").match(/\d+/);
-        if (nqfMatch) { const sel = document.getElementById("min-nqf"); const opt = document.createElement("option"); opt.value = nqfMatch[0]; opt.selected = true; sel.innerHTML = ""; sel.appendChild(opt); }
-        document.getElementById("qual-search-input").classList.add("hidden");
-        document.getElementById("qual-title-display").textContent   = data.title;
-        document.getElementById("qual-nqf-display").textContent     = data.nqf_level ?? "—";
-        document.getElementById("qual-seta-display").textContent    = data.seta      ?? "—";
-        document.getElementById("qual-credits-display").textContent = data.credits   ?? "—";
-        const link = document.getElementById("qual-saqa-link");
-        if (data.saqa_link) { link.href = data.saqa_link; link.style.display = "inline-block"; } else { link.style.display = "none"; }
-        document.getElementById("qual-confirmed").classList.remove("hidden");
-        document.getElementById("accred-check-section").classList.remove("hidden");
-    };
+    // ── Render results ────────────────────────────────────────────────────────
+    function renderDropdown(results) {
+        dropdownResults = results;
+        focusedIdx = -1;
 
-    window.resetQualification = function() {
-        selectedSaqaId = null; verificationStatus = null;
-        document.getElementById("qual-search-input").value = "";
-        document.getElementById("qual-search-input").classList.remove("hidden");
-        document.getElementById("qual-confirmed").classList.add("hidden");
+        if (!results.length) {
+            showDropdownStatus("No qualifications found. Try different keywords or change the NQF filter.");
+            return;
+        }
+
+        dropdown.innerHTML = results.map((q, i) => `
+            <div class="qual-dropdown-item" data-index="${i}">
+                <p class="qual-item-title">${esc(q.title)}</p>
+                <p class="qual-item-meta">
+                    ${q.nqf_level ? esc(q.nqf_level) + " · " : ""}${q.seta ? esc(q.seta) + " · " : ""}SAQA ${esc(q.saqa_id || q.id)}${q.type ? " · " + esc(q.type) : ""}
+                </p>
+            </div>
+        `).join("");
+
+        dropdown.querySelectorAll(".qual-dropdown-item").forEach(el => {
+            el.addEventListener("click", () => {
+                const idx = parseInt(el.dataset.index, 10);
+                chooseQualification(dropdownResults[idx]);
+            });
+        });
+
+        openDropdown();
+    }
+
+    // ── Choose a qualification ────────────────────────────────────────────────
+    function chooseQualification(q) {
+        selectedSaqaId   = String(q.saqa_id || q.id || "").replace(/\.0$/, "");
+        selectedQualData = q;
+
+        // Set hidden NQF level input from the qualification's nqf_level string
+        // e.g. "NQF Level 6" → extract "6"
+        const nqfMatch = (q.nqf_level || "").match(/\d+/);
+        document.getElementById("min-nqf").value = nqfMatch ? nqfMatch[0] : "";
+
+        // Populate confirmed card
+        document.getElementById("qual-title-display").textContent   = q.title    || "—";
+        document.getElementById("qual-nqf-display").textContent     = q.nqf_level || "—";
+        document.getElementById("qual-seta-display").textContent    = q.seta     || "—";
+        document.getElementById("qual-credits-display").textContent = q.credits  || "—";
+
+        const saqaLink = document.getElementById("qual-saqa-link");
+        if (q.saqa_link) { saqaLink.href = q.saqa_link; saqaLink.style.display = "inline-block"; }
+        else             { saqaLink.style.display = "none"; }
+
+        // Show confirmed card, hide search input
+        confirmedCard.classList.remove("hidden");
+        searchInput.closest(".form-group").style.display = "none";
+        nqfFilter.closest(".form-group").style.display   = "none";
+
+        // Show accreditation section
+        document.getElementById("accred-check-section").classList.remove("hidden");
+
+        closeDropdown();
+    }
+
+    // ── Change qualification ──────────────────────────────────────────────────
+    document.getElementById("qual-change-btn").addEventListener("click", resetQualification);
+
+    function resetQualification() {
+        selectedSaqaId     = null;
+        selectedQualData   = null;
+        verificationStatus = null;
+
+        confirmedCard.classList.add("hidden");
+        searchInput.closest(".form-group").style.display = "";
+        nqfFilter.closest(".form-group").style.display   = "";
+        searchInput.value = "";
+        nqfFilter.value   = "";
+
         document.getElementById("accred-check-section").classList.add("hidden");
         document.getElementById("provider-name-input").value = "";
-        ["accred-success","accred-warning","accred-error"].forEach(id => document.getElementById(id).classList.add("hidden"));
+        ["accred-success","accred-warning","accred-error"].forEach(id =>
+            document.getElementById(id).classList.add("hidden")
+        );
         document.getElementById("form-body").classList.add("hidden");
-    };
+        document.getElementById("min-nqf").value = "";
+        closeDropdown();
+        searchInput.focus();
+    }
 
-    window.verifyAccreditation = function() {
+    // ── Dropdown helpers ──────────────────────────────────────────────────────
+    function openDropdown()              { dropdown.classList.add("open"); }
+    function closeDropdown()             { dropdown.classList.remove("open"); focusedIdx = -1; }
+    function showDropdownStatus(msg)     { dropdown.innerHTML = `<div class="qual-dropdown-status">${msg}</div>`; openDropdown(); }
+    function esc(s) {
+        return String(s || "")
+            .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+            .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // ACCREDITATION VERIFICATION
+    // ════════════════════════════════════════════════════════════════════════
+
+    document.getElementById("verify-btn").addEventListener("click", verifyAccreditation);
+
+    async function verifyAccreditation() {
         const name = document.getElementById("provider-name-input").value.trim();
         if (!name) { document.getElementById("provider-name-input").focus(); return; }
-        runAccreditationCheck(name);
-    };
 
-    async function runAccreditationCheck(providerName) {
-        const normalizedInput = providerName.toLowerCase();
         const btn = document.getElementById("verify-btn");
         btn.disabled = true; btn.textContent = "Verifying…";
-        ["accred-success","accred-warning","accred-error"].forEach(id => document.getElementById(id).classList.add("hidden"));
-        const selectedType = document.querySelector(".type-card.active")?.dataset.type;
+        ["accred-success","accred-warning","accred-error"].forEach(id =>
+            document.getElementById(id).classList.add("hidden")
+        );
+
+        const selectedType = document.querySelector(".type-card.active")?.dataset.type || "learnership";
+
         try {
-            const q = query(collection(db, "accredited_providers"), where("qual_id","==",selectedSaqaId), where("opportunity_type","==",selectedType), where("status","==","Active"), limit(50));
+            // Import Firestore dynamically — only needed here
+            const { getFirestore, collection, query, where, getDocs, limit } =
+                await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+            const { initializeApp, getApps } =
+                await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+
+            // Use the already-initialised app from firebase.js
+            const firestoreDb = getFirestore();
+
+            const q = query(
+                collection(firestoreDb, "accredited_providers"),
+                where("qual_id",          "==", selectedSaqaId),
+                where("opportunity_type", "==", selectedType),
+                where("status",           "==", "Active"),
+                limit(50)
+            );
             const snap = await getDocs(q);
-            const matchDoc = snap.docs.find(doc => doc.data().provider_name.toLowerCase() === normalizedInput);
+
+            const normalInput = name.toLowerCase();
+            const matchDoc = snap.docs.find(doc =>
+                (doc.data().provider_name || "").toLowerCase() === normalInput
+            );
+
             if (matchDoc) {
-                const d = matchDoc.data(); verificationStatus = "verified";
-                const banner = document.getElementById("accred-success");
-                banner.innerHTML = `✅ <strong>Accreditation verified.</strong><br>Accreditation #: <strong>${d.accreditation_number ?? "—"}</strong> &nbsp;·&nbsp; SETA: <strong>${d.seta ?? "—"}</strong> &nbsp;·&nbsp; Province: <strong>${d.province ?? "—"}</strong>`;
-                banner.classList.remove("hidden");
-            } else if (!snap.empty) {
-                verificationStatus = "unverified";
-                const banner = document.getElementById("accred-warning");
-                banner.innerHTML = `⚠️ <strong>Organisation not found for this qualification.</strong><br>Check your name matches exactly how it's registered with the SETA. Your listing will be sent for admin review before going live. You may still proceed.`;
-                banner.classList.remove("hidden");
+                const d = matchDoc.data();
+                verificationStatus = "verified";
+                const b = document.getElementById("accred-success");
+                b.innerHTML = `✅ <strong>Accreditation verified.</strong><br>
+                    Accreditation #: <strong>${d.accreditation_number ?? "—"}</strong> &nbsp;·&nbsp;
+                    SETA: <strong>${d.seta ?? "—"}</strong> &nbsp;·&nbsp;
+                    Province: <strong>${d.province ?? "—"}</strong>`;
+                b.classList.remove("hidden");
             } else {
                 verificationStatus = "unverified";
-                const banner = document.getElementById("accred-warning");
-                banner.innerHTML = `⚠️ <strong>No accreditation record found.</strong><br>Your listing will be sent for admin review before going live. You may still proceed.`;
-                banner.classList.remove("hidden");
+                const b = document.getElementById("accred-warning");
+                b.innerHTML = snap.empty
+                    ? `⚠️ <strong>No accreditation record found.</strong><br>Your listing will be sent for admin review before going live. You may still proceed.`
+                    : `⚠️ <strong>Organisation not found for this qualification.</strong><br>Check your name matches exactly how it's registered with the SETA. Your listing will be sent for admin review. You may still proceed.`;
+                b.classList.remove("hidden");
             }
+
             revealForm();
         } catch (err) {
-            console.error(err);
-            const banner = document.getElementById("accred-error");
-            banner.textContent = "❌ Verification failed due to a server error. Please try again.";
-            banner.classList.remove("hidden");
-        } finally { btn.disabled = false; btn.textContent = "Verify Accreditation"; }
+            console.error("Accreditation check error:", err);
+            const b = document.getElementById("accred-error");
+            b.textContent = "❌ Verification failed. Please try again.";
+            b.classList.remove("hidden");
+        } finally {
+            btn.disabled = false; btn.textContent = "Verify Accreditation";
+        }
     }
 
     function revealForm() {
@@ -690,174 +929,184 @@
         document.getElementById("form-body").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
+    // ════════════════════════════════════════════════════════════════════════
+    // FORM SUBMIT
+    // ════════════════════════════════════════════════════════════════════════
+
     window.submitOpportunity = submitOpportunity;
 
     async function submitOpportunity() {
         if (!validateForm()) return;
+
         const btn = document.getElementById("submitBtn");
-        btn.disabled = true; btn.textContent = "Submitting...";
+        btn.disabled = true; btn.textContent = "Submitting…";
+
         const selectedType = document.querySelector(".type-card.active")?.dataset.type || "learnership";
         const skills       = [...document.querySelectorAll("#skills-grid .skill-chip.selected")].map(c => c.textContent.trim());
         const disciplines  = [...document.querySelectorAll("#disciplines-grid .skill-chip.selected")].map(c => c.textContent.trim());
         const industry     = document.querySelector(".industry-chip.selected")?.textContent.trim() || null;
+
         const payload = {
-            type: selectedType,
-            title: document.getElementById("title").value.trim(),
-            description: document.getElementById("description").value.trim(),
-            location: document.getElementById("location").value.trim(),
-            stipend: parseFloat(document.getElementById("stipend").value) || 0,
-            duration: parseInt(document.getElementById("duration").value) || null,
-            closingDate: document.getElementById("closing-date").value,
-            nqfLevel: document.getElementById("min-nqf").value,
-            minAge: parseInt(document.getElementById("min-age").value) || null,
-            maxAge: parseInt(document.getElementById("max-age").value) || null,
+            type:               selectedType,
+            title:              document.getElementById("title").value.trim(),
+            description:        document.getElementById("description").value.trim(),
+            location:           document.getElementById("location").value.trim(),
+            stipend:            parseFloat(document.getElementById("stipend").value) || 0,
+            duration:           parseInt(document.getElementById("duration").value)  || null,
+            closingDate:        document.getElementById("closing-date").value,
+            minimumNQFLevel:    document.getElementById("min-nqf").value || null,
+            minAge:             parseInt(document.getElementById("min-age").value)   || null,
+            maxAge:             parseInt(document.getElementById("max-age").value)   || null,
             skills, disciplines, industry,
-            saqaId: selectedSaqaId, verificationStatus,
+            saqaId:             selectedSaqaId     || null,
+            verificationStatus: verificationStatus || "skipped",
+            qualificationTitle: selectedQualData?.title || null
         };
-        const freshToken = localStorage.getItem("token");
+
         try {
-            const res = await fetch("/api/opportunities/submit", { method:"POST", headers:{"Content-Type":"application/json","Authorization":`Bearer ${freshToken}`}, body: JSON.stringify(payload) });
+            // Always use a fresh token for the submit request
+            const token = await currentUser.getIdToken(true);
+            localStorage.setItem("token", token);
+
+            const res = await fetch("/api/opportunities/submit", {
+                method:  "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                body:    JSON.stringify(payload)
+            });
+
+            const data = await res.json().catch(() => ({}));
+
             if (res.ok) {
-                const data = await res.json(); const isLive = data.status === "auto_approved";
+                const isLive = data.status === "auto_approved";
                 const banner = document.getElementById("successBanner");
-                banner.innerHTML = isLive ? "✅ Opportunity submitted and <strong>automatically approved</strong> — it is now live for applicants." : "✅ Opportunity submitted successfully! It has been sent to an admin for review before going live.";
-                banner.classList.remove("hidden"); window.scrollTo({ top:0, behavior:"smooth" });
-                document.getElementById("submitBtn").textContent = "Submitted ✓";
+                banner.innerHTML = isLive
+                    ? "✅ Opportunity submitted and <strong>automatically approved</strong> — it is now live for applicants."
+                    : "✅ Opportunity submitted! It has been sent to an admin for review before going live.";
+                banner.classList.remove("hidden");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                btn.textContent = "Submitted ✓";
                 setTimeout(() => { window.location.href = "/provider-home"; }, 3000);
+            } else if (res.status === 409) {
+                alert(data.error || "You already have an active listing for this qualification.");
+                btn.disabled = false; btn.textContent = "Submit for Review";
             } else {
-                const data = await res.json();
-                if (res.status === 409) { alert(data.error); } else { alert("Submission failed: " + (data.error || res.status)); }
+                alert("Submission failed: " + (data.error || `HTTP ${res.status}`));
                 btn.disabled = false; btn.textContent = "Submit for Review";
             }
-        } catch (err) { console.error(err); alert("Could not reach server."); btn.disabled = false; btn.textContent = "Submit for Review"; }
+        } catch (err) {
+            console.error("Submit error:", err);
+            alert("Could not reach server. Please try again.");
+            btn.disabled = false; btn.textContent = "Submit for Review";
+        }
     }
 
-    function hideDropdown() { document.getElementById("qual-dropdown").classList.add("hidden"); }
-    document.addEventListener("click", e => { if (!e.target.closest("#qual-search-section")) hideDropdown(); });
+    // ── Validation ────────────────────────────────────────────────────────────
+    function validateForm() {
+        let ok = true;
+
+        const type = document.querySelector(".type-card.active")?.dataset.type;
+        if (type !== "internship" && !selectedSaqaId) {
+            alert("Please select a SAQA qualification before submitting.");
+            document.getElementById("qual-search-input").focus();
+            return false;
+        }
+
+        const checks = [
+            ["title",       document.getElementById("title").value.trim()],
+            ["description", document.getElementById("description").value.trim()],
+            ["location",    document.getElementById("location").value.trim()]
+        ];
+        checks.forEach(([id, val]) => {
+            const show = !val;
+            document.getElementById("err-" + id).classList.toggle("visible", show);
+            if (show) ok = false;
+        });
+
+        const dur = parseInt(document.getElementById("duration").value);
+        const durOk = dur >= 1 && dur <= 24;
+        document.getElementById("err-duration").classList.toggle("visible", !durOk);
+        if (!durOk) ok = false;
+
+        const closing = document.getElementById("closing-date").value;
+        document.getElementById("err-closing").classList.toggle("visible", !closing);
+        if (!closing) ok = false;
+
+        const industryOk = !!document.querySelector(".industry-chip.selected");
+        document.getElementById("err-industry").classList.toggle("visible", !industryOk);
+        if (!industryOk) ok = false;
+
+        if (!ok) window.scrollTo({ top: 0, behavior: "smooth" });
+        return ok;
+    }
 </script>
 
+<!-- ══════════════════════════════════════════════════════════════════════════
+     NON-MODULE SCRIPT  —  type selector, chips, NQF fallback, Google Places
+═══════════════════════════════════════════════════════════════════════════ -->
 <script>
-    async function loadNQFLevels() {
-        try {
-            const res = await fetch("/nqf-levels");
-            if (!res.ok) { populateFallbackNQF(); return; }
-            const data = await res.json();
-            const dropdown = document.getElementById("min-nqf");
-            dropdown.innerHTML = '<option value="">Select NQF Level</option>';
-            data.levels.forEach(nqf => { const opt = document.createElement("option"); opt.value = nqf.level; opt.text = `NQF ${nqf.level} — ${nqf.name}`; dropdown.appendChild(opt); });
-        } catch { populateFallbackNQF(); }
-    }
-
-    function populateFallbackNQF() {
-        const levels = [{level:1,name:"Grade 9"},{level:2,name:"Grade 10"},{level:3,name:"Grade 11"},{level:4,name:"Grade 12 / Matric"},{level:5,name:"Higher Certificate"},{level:6,name:"Diploma / Advanced Certificate"},{level:7,name:"Bachelor's Degree"},{level:8,name:"Honours / Postgraduate Diploma"},{level:9,name:"Master's Degree"},{level:10,name:"Doctoral Degree"}];
-        const dropdown = document.getElementById("min-nqf");
-        dropdown.innerHTML = '<option value="">Select NQF Level</option>';
-        levels.forEach(n => { const opt = document.createElement("option"); opt.value = n.level; opt.text = `NQF ${n.level} — ${n.name}`; dropdown.appendChild(opt); });
-    }
-
-    window.onload = () => {
-        document.getElementById("closing-date").min = new Date().toISOString().split("T")[0];
-        loadNQFLevels();
-    };
-
+    // ── Type selector ────────────────────────────────────────────────────────
     window.selectType = function(type) {
         document.querySelectorAll(".type-card").forEach(c => c.classList.remove("active"));
         document.querySelector(`[data-type="${type}"]`).classList.add("active");
+
         const accSection = document.getElementById("accreditation-section");
         const formBody   = document.getElementById("form-body");
+
         if (type === "internship") {
+            // Internships skip accreditation — show form directly
             accSection.classList.add("hidden");
             formBody.classList.remove("hidden");
-            window._verificationStatus = "skipped";
-            window._selectedSaqaId    = null;
-            // Renumber steps — accreditation (step 2) is hidden
-            document.querySelector("#form-body .form-card:nth-child(1) .card-title").textContent = "2. Opportunity Details";
-            document.querySelector("#form-body .form-card:nth-child(2) .card-title").textContent = "3. Required Skills & Licences";
-            document.querySelector("#form-body .form-card:nth-child(3) .card-title").textContent = "4. Target Applicant Disciplines";
-            document.querySelector("#form-body .form-card:nth-child(4) .card-title").textContent = "5. Your Industry";
+            // verificationStatus will be "skipped" in the submit payload
         } else {
             accSection.classList.remove("hidden");
-            // Restore original step numbers
-            document.querySelector("#form-body .form-card:nth-child(1) .card-title").textContent = "3. Opportunity Details";
-            document.querySelector("#form-body .form-card:nth-child(2) .card-title").textContent = "4. Required Skills & Licences";
-            document.querySelector("#form-body .form-card:nth-child(3) .card-title").textContent = "5. Target Applicant Disciplines";
-            document.querySelector("#form-body .form-card:nth-child(4) .card-title").textContent = "6. Your Industry";
-            const alreadyVerified = !document.getElementById("accred-success").classList.contains("hidden") ||
-                                    !document.getElementById("accred-warning").classList.contains("hidden");
-            if (!alreadyVerified) {
-                formBody.classList.add("hidden");
-            }
+            // Only hide form body if accreditation hasn't been done yet
+            const verified = !document.getElementById("accred-success").classList.contains("hidden");
+            const warned   = !document.getElementById("accred-warning").classList.contains("hidden");
+            if (!verified && !warned) formBody.classList.add("hidden");
         }
     };
 
-    window.toggleSkill    = chip => chip.classList.toggle("selected");
-    window.selectIndustry = chip => { document.querySelectorAll(".industry-chip").forEach(c => c.classList.remove("selected")); chip.classList.add("selected"); };
-
-    function showErr(id, show) { const el = document.getElementById("err-" + id); if (el) el.classList.toggle("visible", show); }
-
-    window.validateForm = function() {
-        let valid = true;
-        const type = document.querySelector(".type-card.active")?.dataset.type;
-        if (type !== "internship") {
-            const hasSaqa = !!window._selectedSaqaId || (document.getElementById("qual-confirmed") && !document.getElementById("qual-confirmed").classList.contains("hidden"));
-            if (!hasSaqa) { alert("Please search for and select a qualification before submitting."); document.getElementById("qual-search-input").focus(); return false; }
-        }
-        const title = document.getElementById("title").value.trim(); showErr("title", !title); if (!title) valid = false;
-        const desc  = document.getElementById("description").value.trim(); showErr("description", !desc); if (!desc) valid = false;
-        const loc   = document.getElementById("location").value.trim(); showErr("location", !loc); if (!loc) valid = false;
-        const dur   = document.getElementById("duration").value;
-        const durValid = dur && parseInt(dur) >= 1 && parseInt(dur) <= 24; showErr("duration", !durValid); if (!durValid) valid = false;
-        const closing = document.getElementById("closing-date").value; showErr("closing", !closing); if (!closing) valid = false;
-        const industry = document.querySelector(".industry-chip.selected");
-        if (!industry) { const grid = document.getElementById("industry-grid"); grid.style.outline = "2px solid #ef4444"; grid.style.borderRadius = "8px"; grid.scrollIntoView({ behavior:"smooth", block:"center" }); valid = false; }
-        else { document.getElementById("industry-grid").style.outline = ""; }
-        if (!valid) window.scrollTo({ top:0, behavior:"smooth" });
-        return valid;
+    // ── Chips ────────────────────────────────────────────────────────────────
+    window.toggleChip    = chip => chip.classList.toggle("selected");
+    window.selectIndustry = chip => {
+        document.querySelectorAll(".industry-chip").forEach(c => c.classList.remove("selected"));
+        chip.classList.add("selected");
+        document.getElementById("err-industry").classList.remove("visible");
     };
 
-    window.goBack = () => window.history.back();
-</script>
+    // ── Init ─────────────────────────────────────────────────────────────────
+    window.addEventListener("load", () => {
+        document.getElementById("closing-date").min = new Date().toISOString().split("T")[0];
+    });
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDHRk3kDwXc6__TDZIuGkQlQsEwCsK8mDc&libraries=places&callback=initPlaces" async defer></script>
-<script>
+    // ── Google Places autocomplete ────────────────────────────────────────────
     window.initPlaces = function() {
-        const input       = document.getElementById("location");
+        const input        = document.getElementById("location");
         const autocomplete = new google.maps.places.Autocomplete(input, {
             componentRestrictions: { country: "za" },
             fields: ["formatted_address", "geometry", "name"]
         });
 
-        // Style the dropdown to match the dark theme
+        // Dark-theme override for the Places dropdown
         const style = document.createElement("style");
         style.textContent = `
-            .pac-container {
-                background-color: #3a3a3a;
-                border: 1.5px solid rgba(255,255,255,0.3);
-                border-radius: 8px;
-                margin-top: 4px;
-                font-family: inherit;
-            }
-            .pac-item {
-                color: white;
-                border-top: 1px solid rgba(255,255,255,0.1);
-                padding: 8px 14px;
-                cursor: pointer;
-                font-size: 14px;
-            }
-            .pac-item:hover, .pac-item-selected { background-color: #4a4a4a; }
-            .pac-item-query { color: white; font-size: 14px; }
-            .pac-matched { font-weight: bold; }
-            .pac-icon { display: none; }
+            .pac-container { background:#1e293b; border:1px solid rgba(56,189,248,0.25); border-radius:8px; margin-top:4px; font-family:inherit; }
+            .pac-item { color:#f1f5f9; border-top:1px solid rgba(255,255,255,0.05); padding:8px 14px; cursor:pointer; font-size:14px; }
+            .pac-item:hover,.pac-item-selected { background:#0f172a; }
+            .pac-item-query { color:#f1f5f9; font-size:14px; }
+            .pac-matched { font-weight:700; }
+            .pac-icon { display:none; }
         `;
         document.head.appendChild(style);
 
         autocomplete.addListener("place_changed", () => {
             const place = autocomplete.getPlace();
-            if (place.formatted_address) {
-                input.value = place.formatted_address;
-            }
+            if (place.formatted_address) input.value = place.formatted_address;
         });
     };
 </script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDHRk3kDwXc6__TDZIuGkQlQsEwCsK8mDc&libraries=places&callback=initPlaces" async defer></script>
+
 </body>
 </html>

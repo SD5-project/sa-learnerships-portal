@@ -302,14 +302,7 @@
         import { auth } from "./firebase.js";
         import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            alert("You must log in first!");
-            window.location.href = "/";
-        }
-
-        // ── Load profile from Firestore via backend ─────────────────────────────
+        // ── Auth guard + profile loader ─────────────────────────────────────────
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = "/";
@@ -317,7 +310,10 @@
             }
 
             try {
-                const freshToken = await user.getIdToken();
+                // Always get a fresh token — stale localStorage tokens cause 401s
+                const freshToken = await user.getIdToken(true);
+                localStorage.setItem("token", freshToken);
+
                 const res = await fetch(`/api/user-profile?uid=${user.uid}`, {
                     headers: { "Authorization": `Bearer ${freshToken}` }
                 });
@@ -326,6 +322,7 @@
                     const data = await res.json();
                     populateProfile(data, user.email);
                 } else {
+                    console.warn("Profile fetch returned", res.status);
                     populateProfile({}, user.email);
                 }
             } catch (err) {
@@ -334,47 +331,85 @@
             }
         });
 
-        // Parse and render values into UI containers safely
+        // ── Populate UI — handles ALL Firestore field name variants ────────────
         function populateProfile(data, authEmail) {
-            const orgName   = data.organization || data.firstname || "-";
-            const email     = data.email        || authEmail      || "-";
-            const phone     = data.phonenumber  || "-";
-            const city      = data.city         || "-";
-            const verified  = data.verified     || false;
-            const status    = data.status       || "active";
+            // Organization name: providers use 'organization'; fallback to firstname
+            const orgName = data.organization || data.firstname || data.name || "";
 
-            // Structural Cleanups for loading states
-            const nameElements = ["profileName", "profileEmail"];
-            nameElements.forEach(id => document.getElementById(id).classList.remove("loading-pulse"));
+            // Email
+            const email = data.email || authEmail || "-";
 
-            // Bind values to Document Object Model
-            document.getElementById("navName").innerText        = orgName !== "-" ? orgName : email;
-            document.getElementById("welcomeMsg").innerText     = "Welcome, " + (orgName !== "-" ? orgName : email) + " 👋";
-            
-            // Format metrics blocks with clear state classes
-            document.getElementById("cardStatus").innerHTML     = `<span class="state-badge state-active">${status}</span>`;
-            document.getElementById("cardLocation").innerText   = city;
-            
-            const verifyBadge = verified 
-                ? `<span class="state-badge state-verified">✓ Verified</span>` 
+            // Phone: field is 'phonenumber' in signup forms
+            const phone = data.phonenumber || data.phone || "-";
+
+            // City/location: providers store either 'city' or 'location'
+            const city = data.city || data.location || "-";
+
+            // Verification: boolean 'verified' OR string 'verificationStatus'
+            const verified =
+                data.verified === true ||
+                data.verificationStatus === "verified" ||
+                data.verificationStatus === "Verified";
+
+            const status = data.status || "active";
+
+            const displayName = orgName || email;
+
+            // Remove loading placeholders
+            ["profileName", "profileEmail"].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove("loading-pulse");
+            });
+
+            // Navbar + welcome
+            const navNameEl = document.getElementById("navName");
+            if (navNameEl) navNameEl.innerText = displayName;
+
+            const welcomeEl = document.getElementById("welcomeMsg");
+            if (welcomeEl) welcomeEl.innerText = `Welcome, ${displayName} 👋`;
+
+            // Status card
+            const cardStatusEl = document.getElementById("cardStatus");
+            if (cardStatusEl) cardStatusEl.innerHTML =
+                `<span class="state-badge state-active">${status}</span>`;
+
+            // Location card
+            const cardLocationEl = document.getElementById("cardLocation");
+            if (cardLocationEl) cardLocationEl.innerText = city;
+
+            // Verification badge
+            const verifyBadge = verified
+                ? `<span class="state-badge state-verified">✓ Verified</span>`
                 : `<span class="state-badge state-unverified">✗ Pending Verification</span>`;
-                
-            document.getElementById("cardVerified").innerHTML   = verifyBadge;
-            document.getElementById("profileVerified").innerHTML = verifyBadge;
 
-            document.getElementById("profileName").innerText    = orgName;
-            document.getElementById("profileEmail").innerText   = email;
-            document.getElementById("profilePhone").innerText   = phone;
-            document.getElementById("profileLocation").innerText= city;
+            const cardVerifiedEl = document.getElementById("cardVerified");
+            if (cardVerifiedEl) cardVerifiedEl.innerHTML = verifyBadge;
+
+            const profileVerifiedEl = document.getElementById("profileVerified");
+            if (profileVerifiedEl) profileVerifiedEl.innerHTML = verifyBadge;
+
+            // Profile fields
+            const profileNameEl = document.getElementById("profileName");
+            if (profileNameEl) profileNameEl.innerText = orgName || "-";
+
+            const profileEmailEl = document.getElementById("profileEmail");
+            if (profileEmailEl) profileEmailEl.innerText = email;
+
+            const profilePhoneEl = document.getElementById("profilePhone");
+            if (profilePhoneEl) profilePhoneEl.innerText = phone;
+
+            const profileLocationEl = document.getElementById("profileLocation");
+            if (profileLocationEl) profileLocationEl.innerText = city;
         }
 
-        // Handle active exit events
+        // ── Logout ──────────────────────────────────────────────────────────────
         document.getElementById("logoutBtn").addEventListener("click", async () => {
             try { await signOut(auth); } catch (e) { console.error(e); }
             localStorage.clear();
             window.location.href = "/";
         });
 
+        // ── My Listings button ──────────────────────────────────────────────────
         document.getElementById("myListingsBtn").addEventListener("click", () => {
             window.location.href = "/applicants";
         });

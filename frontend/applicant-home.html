@@ -328,6 +328,11 @@
                     <h3>Profile</h3>
                     <p class="widget-value">My Qualifications →</p>
                 </div>
+                <div class="widget-card clickable" onclick="window.location.href='/applicant-cv'">
+                    <span class="widget-icon-frame">📄</span>
+                    <h3>Documents</h3>
+                    <p class="widget-value">My CV →</p>
+                </div>
             </section>
 
             <!-- PROFILE -->
@@ -363,6 +368,7 @@
     <script type="module" src="script.js"></script>
     <script type="module">
         import { auth, db } from "./firebase.js";
+        import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { query, collection, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const token = localStorage.getItem("token");
@@ -371,8 +377,12 @@
             window.location.href = "/";
         }
 
-        auth.onAuthStateChanged(async (user) => {
-            if (!user) { window.location.href = "/"; return; }
+        //── Load profile from Firestore via backend ─────────────────────────────
+        onAuthStateChanged(auth,async (user) => {
+            if (!user) {
+                window.location.href = "/";
+                return;
+            }
 
             try {
                 const freshToken = await user.getIdToken();
@@ -407,7 +417,7 @@
         }
 
         document.getElementById("logoutBtn").addEventListener("click", async () => {
-            try { await auth.signOut(); } catch (e) { console.error(e); }
+            try { await signOut(auth); } catch (e) { console.error(e); }
             localStorage.clear();
             window.location.href = "/";
         });
@@ -416,9 +426,14 @@
             window.location.href = "/applications-page.html";
         });
 
-        // Notifications
-        auth.onAuthStateChanged((user) => {
-            if (!user) return;
+        //Notifications
+        onAuthStateChanged(auth,(user) => {
+            if (user) {
+                const q = query(
+                    collection(db, "notifications"),
+                    where("recipientId", "==", user.uid),
+                    orderBy("timestamp", "desc")
+                );
 
             const q = query(
                 collection(db, "notifications"),

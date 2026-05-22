@@ -300,6 +300,7 @@
 
     <script type="module">
         import { auth } from "./firebase.js";
+        import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         const token = localStorage.getItem("token");
 
@@ -308,8 +309,8 @@
             window.location.href = "/";
         }
 
-        // Monitor identity states and fetch Firestore payloads securely
-        auth.onAuthStateChanged(async (user) => {
+        // ── Load profile from Firestore via backend ─────────────────────────────
+        onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = "/";
                 return;
@@ -369,7 +370,7 @@
 
         // Handle active exit events
         document.getElementById("logoutBtn").addEventListener("click", async () => {
-            try { await auth.signOut(); } catch (e) { console.error(e); }
+            try { await signOut(auth); } catch (e) { console.error(e); }
             localStorage.clear();
             window.location.href = "/";
         });

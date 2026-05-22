@@ -9,11 +9,13 @@ const builder = SignupBuilder.load();
 const areaCodes = { '+27': 9, '+1': 10, '+44': 10, '+91': 10, '+61': 9 };
 
 const orgNameEl    = document.getElementById('orgName');
+const cityEl       = document.getElementById('city');
 const phoneEl      = document.getElementById('phone');
 const areaCodeEl   = document.getElementById('areaCode');
 const nextBtn      = document.getElementById('next-btn');
 const errorBox     = document.getElementById('global-error');
 const phoneErrorEl = document.getElementById('phoneError');
+const cityErrorEl  = document.getElementById('cityError');
 
 function showFieldError(el, msg) {
     el.textContent = msg;
@@ -46,10 +48,11 @@ nextBtn.addEventListener('click', async () => {
     clearFieldError(phoneErrorEl);
 
     const orgName  = orgNameEl.value.trim();
+    const city     = cityEl.value.trim();
     const phone    = phoneEl.value.trim();
     const areaCode = areaCodeEl.value;
 
-    if (!orgName || !phone) {
+    if (!orgName || !city || !phone) {
         errorBox.textContent = 'Please fill in all fields.';
         errorBox.classList.add('visible');
         return;
@@ -75,7 +78,7 @@ nextBtn.addEventListener('click', async () => {
     nextBtn.textContent = 'Creating account…';
 
     try {
-        builder.setDetails({ organization: orgName, phonenumber: areaCode + phone });
+        builder.setDetails({ organization: orgName, city, phonenumber: areaCode + phone });
 
         // save() creates the Firebase account (email path) and writes to Firestore atomically.
         const savedUser = await builder.save();

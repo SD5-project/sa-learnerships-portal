@@ -70,8 +70,20 @@ app.get('/provider-home', (req, res) =>
 app.get('/listings', (req, res) =>
     res.sendFile(path.join(__dirname, '..', 'frontend', 'listings.html')));
 
+app.get('/email-verified', (req, res) =>
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'email-verified.html')));
+
+app.get('/applicant-qualifications', (req, res) =>
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'applicant-qualifications.html')));
+
+app.get('/applicant-cv', (req, res) =>
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'edit-cv.html')));
+
 app.get('/', (req, res) =>
     res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html')));
+
+app.get('/applicant-cv', (req, res) =>
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'edit-cv.html')));
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/api/health', async (req, res) => {
@@ -133,16 +145,22 @@ app.get('/nqf-levels', async (req, res) => {
 // =============================================================================
 
 app.post("/signup/applicant", async (req, res) => {
-    const { uid, firstname, lastname, email, username, institution, city, phonenumber, cv } = req.body;
+    const { uid, firstname, lastname, email, phonenumber, idNumber, qualifications, cv } = req.body;
     if (!email) return res.status(400).json({ error: "Email is required" });
     try {
         await admin.auth().setCustomUserClaims(uid, { role: "applicant" });
         const userData = {
-            firstname, lastname, email, username, institution, city, phonenumber, cv,
+            firstname:      firstname      || null,
+            lastname:       lastname       || null,
+            email:          email          || null,
+            phonenumber:    phonenumber    || null,
+            idNumber:       idNumber       || null,
+            qualifications: qualifications || [],
+            cv:             cv             || null,
             role: "applicant", status: "active", createdAt: new Date().toISOString()
         };
+        await db.collection("users").doc(uid).set(userData);
         await applicantRef(uid).set(userData);
-        try { await db.collection("users").doc(uid).set(userData); } catch (_) {}
         res.status(201).json({ message: "Applicant created successfully" });
     } catch (error) {
         console.error("Applicant signup error:", error.message);
@@ -150,23 +168,6 @@ app.post("/signup/applicant", async (req, res) => {
     }
 });
 
-app.post("/signup/provider", async (req, res) => {
-    const { uid, organization, email, city, phonenumber, username } = req.body;
-    if (!email) return res.status(400).json({ error: "Email is required" });
-    try {
-        await admin.auth().setCustomUserClaims(uid, { role: "provider" });
-        const userData = {
-            organization, email, city, phonenumber, username,
-            role: "provider", status: "active", createdAt: new Date().toISOString()
-        };
-        await providerRef(uid).set(userData);
-        try { await db.collection("users").doc(uid).set(userData); } catch (_) {}
-        res.status(201).json({ message: "Provider created successfully" });
-    } catch (error) {
-        console.error("Provider signup error:", error.message);
-        res.status(500).json({ error: "Failed to create provider" });
-    }
-});
 
 // =============================================================================
 // OPPORTUNITIES
@@ -785,16 +786,32 @@ app.post("/api/set-role-claim", verifyToken, async (req, res) => {
 // DUPLICATE CHECK ENDPOINTS (used during signup)
 // =============================================================================
 
-// Check if email already exists in either subcollection
+// Check if email already exists in either subcollection.
+// Also detects and cleans up ghost Firebase Auth accounts left behind by
+// abandoned signups (account created on the password page but signup never completed).
 app.get("/api/check-email", async (req, res) => {
-    const { email } = req.query;
+    const email = (req.query.email || "").trim().toLowerCase();
     if (!email) return res.status(400).json({ error: "Email is required" });
     try {
+        // 1. Firestore check — a record here means signup was fully completed.
         const [aSnap, pSnap] = await Promise.all([
             applicantsCol().where("email", "==", email).limit(1).get(),
             providersCol().where("email",  "==", email).limit(1).get()
         ]);
-        res.json({ exists: !aSnap.empty || !pSnap.empty });
+        if (!aSnap.empty || !pSnap.empty) return res.json({ exists: true });
+
+        // 2. Firebase Auth check — if an account exists here but NOT in Firestore,
+        //    it is a ghost from an abandoned signup. Delete it so the user can retry.
+        try {
+            const fbUser = await admin.auth().getUserByEmail(email);
+            await admin.auth().deleteUser(fbUser.uid);
+            console.log(`[check-email] Deleted ghost account for ${email}`);
+        } catch (authErr) {
+            if (authErr.code !== 'auth/user-not-found') throw authErr;
+            // Not found in Firebase Auth either — clean slate.
+        }
+
+        res.json({ exists: false });
     } catch (error) {
         console.error("Check email error:", error);
         res.status(500).json({ error: "Failed to check email" });
@@ -854,6 +871,14 @@ app.patch("/api/profile/qualifications", verifyToken, async (req, res) => {
         res.status(500).json({ error: "Failed to update qualifications" });
     }
 });
+
+app.use('/', require('./routes/auth'));
+app.use('/', require('./routes/pages'));
+app.use('/', require('./routes/nqf'));
+app.use('/', require('./routes/opportunities'));
+app.use('/', require('./routes/applications'));
+app.use('/', require('./routes/provider'));
+app.use('/api/admin', require('./routes/admin'));
 
 // =============================================================================
 // EXPORT

@@ -436,8 +436,8 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Location <span class="req">*</span></label>
-                        <input type="text" id="location" placeholder="e.g. Johannesburg, Gauteng">
-                        <span class="field-error" id="err-location">Please enter a location.</span>
+                        <input type="text" id="location" placeholder="Start typing an address…" autocomplete="off">
+                        <span class="field-error" id="err-location">Please select a location from the suggestions.</span>
                     </div>
                     <div class="form-group">
                         <label>Monthly Stipend (ZAR)</label>
@@ -553,13 +553,23 @@
 
 <script type="module">
     import { auth, db } from "./firebase.js";
-    import { collection, query, where, orderBy, startAt, endAt, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+        collection, query, where,
+        orderBy, startAt, endAt, getDocs, limit
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     let selectedSaqaId = null, verificationStatus = null, qualSearchTimer = null;
 
     if (!localStorage.getItem("token")) { window.location.href = "/"; }
 
-    auth.onAuthStateChanged(async (user) => {
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+        try { await signOut(auth); } catch (e) { console.error(e); }
+        localStorage.clear();
+        window.location.href = "/";
+    });
+
+    onAuthStateChanged(auth, async (user) => {
         if (!user) { window.location.href = "/"; return; }
         const idTokenResult = await user.getIdTokenResult();
         const role = idTokenResult.claims.role;
@@ -756,12 +766,27 @@
         const accSection = document.getElementById("accreditation-section");
         const formBody   = document.getElementById("form-body");
         if (type === "internship") {
-            accSection.classList.add("hidden"); formBody.classList.remove("hidden");
-            window._verificationStatus = "skipped"; window._selectedSaqaId = null;
+            accSection.classList.add("hidden");
+            formBody.classList.remove("hidden");
+            window._verificationStatus = "skipped";
+            window._selectedSaqaId    = null;
+            // Renumber steps — accreditation (step 2) is hidden
+            document.querySelector("#form-body .form-card:nth-child(1) .card-title").textContent = "2. Opportunity Details";
+            document.querySelector("#form-body .form-card:nth-child(2) .card-title").textContent = "3. Required Skills & Licences";
+            document.querySelector("#form-body .form-card:nth-child(3) .card-title").textContent = "4. Target Applicant Disciplines";
+            document.querySelector("#form-body .form-card:nth-child(4) .card-title").textContent = "5. Your Industry";
         } else {
             accSection.classList.remove("hidden");
-            const alreadyVerified = !document.getElementById("accred-success").classList.contains("hidden") || !document.getElementById("accred-warning").classList.contains("hidden");
-            if (!alreadyVerified) { formBody.classList.add("hidden"); }
+            // Restore original step numbers
+            document.querySelector("#form-body .form-card:nth-child(1) .card-title").textContent = "3. Opportunity Details";
+            document.querySelector("#form-body .form-card:nth-child(2) .card-title").textContent = "4. Required Skills & Licences";
+            document.querySelector("#form-body .form-card:nth-child(3) .card-title").textContent = "5. Target Applicant Disciplines";
+            document.querySelector("#form-body .form-card:nth-child(4) .card-title").textContent = "6. Your Industry";
+            const alreadyVerified = !document.getElementById("accred-success").classList.contains("hidden") ||
+                                    !document.getElementById("accred-warning").classList.contains("hidden");
+            if (!alreadyVerified) {
+                formBody.classList.add("hidden");
+            }
         }
     };
 
@@ -791,6 +816,48 @@
     };
 
     window.goBack = () => window.history.back();
+</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDHRk3kDwXc6__TDZIuGkQlQsEwCsK8mDc&libraries=places&callback=initPlaces" async defer></script>
+<script>
+    window.initPlaces = function() {
+        const input       = document.getElementById("location");
+        const autocomplete = new google.maps.places.Autocomplete(input, {
+            componentRestrictions: { country: "za" },
+            fields: ["formatted_address", "geometry", "name"]
+        });
+
+        // Style the dropdown to match the dark theme
+        const style = document.createElement("style");
+        style.textContent = `
+            .pac-container {
+                background-color: #3a3a3a;
+                border: 1.5px solid rgba(255,255,255,0.3);
+                border-radius: 8px;
+                margin-top: 4px;
+                font-family: inherit;
+            }
+            .pac-item {
+                color: white;
+                border-top: 1px solid rgba(255,255,255,0.1);
+                padding: 8px 14px;
+                cursor: pointer;
+                font-size: 14px;
+            }
+            .pac-item:hover, .pac-item-selected { background-color: #4a4a4a; }
+            .pac-item-query { color: white; font-size: 14px; }
+            .pac-matched { font-weight: bold; }
+            .pac-icon { display: none; }
+        `;
+        document.head.appendChild(style);
+
+        autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            if (place.formatted_address) {
+                input.value = place.formatted_address;
+            }
+        });
+    };
 </script>
 </body>
 </html>

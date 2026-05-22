@@ -255,6 +255,12 @@
         </div>
 
         <div class="signup-field">
+            <label for="city">Location</label>
+            <input type="text" id="city" placeholder="Start typing an address…" autocomplete="off">
+            <span class="field-error" id="cityError"></span>
+        </div>
+
+        <div class="signup-field">
             <label for="phone">Organisation phone number</label>
             <div class="phone-input-group">
                 <select id="areaCode">
@@ -278,5 +284,31 @@
     </div>
 
     <script type="module" src="provider-signup-details.js"></script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDHRk3kDwXc6__TDZIuGkQlQsEwCsK8mDc&libraries=places&callback=initPlaces" async defer></script>
+    <script>
+        window.initPlaces = function() {
+            const input        = document.getElementById("city");
+            const autocomplete = new google.maps.places.Autocomplete(input, {
+                componentRestrictions: { country: "za" },
+                fields: ["formatted_address", "geometry", "name"]
+            });
+
+            const style = document.createElement("style");
+            style.textContent = `
+                .pac-container { background:#f9f9f9; border:1.5px solid #ccc; border-radius:8px; margin-top:4px; font-family:inherit; }
+                .pac-item { color:#333; border-top:1px solid #eee; padding:8px 14px; cursor:pointer; font-size:14px; }
+                .pac-item:hover, .pac-item-selected { background:#f0f0f0; }
+                .pac-item-query { color:#333; font-size:14px; }
+                .pac-icon { display:none; }
+            `;
+            document.head.appendChild(style);
+
+            autocomplete.addListener("place_changed", () => {
+                const place = autocomplete.getPlace();
+                if (place.formatted_address) input.value = place.formatted_address;
+            });
+        };
+    </script>
 </body>
 </html>

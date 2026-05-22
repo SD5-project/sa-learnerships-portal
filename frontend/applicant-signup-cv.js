@@ -54,13 +54,14 @@ submitBtn.addEventListener('click', async () => {
                 if (!res.ok) throw new Error('Upload failed');
                 console.log('[signup] CV uploaded successfully');
             } catch (cvErr) {
-                console.warn('[signup] CV upload failed, proceeding without CV:', cvErr);
-                errorBox.textContent = 'CV upload failed';
+                console.warn('[signup] CV upload failed:', cvErr);
+                errorBox.textContent = 'CV upload failed. Please try again.';
                 errorBox.classList.add('visible');
+                submitBtn.disabled    = false;
+                submitBtn.textContent = 'Complete sign-up';
+                return; // stops the redirect
             }
         }
-
-
         window.location.href = '/applicant-home';
 
     } catch (err) {

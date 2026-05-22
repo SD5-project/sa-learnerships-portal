@@ -189,10 +189,11 @@
                 }
 
                 try {
-                  const token = await user.getIdToken(true); // user is available here
+                  const token = await user.getIdToken(true);
                   const response = await fetch(`/applicant/hasApplied?applicantID=${user.uid}&listingID=${listingID}`, {
                         headers: { "Authorization": `Bearer ${token}` }
-                    });;
+                    });
+                    const data = await response.json();
 
                     if (data.hasApplied) {
                         applyBtn.remove();

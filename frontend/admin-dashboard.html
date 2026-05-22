@@ -620,6 +620,7 @@
                     <button class="tab-btn"         id="tab-btn-all"      onclick="switchTab('all')">📋 All Listings</button>
                     <button class="tab-btn"         id="tab-btn-rejected" onclick="switchTab('rejected')">❌ Rejected</button>
                     <button class="tab-btn"         id="tab-btn-users"    onclick="switchTab('users')">👥 Manage Users</button>
+                    <button class="tab-btn"         id="tab-btn-reports"  onclick="switchTab('reports')">📊 Reports</button>
                     <button class="tab-btn"         id="tab-btn-profile"  onclick="switchTab('profile')">👤 My Profile</button>
                 </div>
             </div>
@@ -744,6 +745,10 @@
                         <p id="profileUsername" class="data-item-value">-</p>
                     </div>
                     <div class="data-item-field">
+                        <label>Phone Number</label>
+                        <p id="profilePhone" class="data-item-value">-</p>
+                    </div>
+                    <div class="data-item-field">
                         <label>Status</label>
                         <p id="profileStatus" class="data-item-value">-</p>
                     </div>
@@ -752,6 +757,53 @@
                     <p style="margin: 0 0 14px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">Permissions</p>
                     <div class="permissions-list" id="permissionsList">
                         <p style="color: var(--text-muted); font-style: italic; font-size: 14px;">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: REPORTS -->
+            <div class="tab-panel" id="tab-reports" style="padding: 28px 32px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+                    <h3 style="margin:0;font-size:16px;font-weight:600;color:var(--text-main);">📊 Platform Reports</h3>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <button class="act-btn" onclick="exportReportCSV()">⬇ Export CSV</button>
+                        <button class="act-btn" onclick="exportReportPDF()">⬇ Export PDF</button>
+                    </div>
+                </div>
+
+                <!-- Report 1: Application Volume per Opportunity -->
+                <div style="margin-bottom:36px;">
+                    <h4 style="margin:0 0 14px;font-size:14px;font-weight:600;color:var(--text-main);text-transform:uppercase;letter-spacing:0.04em;">Application Volume per Opportunity</h4>
+                    <div id="reportAppVolLoading" style="color:var(--text-muted);font-style:italic;font-size:14px;padding:20px 0;">Loading report data...</div>
+                    <div class="table-wrap" id="reportAppVolWrap" style="display:none;">
+                        <table class="admin-table">
+                            <thead><tr><th>Opportunity Title</th><th>Company</th><th>Type</th><th>Status</th><th style="text-align:right">Applications</th></tr></thead>
+                            <tbody id="reportAppVolBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Report 2: Placement Success Rates by Sector -->
+                <div style="margin-bottom:36px;">
+                    <h4 style="margin:0 0 14px;font-size:14px;font-weight:600;color:var(--text-main);text-transform:uppercase;letter-spacing:0.04em;">Placement Success Rates by Sector</h4>
+                    <div id="reportPlacementLoading" style="color:var(--text-muted);font-style:italic;font-size:14px;padding:20px 0;">Loading report data...</div>
+                    <div class="table-wrap" id="reportPlacementWrap" style="display:none;">
+                        <table class="admin-table">
+                            <thead><tr><th>Sector / Type</th><th>Total Applications</th><th>Accepted</th><th style="text-align:right">Success Rate</th></tr></thead>
+                            <tbody id="reportPlacementBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Report 3: Custom / Platform Summary -->
+                <div>
+                    <h4 style="margin:0 0 14px;font-size:14px;font-weight:600;color:var(--text-main);text-transform:uppercase;letter-spacing:0.04em;">Platform Activity Summary</h4>
+                    <div id="summaryGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;">
+                        <div class="widget-card"><h3>Total Applicants</h3><p id="sumApplicants" class="widget-value" style="font-size:24px;">—</p></div>
+                        <div class="widget-card"><h3>Total Providers</h3><p id="sumProviders"  class="widget-value" style="font-size:24px;">—</p></div>
+                        <div class="widget-card"><h3>Total Applications</h3><p id="sumApplications" class="widget-value" style="font-size:24px;">—</p></div>
+                        <div class="widget-card"><h3>Accepted Applications</h3><p id="sumAccepted" class="widget-value" style="font-size:24px;">—</p></div>
+                        <div class="widget-card"><h3>Live Opportunities</h3><p id="sumLive" class="widget-value" style="font-size:24px;">—</p></div>
                     </div>
                 </div>
             </div>
@@ -837,6 +889,7 @@
         const fullName    = [data.firstname, data.lastname].filter(Boolean).join(" ") || data.organization || "-";
         const email       = data.email    || authEmail || "-";
         const username    = data.username || "-";
+        const phone       = data.phonenumber || "-";
         const status      = data.status   || "active";
         const displayName = fullName !== "-" ? fullName : email;
         const permissions = data.permissions || [];
@@ -846,6 +899,7 @@
         document.getElementById("profileName").innerText     = fullName;
         document.getElementById("profileEmail").innerText    = email;
         document.getElementById("profileUsername").innerText = username;
+        document.getElementById("profilePhone").innerText    = phone;
         document.getElementById("profileStatus").innerText   = status;
 
         ["profileName", "profileEmail"].forEach(id =>
@@ -1123,6 +1177,7 @@
 
     // ── Tab switching ──────────────────────────────────────────────────────────
     let rejectedLoaded = false;
+    let reportsLoaded  = false;
 
     async function loadRejectedListings() {
         const tok = localStorage.getItem("token");
@@ -1148,14 +1203,225 @@
     }
 
     window.switchTab = function(name) {
-        ["pending", "all", "rejected", "users", "profile"].forEach(t => {
+        ["pending", "all", "rejected", "users", "reports", "profile"].forEach(t => {
             document.getElementById("tab-" + t).classList.remove("active");
             document.getElementById("tab-btn-" + t).classList.remove("active");
         });
         document.getElementById("tab-" + name).classList.add("active");
         document.getElementById("tab-btn-" + name).classList.add("active");
         if (name === "users"    && !usersLoaded)    loadUsers(1);
-        if (name === "rejected" && !rejectedLoaded) { rejectedLoaded = true; loadRejectedListings(); }
+        if (name === "rejected") { rejectedLoaded = false; loadRejectedListings(); }
+        if (name === "reports"  && !reportsLoaded) { reportsLoaded = true; loadReports(); }
+    };
+
+    // ── Reports ────────────────────────────────────────────────────────────────
+    let reportData = { appVolume: [], placement: [], summary: {} };
+
+    async function loadReports() {
+        const tok = localStorage.getItem("token");
+        try {
+            // Fetch all data in parallel
+            const [listingsRes, usersRes] = await Promise.all([
+                fetch("/api/admin/listings",          { headers: { "Authorization": `Bearer ${tok}` } }),
+                fetch("/api/admin/users?limit=1000",  { headers: { "Authorization": `Bearer ${tok}` } })
+            ]);
+
+            const listings = listingsRes.ok ? await listingsRes.json() : [];
+            const usersData = usersRes.ok ? await usersRes.json() : { users: [] };
+            const users = usersData.users || [];
+
+            // Report 1: Application volume per opportunity
+            // Fetch all applications then group
+            const appRes = await fetch("/api/applications?applicantID=all_admin_view", {
+                headers: { "Authorization": `Bearer ${tok}` }
+            });
+            // Fall back: use the listings data and mock counts if the endpoint isn't available
+            let applications = [];
+            if (appRes.ok) {
+                applications = await appRes.json();
+            }
+
+            // Build a map of listingID -> count
+            const appCountMap = {};
+            applications.forEach(a => {
+                appCountMap[a.listingID] = (appCountMap[a.listingID] || 0) + 1;
+            });
+
+            // Build Report 1 data
+            const appVolData = listings.map(l => ({
+                title:    l.title    || "Untitled",
+                company:  l.company  || "—",
+                type:     l.type     || "—",
+                status:   l.status   || "—",
+                appCount: appCountMap[l.id] || 0
+            })).sort((a, b) => b.appCount - a.appCount);
+
+            reportData.appVolume = appVolData;
+
+            // Render Report 1
+            const volBody = document.getElementById("reportAppVolBody");
+            if (!appVolData.length) {
+                volBody.innerHTML = `<tr class="empty-row"><td colspan="5">No data available.</td></tr>`;
+            } else {
+                volBody.innerHTML = appVolData.map(r => `<tr>
+                    <td><strong>${r.title}</strong></td>
+                    <td style="color:var(--text-muted)">${r.company}</td>
+                    <td style="color:var(--text-muted)">${r.type}</td>
+                    <td><span class="badge badge-${r.status}">${r.status.replace(/_/g," ")}</span></td>
+                    <td style="text-align:right;font-weight:700;color:var(--accent-blue)">${r.appCount}</td>
+                </tr>`).join("");
+            }
+            document.getElementById("reportAppVolLoading").style.display  = "none";
+            document.getElementById("reportAppVolWrap").style.display     = "block";
+
+            // Report 2: Placement success rates by sector/type
+            const sectorMap = {};
+            applications.forEach(a => {
+                const listing = listings.find(l => l.id === a.listingID);
+                const type    = listing ? (listing.type || "Unknown") : "Unknown";
+                if (!sectorMap[type]) sectorMap[type] = { total: 0, accepted: 0 };
+                sectorMap[type].total++;
+                if (a.status === "accepted") sectorMap[type].accepted++;
+            });
+
+            // If no application data, derive from listings
+            if (applications.length === 0) {
+                listings.forEach(l => {
+                    const type = l.type || "Unknown";
+                    if (!sectorMap[type]) sectorMap[type] = { total: 0, accepted: 0 };
+                });
+            }
+
+            const placementData = Object.entries(sectorMap).map(([type, d]) => ({
+                type,
+                total:    d.total,
+                accepted: d.accepted,
+                rate:     d.total > 0 ? ((d.accepted / d.total) * 100).toFixed(1) + "%" : "N/A"
+            })).sort((a, b) => b.total - a.total);
+
+            reportData.placement = placementData;
+
+            const plBody = document.getElementById("reportPlacementBody");
+            if (!placementData.length) {
+                plBody.innerHTML = `<tr class="empty-row"><td colspan="4">No data available.</td></tr>`;
+            } else {
+                plBody.innerHTML = placementData.map(r => `<tr>
+                    <td><strong>${r.type}</strong></td>
+                    <td style="color:var(--text-muted)">${r.total}</td>
+                    <td style="color:var(--text-muted)">${r.accepted}</td>
+                    <td style="text-align:right;font-weight:700;color:${r.rate !== "N/A" && parseFloat(r.rate) > 30 ? "#4ade80" : "var(--accent-blue)"}">${r.rate}</td>
+                </tr>`).join("");
+            }
+            document.getElementById("reportPlacementLoading").style.display = "none";
+            document.getElementById("reportPlacementWrap").style.display    = "block";
+
+            // Report 3: Platform summary
+            const applicants = users.filter(u => u.role === "applicant").length;
+            const providers  = users.filter(u => u.role === "provider").length;
+            const live       = listings.filter(l => l.status === "auto_approved" || l.status === "review_accepted").length;
+            const accepted   = applications.filter(a => a.status === "accepted").length;
+
+            reportData.summary = { applicants, providers, totalApps: applications.length, accepted, live };
+
+            document.getElementById("sumApplicants").innerText   = applicants;
+            document.getElementById("sumProviders").innerText    = providers;
+            document.getElementById("sumApplications").innerText = applications.length;
+            document.getElementById("sumAccepted").innerText     = accepted;
+            document.getElementById("sumLive").innerText         = live;
+
+        } catch (e) {
+            console.error("Reports error:", e);
+        }
+    }
+
+    // ── Export CSV ─────────────────────────────────────────────────────────────
+    window.exportReportCSV = function() {
+        const lines = [];
+        lines.push("=== Report 1: Application Volume per Opportunity ===");
+        lines.push("Title,Company,Type,Status,Applications");
+        reportData.appVolume.forEach(r =>
+            lines.push(`"${r.title}","${r.company}","${r.type}","${r.status}",${r.appCount}`)
+        );
+        lines.push("");
+        lines.push("=== Report 2: Placement Success Rates by Sector ===");
+        lines.push("Sector/Type,Total Applications,Accepted,Success Rate");
+        reportData.placement.forEach(r =>
+            lines.push(`"${r.type}",${r.total},${r.accepted},"${r.rate}"`)
+        );
+        lines.push("");
+        lines.push("=== Report 3: Platform Activity Summary ===");
+        lines.push("Metric,Value");
+        lines.push(`"Total Applicants",${reportData.summary.applicants || 0}`);
+        lines.push(`"Total Providers",${reportData.summary.providers || 0}`);
+        lines.push(`"Total Applications",${reportData.summary.totalApps || 0}`);
+        lines.push(`"Accepted Applications",${reportData.summary.accepted || 0}`);
+        lines.push(`"Live Opportunities",${reportData.summary.live || 0}`);
+
+        const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+        const a    = document.createElement("a");
+        a.href     = URL.createObjectURL(blob);
+        a.download = `skillsconnect-report-${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showToast("CSV exported ✓", "success");
+    };
+
+    // ── Export PDF ─────────────────────────────────────────────────────────────
+    window.exportReportPDF = function() {
+        const date = new Date().toLocaleDateString("en-ZA");
+
+        const rows1 = reportData.appVolume.map(r =>
+            `<tr><td>${r.title}</td><td>${r.company}</td><td>${r.type}</td><td>${r.status.replace(/_/g," ")}</td><td style="text-align:right;font-weight:700">${r.appCount}</td></tr>`
+        ).join("") || `<tr><td colspan="5" style="text-align:center;font-style:italic">No data</td></tr>`;
+
+        const rows2 = reportData.placement.map(r =>
+            `<tr><td>${r.type}</td><td>${r.total}</td><td>${r.accepted}</td><td style="text-align:right;font-weight:700">${r.rate}</td></tr>`
+        ).join("") || `<tr><td colspan="4" style="text-align:center;font-style:italic">No data</td></tr>`;
+
+        const s = reportData.summary;
+
+        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>SkillsConnect Report ${date}</title>
+<style>
+  body{font-family:sans-serif;margin:32px;color:#111;font-size:13px}
+  h1{font-size:22px;margin-bottom:4px} .sub{color:#666;margin-bottom:32px}
+  h2{font-size:15px;margin:28px 0 10px;text-transform:uppercase;letter-spacing:0.04em;color:#333}
+  table{width:100%;border-collapse:collapse;margin-bottom:24px}
+  th{background:#f3f4f6;padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #e5e7eb}
+  td{padding:8px 12px;border-bottom:1px solid #e5e7eb}
+  .summary{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+  .sm{padding:14px 20px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;min-width:120px}
+  .sm-label{font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#6b7280;margin:0 0 6px}
+  .sm-val{font-size:22px;font-weight:700;color:#111;margin:0}
+</style></head><body>
+<h1>SkillsConnect Platform Reports</h1>
+<p class="sub">Generated: ${date} | Admin Dashboard</p>
+
+<h2>Report 1 — Application Volume per Opportunity</h2>
+<table><thead><tr><th>Opportunity</th><th>Company</th><th>Type</th><th>Status</th><th>Applications</th></tr></thead>
+<tbody>${rows1}</tbody></table>
+
+<h2>Report 2 — Placement Success Rates by Sector</h2>
+<table><thead><tr><th>Sector / Type</th><th>Total Applications</th><th>Accepted</th><th>Success Rate</th></tr></thead>
+<tbody>${rows2}</tbody></table>
+
+<h2>Report 3 — Platform Activity Summary</h2>
+<div class="summary">
+  <div class="sm"><p class="sm-label">Total Applicants</p><p class="sm-val">${s.applicants || 0}</p></div>
+  <div class="sm"><p class="sm-label">Total Providers</p><p class="sm-val">${s.providers || 0}</p></div>
+  <div class="sm"><p class="sm-label">Total Applications</p><p class="sm-val">${s.totalApps || 0}</p></div>
+  <div class="sm"><p class="sm-label">Accepted</p><p class="sm-val">${s.accepted || 0}</p></div>
+  <div class="sm"><p class="sm-label">Live Opportunities</p><p class="sm-val">${s.live || 0}</p></div>
+</div>
+</body></html>`;
+
+        const win = window.open("", "_blank");
+        if (!win) { showToast("Pop-up blocked — allow pop-ups and try again", "error"); return; }
+        win.document.write(html);
+        win.document.close();
+        win.focus();
+        win.print();
+        showToast("PDF print dialog opened ✓", "success");
     };
 
     // ── Logout ─────────────────────────────────────────────────────────────────

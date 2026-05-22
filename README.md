@@ -51,7 +51,7 @@ Make sure you have the following installed before proceeding:
 
 ```bash
 git clone https://github.com/SD5-project/sa-learnerships-portal.git
-cd your-repo-name
+cd sa-learnerships-portal
 ```
 
 ### Backend Setup

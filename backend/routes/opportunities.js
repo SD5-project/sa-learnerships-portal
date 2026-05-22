@@ -2,17 +2,17 @@
  * routes/opportunities.js
  * Manages SETA-accredited learnership, apprenticeship and internship listings.
  *
- * Opportunity status lifecycle:
- *   auto_approved   - Learnership/apprenticeship with verified SETA accreditation; goes live immediately.
- *   in_for_review   - All internships, or unverified learnerships; requires admin review.
- *   review_accepted - Admin approved an in_for_review listing; goes live.
- *   rejected_review - Admin rejected the listing; provider can resubmit if resolved.
+ * Status lifecycle:
+ *   auto_approved   — Learnership/apprenticeship with verified SETA accreditation; live immediately.
+ *   in_for_review   — Internships or unverified learnerships; requires admin review.
+ *   review_accepted — Admin approved an in_for_review listing; goes live.
+ *   rejected_review — Admin rejected the listing; provider can resubmit.
  *
  * Routes:
- *   POST /api/opportunities/submit       - Submit a new opportunity listing
- *   GET  /api/listings                   - Browse live listings (auto_approved + review_accepted)
- *   GET  /api/opportunities/:id          - Fetch a single opportunity by ID
- *   POST /validate-application           - Check NQF eligibility for an applicant
+ *   POST /api/opportunities/submit   — Submit a new listing
+ *   GET  /api/listings               — Browse live listings
+ *   GET  /api/opportunities/:id      — Single listing by ID
+ *   POST /validate-application       — Check NQF eligibility
  */
 
 const express          = require('express');
@@ -20,60 +20,70 @@ const { db, admin }    = require('../firebaseAdmin');
 const { verifyToken }  = require('../auth');
 const { guard }        = require('../helpers');
 const { authorize }    = require('../access-logic');
-const { applicantRef } = require('../userPaths');
+const { applicantRef, lookupUser } = require('../userPaths');
 
 const router = express.Router();
 
-/**
- * POST /api/opportunities/submit
- * Submits a new opportunity listing. Accessible to providers and admins only.
- *
- * Status assignment logic:
- *   - Internships always go to "in_for_review" (no SETA accreditation required).
- *   - Learnerships/apprenticeships with verified accreditation → "auto_approved" (live immediately).
- *   - Learnerships/apprenticeships without verified accreditation → "in_for_review" (admin review).
- *
- * Duplicate prevention: if the same provider already has an active listing for
- * the same SAQA qualification ID, the submission is rejected with 409.
- *
- * Body: { type, verificationStatus, saqaId, title, description, ... }
- * Response: { message, id, status }
- */
+// ── Submit opportunity ────────────────────────────────────────────────────────
 router.post("/api/opportunities/submit", verifyToken, guard('/create-opportunity'), async (req, res) => {
     try {
         const { type, verificationStatus, saqaId } = req.body;
 
-        // Duplicate check — only applies to listings that have a SAQA qualification ID.
-        // Internships may not have one, so they are skipped.
+        // Duplicate check — only for listings with a SAQA ID
         if (saqaId) {
             const dupSnap = await db.collection("Opportunities")
                 .where("providerID", "==", req.user.uid)
                 .where("saqaId",     "==", saqaId)
                 .get();
-            // A rejected listing is not considered active, so resubmission is allowed
-            const activeDup = dupSnap.docs.find(doc => doc.data().status !== "rejected_review");
+            const activeDup = dupSnap.docs.find(doc =>
+                !["rejected_review", "removed"].includes(doc.data().status)
+            );
             if (activeDup) {
                 return res.status(409).json({ error: "You already have an active listing for this qualification." });
             }
         }
 
-        // Determine the initial status based on opportunity type and accreditation result
+        // Determine initial status
         let status;
         if (type === "internship") {
-            status = "in_for_review";               // Internships always need admin review
+            status = "in_for_review";
         } else if (verificationStatus === "verified") {
-            status = "auto_approved";               // Verified accreditation — goes live immediately
+            status = "auto_approved";
         } else {
-            status = "in_for_review";               // Unverified — pending admin review
+            status = "in_for_review";
+        }
+
+        // Resolve provider's organisation name as 'company' if not already in body.
+        // This ensures listings always display the correct company name.
+        let company = req.body.company || null;
+        if (!company) {
+            try {
+                const { snap } = await lookupUser(req.user.uid);
+                if (snap && snap.exists) {
+                    const pd = snap.data();
+                    company = pd.organization || pd.firstname || pd.name || null;
+                }
+                if (!company) {
+                    const topSnap = await db.collection("Providers").doc(req.user.uid).get();
+                    if (topSnap.exists) {
+                        const pd = topSnap.data();
+                        company = pd.organization || pd.firstname || pd.name || null;
+                    }
+                }
+            } catch (e) {
+                console.warn("Could not resolve provider company name:", e.message);
+            }
         }
 
         const opportunityData = {
             ...req.body,
+            company:    company || "",
             providerID: req.user.uid,
             status,
             createdAt:  new Date().toISOString(),
             updatedAt:  new Date().toISOString()
         };
+
         const docRef = await db.collection("Opportunities").add(opportunityData);
         res.status(201).json({ message: "Opportunity submitted successfully", id: docRef.id, status });
     } catch (error) {
@@ -82,39 +92,39 @@ router.post("/api/opportunities/submit", verifyToken, guard('/create-opportunity
     }
 });
 
-/**
- * GET /api/listings
- * Returns all live opportunity listings visible to applicants.
- * "Live" means status is either "auto_approved" or "review_accepted".
- * Two parallel Firestore queries are used because Firestore does not support
- * "in" combined with other inequality filters without a composite index.
- *
- * Response: [{ id, title, description, price, location, provider, type }]
- */
+// ── Browse live listings ──────────────────────────────────────────────────────
+// Returns all listings with status auto_approved, review_accepted, OR the legacy
+// "approved" value so existing data is never lost.
 router.get('/api/listings', verifyToken, async (req, res) => {
     if (!authorize(req.user, '/api/listings')) {
         return res.status(403).json({ error: "Unauthorized" });
     }
     try {
-        const [snap1, snap2] = await Promise.all([
+        const [snap1, snap2, snap3] = await Promise.all([
             db.collection('Opportunities').where('status', '==', 'auto_approved').get(),
-            db.collection('Opportunities').where('status', '==', 'review_accepted').get()
+            db.collection('Opportunities').where('status', '==', 'review_accepted').get(),
+            db.collection('Opportunities').where('status', '==', 'approved').get()
         ]);
-        // Merge both result sets into a single iterable snapshot
-        const snapshot = { forEach: (fn) => { snap1.forEach(fn); snap2.forEach(fn); } };
+
+        const seen = new Set();
         const opportunities = [];
-        snapshot.forEach(doc => {
-            const d = doc.data();
-            opportunities.push({
-                id:          doc.id,
-                title:       d.title,
-                description: d.description,
-                price:       d.stipend,
-                location:    d.location,
-                provider:    d.company,
-                type:        d.type
+        [snap1, snap2, snap3].forEach(snap => {
+            snap.forEach(doc => {
+                if (seen.has(doc.id)) return;
+                seen.add(doc.id);
+                const d = doc.data();
+                opportunities.push({
+                    id:          doc.id,
+                    title:       d.title       || "Untitled",
+                    description: d.description || "",
+                    price:       d.stipend     ?? null,
+                    location:    d.location    || "-",
+                    provider:    d.company     || "-",
+                    type:        d.type        || "-"
+                });
             });
         });
+
         res.status(200).json(opportunities);
     } catch (error) {
         console.error("Listings error:", error);
@@ -122,7 +132,7 @@ router.get('/api/listings', verifyToken, async (req, res) => {
     }
 });
 
-// ─── Single Opportunity ───────────────────────────────────────────────────────
+// ── Single opportunity ────────────────────────────────────────────────────────
 router.get("/api/opportunities/:id", verifyToken, async (req, res) => {
     try {
         const doc = await db.collection("Opportunities").doc(req.params.id).get();
@@ -134,7 +144,7 @@ router.get("/api/opportunities/:id", verifyToken, async (req, res) => {
     }
 });
 
-// ─── NQF Eligibility Validation ───────────────────────────────────────────────
+// ── NQF eligibility validation ────────────────────────────────────────────────
 router.post("/validate-application", async (req, res) => {
     const { userId, opportunityId } = req.body;
     if (!userId || !opportunityId) {
@@ -144,7 +154,8 @@ router.post("/validate-application", async (req, res) => {
         const userDoc = await applicantRef(userId).get();
         if (!userDoc.exists) return res.status(404).json({ error: "Applicant not found." });
 
-        const applicantNQF = userDoc.data().highestNQFLevel;
+        const data = userDoc.data();
+        const applicantNQF = parseInt(data.highestNQFLevel || data.nqfLevel || "0", 10);
         if (!applicantNQF) {
             return res.status(400).json({
                 eligible: false,
@@ -155,8 +166,9 @@ router.post("/validate-application", async (req, res) => {
         const oppDoc = await db.collection("Opportunities").doc(opportunityId).get();
         if (!oppDoc.exists) return res.status(404).json({ error: "Opportunity not found." });
 
-        const minimumNQF = oppDoc.data().minimumNQFLevel;
-        if (parseInt(applicantNQF) >= parseInt(minimumNQF)) {
+        const minimumNQF = parseInt(oppDoc.data().minimumNQFLevel || oppDoc.data().nqfLevel || "1", 10);
+
+        if (applicantNQF >= minimumNQF) {
             return res.status(200).json({ eligible: true, message: "You meet the requirements for this opportunity." });
         }
         return res.status(200).json({

@@ -1,3 +1,5 @@
+/* listing-logic.js*/
+
 const { db } = require("./firebaseAdmin");
 
 async function getAllListings() {

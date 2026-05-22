@@ -34,6 +34,7 @@ router.get('/applicants',                                  page('applicants.html
 router.get('/admin-dashboard',                             page('admin-dashboard.html'));
 router.get('/provider-home',                               page('provider-home.html'));
 router.get('/listings',                                    page('listings.html'));
+router.get('/email-verified',                              page('email-verified.html'));
 router.get('/',                                            page('index.html'));
 
 module.exports = router;

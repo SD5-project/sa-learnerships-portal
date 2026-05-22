@@ -140,13 +140,14 @@ router.post("/signup/applicant", async (req, res) => {
 
 // ─── Signup: Provider ─────────────────────────────────────────────────────────
 router.post("/signup/provider", verifyToken, async (req, res) => {
-    const { uid, organization, email, phonenumber } = req.body;
+    const { uid, organization, email, city, phonenumber } = req.body;
     if (!email) return res.status(400).json({ error: "Email is required" });
     try {
         await admin.auth().setCustomUserClaims(uid, { role: "provider" });
         await providerRef(uid).set({
             organization: (organization || "").trim(),
             email:        (email        || "").trim(),
+            city:         (city         || "").trim(),
             phonenumber:  (phonenumber  || "").trim(),
             role: "provider", status: "active", createdAt: new Date().toISOString()
         });

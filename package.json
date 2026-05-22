@@ -2,24 +2,38 @@
   "name": "sa-learnerships-portal",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs",
-    "test": "tests"
-  },
+  "main": "backend/app.js",
   "scripts": {
-    "start": "node backend/app.js",
-    "test": "jest --coverage",
-    "test:watch": "jest --watchAll"
+    "start":         "node backend/app.js",
+    "dev":           "nodemon backend/app.js",
+    "test":          "jest --testPathPattern=__tests__ --forceExit",
+    "test:mocha":    "mocha tests/control-access.test.js --timeout 10000",
+    "test:coverage": "jest --testPathPattern=__tests__ --coverage --forceExit"
   },
   "jest": {
     "testEnvironment": "node",
-    "collectCoverage": true,
+    "testMatch": [
+      "**/tests/__tests__/**/*.test.js"
+    ],
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "backend/app.js",
+      "backend/auth.js",
+      "backend/access-logic.js",
+      "backend/helpers.js",
+      "backend/routes/admin.js",
+      "backend/routes/applications.js",
+      "backend/routes/auth.js",
+      "backend/routes/nqf.js",
+      "backend/routes/opportunities.js",
+      "backend/routes/provider.js"
+    ],
+    "coverageReporters": ["lcov", "text", "text-summary"],
     "coverageDirectory": "coverage",
-    "coverageReporters": [
-      "lcov",
-      "text"
-    ]
+    "coverageThreshold": {
+      "global": { "lines": 10 }
+    },
+    "moduleNameMapper": {}
   },
   "repository": {
     "type": "git",
@@ -29,25 +43,21 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/Swag-png/sa-learnerships-portal/issues"
-  },
-  "homepage": "https://github.com/Swag-png/sa-learnerships-portal#readme",
   "devDependencies": {
-    "jest": "^29.0.0",
-    "mocha": "^11.3.0",
+    "jest":      "^29.0.0",
+    "mocha":     "^11.3.0",
     "supertest": "^6.3.0"
   },
   "dependencies": {
-    "cloudinary": "^1.41.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.0.0",
-    "express": "^5.2.1",
-    "firebase-admin": "^13.8.0",
-    "multer": "^2.1.1",
+    "cloudinary":               "^1.41.3",
+    "cors":                     "^2.8.5",
+    "dotenv":                   "^16.0.0",
+    "express":                  "^5.2.1",
+    "firebase-admin":           "^13.8.0",
+    "multer":                   "^1.4.5-lts.1",
     "multer-storage-cloudinary": "^4.0.0",
-    "node-cron": "^3.0.0",
-    "nodemailer": "^6.9.0",
-    "nodemon": "^3.1.14"
+    "node-cron":                "^3.0.0",
+    "nodemailer":               "^6.9.0",
+    "nodemon":                  "^3.1.14"
   }
 }

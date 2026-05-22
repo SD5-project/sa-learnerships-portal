@@ -2,225 +2,218 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Applicant Dashboard - SkillsConnect</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applicant Dashboard | SkillsConnect</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <style>
-        .dashboard-wrapper {
-            min-height: 100vh;
-            background-color: #666666;
+        /* ── LAYOUT ── */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
             display: flex;
             flex-direction: column;
+            gap: 32px;
         }
 
-        /* NAVBAR */
-        .navbar {
-            background-color: #444444;
-            padding: 15px 30px;
+        /* ── NAVBAR ── */
+        .dashboard-navbar {
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-soft);
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid white;
         }
 
-        .navbar h1 {
-            color: white;
-            font-size: 20px;
-            margin: 0;
+        .navbar-logo {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+            display: block;
         }
 
-        .navbar-right {
+        .navbar-actions {
             display: flex;
             align-items: center;
-            gap: 15px;
-            color: white;
-            font-size: 14px;
+            gap: 16px;
         }
 
-        .nav-link-btn {
-            background-color: transparent;
-            color: white;
-            border: 2px solid white;
+        .user-greeting-span {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .btn-nav-action {
+            background: rgba(56,189,248,0.1);
+            color: var(--accent-blue);
+            border: 1px solid rgba(56,189,248,0.2);
             padding: 8px 16px;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 14px;
-            margin-top: 0;
-            text-transform: uppercase;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        .nav-link-btn:hover {
-            background-color: white;
-            color: #444;
+        .btn-nav-action:hover {
+            background: var(--accent-blue);
+            color: #000;
+            box-shadow: 0 0 16px rgba(56,189,248,0.3);
         }
 
-        .logout-btn {
-            background-color: crimson;
-            color: white;
-            border: none;
+        .btn-nav-logout {
+            background: rgba(239,68,68,0.1);
+            color: #fca5a5;
+            border: 1px solid rgba(239,68,68,0.2);
             padding: 8px 16px;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 14px;
-            margin-top: 0;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        .logout-btn:hover {
-            opacity: 0.85;
-            background-color: crimson;
-            color: white;
+        .btn-nav-logout:hover {
+            background: #ef4444;
+            color: #fff;
         }
 
-        /* MAIN CONTENT */
-        .dashboard-content {
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+        /* ── HERO ── */
+        .dashboard-hero {
+            background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(30,41,59,0.7) 100%);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            padding: 32px;
         }
 
-        /* WELCOME CARD */
-        .welcome-card {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 25px;
-            color: white;
+        .dashboard-hero h2 {
+            margin: 0 0 8px;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-main);
         }
 
-        .welcome-card h2 {
-            margin: 0 0 8px 0;
-            font-size: 24px;
-        }
-
-        .welcome-card p {
+        .dashboard-hero p {
             margin: 0;
-            color: #ccc;
-            font-size: 14px;
-        }
-
-        /* QUICK ACTIONS */
-        .quick-actions {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .action-btn {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 20px 28px;
-            color: white;
-            cursor: pointer;
+            color: var(--text-muted);
             font-size: 15px;
-            font-weight: bold;
-            text-align: center;
-            flex: 1;
-            min-width: 180px;
-            transition: background 0.2s;
+            line-height: 1.5;
         }
 
-        .action-btn:hover {
-            background-color: white;
-            color: #333;
-        }
-
-        .action-btn .btn-icon {
-            font-size: 24px;
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        /* INFO CARDS ROW */
-        .cards-row {
-            display: flex;
-            gap: 20px;
-        }
-        .cards-row .info-card {
-            min-width: 160px;
-            max-width: 220px;
-        }
-
-        .info-card {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 20px;
-            color: white;
-            text-align: center;
-        }
-
-        .info-card h3 {
-            margin: 0 0 8px 0;
-            font-size: 14px;
-            color: #ccc;
-            text-transform: uppercase;
-        }
-
-        .info-card p {
-            margin: 0;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        /* PROFILE SECTION */
-        .profile-section {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 25px;
-            color: white;
-        }
-
-        .profile-section h2 {
-            margin: 0 0 20px 0;
-            border-left: 5px solid white;
-            padding-left: 10px;
-        }
-
-        .profile-grid {
+        /* ── WIDGET GRID ── */
+        .workspace-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
         }
 
-        .profile-field {
+        .widget-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            padding: 24px;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .widget-card.clickable {
+            cursor: pointer;
+        }
+
+        .widget-card.clickable:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.15);
+        }
+
+        .widget-card h3 {
+            margin: 0 0 12px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .widget-icon-frame {
+            font-size: 24px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .widget-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin: 0;
+        }
+
+        /* ── PROFILE SECTION ── */
+        .profile-container-block {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            padding: 32px;
+        }
+
+        .profile-container-block h2 {
+            margin: 0 0 24px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .data-list-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+        }
+
+        .data-item-field {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
         }
 
-        .profile-field label {
+        .data-item-field label {
             font-size: 12px;
-            color: #ccc;
             text-transform: uppercase;
-            margin: 0;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 600;
         }
 
-        .profile-field p {
-            margin: 0;
+        .data-item-value {
             font-size: 15px;
-            font-weight: bold;
+            font-weight: 500;
+            color: var(--text-main);
+            margin: 0;
         }
 
-        .loading-indicator {
-            color: #ccc;
+        .loading-pulse {
+            color: var(--text-muted);
             font-style: italic;
+            opacity: 0.7;
         }
 
-        
-        /* NOTIFICATIONS SECTION */
-        .notifications-section {
-            background-color: #545454;
-            border: 2px solid #ffcc00; /* Distinct border for updates */
-            border-radius: 12px;
-            padding: 20px;
-            color: white;
+        /* ── NOTIFICATIONS ── */
+        .notifications-block {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            padding: 32px;
         }
 
-        .notifications-section h2 {
-            margin: 0 0 15px 0;
-            font-size: 18px;
+        .notifications-block h2 {
+            margin: 0 0 20px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-main);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -230,120 +223,155 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            max-height: 200px;
+            max-height: 240px;
             overflow-y: auto;
+            padding-right: 4px;
         }
 
+        .notification-list::-webkit-scrollbar { width: 4px; }
+        .notification-list::-webkit-scrollbar-track { background: transparent; }
+        .notification-list::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 4px; }
+
         .notification-item {
-            background: #444;
-            padding: 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-soft);
+            border-left: 3px solid rgba(56,189,248,0.4);
             border-radius: 8px;
-            border-left: 4px solid #ffcc00;
+            padding: 14px 16px;
             font-size: 14px;
+            color: var(--text-main);
+            line-height: 1.5;
         }
 
         .notification-item.unread {
-            background: #4d4d4d;
-            border-left: 4px solid #00ff88; /* Green for new unread status */
+            background: rgba(56,189,248,0.05);
+            border-left-color: var(--accent-blue);
         }
 
         .notification-time {
             display: block;
             font-size: 11px;
-            color: #aaa;
-            margin-top: 5px;
+            color: var(--text-muted);
+            margin-top: 6px;
         }
 
-        .no-notifications {
-            font-style: italic;
-            color: #ccc;
+        .notification-empty {
             font-size: 14px;
+            color: var(--text-muted);
+            font-style: italic;
+            text-align: center;
+            padding: 24px 0;
         }
 
-        /* Scrollbar styling */
-        .notification-list::-webkit-scrollbar { width: 5px; }
-        .notification-list::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        /* ── ROLE BADGE ── */
+        .state-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .state-active {
+            background: rgba(56,189,248,0.15);
+            color: var(--accent-blue);
+            border: 1px solid rgba(56,189,248,0.2);
+        }
     </style>
 </head>
 <body>
-    <div class="dashboard-wrapper">
 
-        <!-- NAVBAR -->
-        <nav class="navbar">
-            <h1>SkillsConnect</h1>
-            <div class="navbar-right">
-                <button class="nav-link-btn" onclick="window.location.href='/listings'">🔍 Browse Opportunities</button>
-                <span id="navName"></span>
-                <button class="logout-btn" id="logoutBtn">Logout</button>
+    <div style="min-height: 100vh; display: flex; flex-direction: column;">
+
+        <nav class="dashboard-navbar">
+            <img src="SkillsConnect Logo 2.PNG" alt="SkillsConnect Logo" class="navbar-logo">
+            <div class="navbar-actions">
+                <button class="btn-nav-action" onclick="window.location.href='/listings'">🔍 Browse Opportunities</button>
+                <span id="navName" class="user-greeting-span"></span>
+                <button class="btn-nav-logout" id="logoutBtn">Logout</button>
             </div>
         </nav>
 
-        <!-- MAIN CONTENT -->
-        <div class="dashboard-content">
+        <main class="dashboard-container">
 
-            <!-- WELCOME -->
-            <div class="welcome-card">
+            <section class="dashboard-hero">
                 <h2 id="welcomeMsg">Welcome 👋</h2>
-                <p>Applicant Dashboard — find learnerships, internships and apprenticeships</p>
-            </div>
+                <p>Dashboard — find learnerships, internships, and apprenticeships matched to your skills and interests.</p>
+            </section>
 
-            <!-- INFO CARDS -->
-            <div class="cards-row">
-                <div class="info-card">
-                    <h3>Role</h3>
-                    <p id="cardRole">Applicant</p>
+            <!-- STATUS WIDGET -->
+            <section class="workspace-grid">
+                <div class="widget-card">
+                    <h3>Account Role</h3>
+                    <p id="cardRole" class="widget-value" style="font-size: 14px;">
+                        <span class="state-badge state-active">Applicant</span>
+                    </p>
                 </div>
-            </div>
+            </section>
 
             <!-- QUICK ACTIONS -->
-            <div class="quick-actions">
-                <button class="action-btn" onclick="window.location.href='/listings'">
-                    <span class="btn-icon">🔍</span>Browse Opportunities
-                </button>
-                <button class="action-btn" id="myApplicationsBtn">
-                    <span class="btn-icon">📋</span>My Applications
-                </button>
-                <button class="action-btn" onclick="window.location.href='/applicant-qualifications'">
-                    <span class="btn-icon">🎓</span>My Qualifications
-                </button>
-                  <button class="action-btn" onclick="window.location.href='/applicant-cv'">
-                    <span class="btn-icon">📄</span>My CV
-                </button>
-            </div>
+            <section class="workspace-grid">
+                <div class="widget-card clickable" onclick="window.location.href='/listings'">
+                    <span class="widget-icon-frame">🔍</span>
+                    <h3>Discover</h3>
+                    <p class="widget-value">Browse Opportunities →</p>
+                </div>
+                <div class="widget-card clickable" id="myApplicationsBtn">
+                    <span class="widget-icon-frame">📋</span>
+                    <h3>Track</h3>
+                    <p class="widget-value">My Applications →</p>
+                </div>
+                <div class="widget-card clickable" onclick="window.location.href='/applicant-qualifications'">
+                    <span class="widget-icon-frame">🎓</span>
+                    <h3>Profile</h3>
+                    <p class="widget-value">My Qualifications →</p>
+                </div>
+                <div class="widget-card clickable" onclick="window.location.href='/applicant-cv'">
+                    <span class="widget-icon-frame">📄</span>
+                    <h3>Documents</h3>
+                    <p class="widget-value">My CV →</p>
+                </div>
+            </section>
 
             <!-- PROFILE -->
-            <div class="profile-section">
-                <h2>Your Profile</h2>
-                <div class="profile-grid">
-                    <div class="profile-field">
+            <section class="profile-container-block">
+                <h2>👤 Your Profile</h2>
+                <div class="data-list-grid">
+                    <div class="data-item-field">
                         <label>Full Name</label>
-                        <p id="profileName" class="loading-indicator">Loading...</p>
+                        <p id="profileName" class="data-item-value loading-pulse">Loading...</p>
                     </div>
-                    <div class="profile-field">
+                    <div class="data-item-field">
                         <label>Email</label>
-                        <p id="profileEmail" class="loading-indicator">Loading...</p>
+                        <p id="profileEmail" class="data-item-value loading-pulse">Loading...</p>
                     </div>
-                    <div class="profile-field">
+                    <div class="data-item-field">
                         <label>Phone Number</label>
-                        <p id="profilePhone">-</p>
+                        <p id="profilePhone" class="data-item-value">-</p>
                     </div>
                 </div>
-            </div>
-            <div class="notifications-section">
-                <h2><span>🔔</span> Recent Updates</h2>
+            </section>
+
+            <!-- NOTIFICATIONS -->
+            <section class="notifications-block">
+                <h2>🔔 Recent Updates</h2>
                 <div id="notificationList" class="notification-list">
-                    <p class="loading-indicator">Checking for updates...</p>
+                    <p class="notification-empty">Checking for updates...</p>
                 </div>
-            </div>
-        </div>
+            </section>
+
+        </main>
     </div>
+
     <script type="module" src="script.js"></script>
     <script type="module">
         import { auth, db } from "./firebase.js";
         import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { query, collection, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        const token = localStorage.getItem("token");
 
+        const token = localStorage.getItem("token");
         if (!token) {
             alert("You must log in first!");
             window.location.href = "/";
@@ -356,23 +384,13 @@
                 return;
             }
 
-            // Verify role
-            const idTokenResult = await user.getIdTokenResult();
-            const role = idTokenResult.claims.role;
-
-            // Fetch fresh profile data from Firestore
             try {
                 const freshToken = await user.getIdToken();
                 const res = await fetch(`/api/user-profile?uid=${user.uid}`, {
                     headers: { "Authorization": `Bearer ${freshToken}` }
                 });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    populateProfile(data, user.email);
-                } else {
-                    populateProfile({}, user.email);
-                }
+                const data = res.ok ? await res.json() : {};
+                populateProfile(data, user.email);
             } catch (err) {
                 console.error("Profile fetch error:", err);
                 populateProfile({}, user.email);
@@ -380,32 +398,33 @@
         });
 
         function populateProfile(data, authEmail) {
-            const fullName   = [data.firstname, data.lastname].filter(Boolean).join(" ") || "-";
-            const email      = data.email || authEmail || "-";
-            const username   = data.username   || "-";
+            const fullName    = [data.firstname, data.lastname].filter(Boolean).join(" ") || "-";
+            const email       = data.email       || authEmail || "-";
             const phone       = data.phonenumber || "-";
             const role        = data.role        || "applicant";
             const displayName = fullName !== "-" ? fullName : email;
 
-            document.getElementById("navName").innerText     = displayName;
-            document.getElementById("welcomeMsg").innerText  = "Welcome, " + displayName + " 👋";
-            document.getElementById("cardRole").innerText    = role;
-            document.getElementById("profileName").innerText = fullName;
-            document.getElementById("profileEmail").innerText= email;
-            document.getElementById("profilePhone").innerText= phone;
+            document.getElementById("navName").innerText      = displayName;
+            document.getElementById("welcomeMsg").innerText   = "Welcome, " + displayName + " 👋";
+            document.getElementById("cardRole").innerHTML     = `<span class="state-badge state-active">${role}</span>`;
+            document.getElementById("profileName").innerText  = fullName;
+            document.getElementById("profileEmail").innerText = email;
+            document.getElementById("profilePhone").innerText = phone;
+
+            ["profileName", "profileEmail"].forEach(id =>
+                document.getElementById(id).classList.remove("loading-pulse")
+            );
         }
 
-        // ── Logout ──────────────────────────────────────────────────────────────
         document.getElementById("logoutBtn").addEventListener("click", async () => {
             try { await signOut(auth); } catch (e) { console.error(e); }
             localStorage.clear();
             window.location.href = "/";
         });
 
-        // ── My Applications placeholder ─────────────────────────────────────────
         document.getElementById("myApplicationsBtn").addEventListener("click", () => {
-                    window.location.href = '/applications-page.html';
-                    });
+            window.location.href = "/applications-page.html";
+        });
 
         //Notifications
         onAuthStateChanged(auth,(user) => {
@@ -416,38 +435,41 @@
                     orderBy("timestamp", "desc")
                 );
 
-                onSnapshot(q, (snapshot) => {
-                    const notifications = [];
-                    snapshot.forEach((doc) => {
-                        notifications.push({ id: doc.id, ...doc.data() });
-                    });
-                    renderNotifications(notifications);
-                }, (error) => {
-                    console.error("Notification listener error:", error);
-                    document.getElementById("notificationList").innerHTML = `<p class="no-notifications">Could not load notifications.</p>`;
-                });
-            }
+            const q = query(
+                collection(db, "notifications"),
+                where("recipientId", "==", user.uid),
+                orderBy("timestamp", "desc")
+            );
+
+            onSnapshot(q, (snapshot) => {
+                const notifications = [];
+                snapshot.forEach(doc => notifications.push({ id: doc.id, ...doc.data() }));
+                renderNotifications(notifications);
+            }, (error) => {
+                console.error("Notification listener error:", error);
+                document.getElementById("notificationList").innerHTML =
+                    `<p class="notification-empty">Could not load notifications.</p>`;
+            });
         });
 
         function renderNotifications(data) {
-            const listContainer = document.getElementById("notificationList");
-            
+            const container = document.getElementById("notificationList");
+
             if (data.length === 0) {
-                listContainer.innerHTML = `<p class="no-notifications" style="color: #ccc; font-style: italic;">No new updates at this time.</p>`;
+                container.innerHTML = `<p class="notification-empty">No new updates at this time.</p>`;
                 return;
             }
 
-            listContainer.innerHTML = data.map(n => {
-                const date = n.timestamp ? new Date(n.timestamp.seconds * 1000).toLocaleString() : "Just now";
-                const isUnread = n.status === 'unread' ? 'unread' : '';
-
+            container.innerHTML = data.map(n => {
+                const date    = n.timestamp ? new Date(n.timestamp.seconds * 1000).toLocaleString() : "Just now";
+                const unread  = n.status === "unread" ? "unread" : "";
                 return `
-                    <div class="notification-item ${isUnread}">
-                        <strong style="color: #ccc;">Update:</strong> ${n.message}
+                    <div class="notification-item ${unread}">
+                        ${n.message}
                         <span class="notification-time">${date}</span>
                     </div>
                 `;
-            }).join('');
+            }).join("");
         }
     </script>
 </body>

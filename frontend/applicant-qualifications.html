@@ -5,129 +5,184 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Qualifications | SkillsConnect</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <style>
+        /* ── PAGE LAYOUT ── */
         .page-wrapper {
             min-height: 100vh;
-            background-color: #666666;
             display: flex;
             flex-direction: column;
+            background-color: var(--bg-main);
         }
 
-        .navbar {
-            background-color: #444444;
-            padding: 15px 30px;
+        /* ── NAVBAR ── */
+        .dashboard-navbar {
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-soft);
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid white;
         }
-        .navbar h1 { color: white; font-size: 20px; margin: 0; }
-        .navbar-right { display: flex; align-items: center; gap: 15px; }
 
-        .nav-link-btn {
-            background-color: transparent;
-            color: white;
-            border: 2px solid white;
+        .navbar-logo {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .btn-nav-back {
+            background: rgba(255,255,255,0.04);
+            color: var(--text-muted);
+            border: 1px solid var(--border-soft);
             padding: 8px 16px;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 14px;
-            margin-top: 0;
-            text-transform: uppercase;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
         }
-        .nav-link-btn:hover { background-color: white; color: #444; }
+        .btn-nav-back:hover {
+            background: rgba(255,255,255,0.08);
+            color: var(--text-main);
+            border-color: rgba(255,255,255,0.15);
+        }
 
+        /* ── MAIN CONTENT ── */
         .main-content {
-            padding: 30px;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            width: 100%;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             gap: 20px;
-            max-width: 860px;
-            margin: 0 auto;
-            width: 100%;
         }
 
+        /* ── PAGE HEADER ── */
         .page-header {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 25px;
-            color: white;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            padding: 28px 32px;
         }
-        .page-header h2 { margin: 0 0 6px; font-size: 24px; }
-        .page-header p  { margin: 0; color: #ccc; font-size: 14px; }
 
-        .qual-card {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 22px;
-            color: white;
+        .page-header h2 {
+            margin: 0 0 6px;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
         }
+
+        .page-header p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* ── QUAL CARD ── */
+        .qual-card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            padding: 24px 28px;
+        }
+
         .qual-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
-        .qual-card-header span {
-            font-weight: bold;
-            font-size: 14px;
-            color: #ccc;
+
+        .qual-card-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
             text-transform: uppercase;
-            border-left: 4px solid white;
+            letter-spacing: 0.07em;
+            border-left: 3px solid var(--accent-blue);
             padding-left: 10px;
         }
-        .btn-remove-qual {
-            background: transparent;
-            border: 1px solid #f87171;
-            color: #f87171;
-            border-radius: 6px;
-            padding: 5px 14px;
-            cursor: pointer;
-            font-size: 13px;
-            margin: 0;
-        }
-        .btn-remove-qual:hover { background: #f87171; color: white; }
 
+        .qual-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ── FORM FIELDS ── */
         .qual-field-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
             margin-bottom: 16px;
         }
+
+        .qual-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
         .qual-field label {
-            display: block;
             font-size: 12px;
-            color: #ccc;
+            font-weight: 600;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 5px;
         }
+
         .qual-field input,
         .qual-field select {
-            width: 100%;
-            background: #444;
-            color: white;
-            border: 1.5px solid rgba(255,255,255,0.3);
+            background-color: #0f172a;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-main);
             border-radius: 8px;
-            padding: 9px 13px;
+            padding: 10px 13px;
             font-size: 14px;
-            margin: 0;
-        }
-        .qual-field input:focus, .qual-field select:focus {
+            font-family: inherit;
             outline: none;
-            border-color: white;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
         }
-        .qual-field select option { background: #444; }
 
+        .qual-field input:focus,
+        .qual-field select:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
+        }
+
+        .qual-field input.invalid,
+        .qual-field select.invalid {
+            border-color: #f87171 !important;
+        }
+
+        .qual-field select option { background: #1e293b; }
+
+        .field-error-msg {
+            color: #f87171;
+            font-size: 11px;
+            display: block;
+            min-height: 14px;
+        }
+
+        /* ── SUBJECTS ── */
         .subjects-heading {
             font-size: 12px;
-            color: #ccc;
+            font-weight: 600;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 10px;
         }
+
         .subject-row {
             display: grid;
             grid-template-columns: 1fr 100px auto;
@@ -135,175 +190,256 @@
             margin-bottom: 8px;
             align-items: center;
         }
+
         .subject-row input {
-            background: #444;
-            color: white;
-            border: 1.5px solid rgba(255,255,255,0.3);
+            background-color: #0f172a;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-main);
             border-radius: 8px;
-            padding: 7px 10px;
+            padding: 8px 10px;
             font-size: 13px;
-            margin: 0;
+            font-family: inherit;
+            outline: none;
             width: 100%;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
         }
+
+        .subject-row input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.12);
+        }
+
+        /* ── BUTTONS ── */
+        .btn-edit-qual {
+            background: transparent;
+            border: 1px solid var(--border-soft);
+            color: var(--text-main);
+            border-radius: 6px;
+            padding: 5px 14px;
+            font-size: 13px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-edit-qual:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .btn-remove-qual {
+            background: transparent;
+            border: 1px solid rgba(248,113,113,0.4);
+            color: #f87171;
+            border-radius: 6px;
+            padding: 5px 14px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-remove-qual:hover {
+            background: rgba(248,113,113,0.12);
+            border-color: #f87171;
+        }
+
         .btn-remove-subject {
             background: transparent;
-            border: 1px solid #f87171;
+            border: 1px solid rgba(248,113,113,0.35);
             color: #f87171;
             border-radius: 6px;
             padding: 5px 10px;
-            cursor: pointer;
             font-size: 13px;
-            margin: 0;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
-        .btn-remove-subject:hover { background: #f87171; color: white; }
+        .btn-remove-subject:hover {
+            background: rgba(248,113,113,0.12);
+            border-color: #f87171;
+        }
+
         .btn-add-subject {
             background: transparent;
-            color: #ccc;
-            border: 1px dashed rgba(255,255,255,0.3);
+            color: var(--text-muted);
+            border: 1px dashed rgba(255,255,255,0.15);
             border-radius: 6px;
             padding: 6px 14px;
-            cursor: pointer;
             font-size: 13px;
-            margin: 4px 0 0;
-        }
-        .btn-add-subject:hover { border-color: white; color: white; }
-
-        .btn-add-qual {
-            background: transparent;
-            color: white;
-            border: 1.5px dashed rgba(255,255,255,0.5);
-            border-radius: 12px;
-            padding: 14px;
+            font-family: inherit;
             cursor: pointer;
-            font-size: 14px;
-            margin: 0;
-            width: 100%;
+            margin: 4px 0 0;
+            transition: all 0.2s ease;
         }
-        .btn-add-qual:hover { border-color: white; background: rgba(255,255,255,0.05); }
-        .btn-add-qual:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-add-subject:hover {
+            border-color: rgba(255,255,255,0.3);
+            color: var(--text-main);
+        }
 
+        /* ── CARD SAVE ROW ── */
         .card-save-row {
             display: flex;
             align-items: center;
             gap: 12px;
             justify-content: flex-end;
             margin-top: 16px;
-            padding-top: 14px;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 16px;
+            border-top: 1px solid var(--border-soft);
         }
+
+        .btn-cancel-edit {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-soft);
+            border-radius: 8px;
+            padding: 9px 20px;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-cancel-edit:hover {
+            border-color: rgba(255,255,255,0.2);
+            color: var(--text-main);
+        }
+
         .btn-save-card {
-            background: white;
-            color: #333;
+            background: var(--accent-blue);
+            color: #0f172a;
             border: none;
             border-radius: 8px;
             padding: 9px 26px;
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
-            margin: 0;
-            text-transform: uppercase;
+            transition: all 0.2s ease;
         }
-        .btn-save-card:hover { background: #ddd; }
-        .btn-save-card:disabled { background: #888; cursor: not-allowed; }
+        .btn-save-card:hover { background: var(--accent-hover); }
+        .btn-save-card:disabled { opacity: 0.5; cursor: not-allowed; }
+
         .save-msg { font-size: 13px; color: #4ade80; }
         .save-msg.error { color: #f87171; }
-        .field-error-msg {
-            color: #f87171;
-            font-size: 11px;
-            margin-top: 3px;
-            display: block;
-            min-height: 14px;
+
+        /* ── ADD QUALIFICATION BUTTON ── */
+        .btn-add-qual {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px dashed rgba(255,255,255,0.15);
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: inherit;
+            width: 100%;
+            transition: all 0.2s ease;
         }
-        .qual-field input.invalid,
-        .qual-field select.invalid {
-            border-color: #f87171 !important;
+        .btn-add-qual:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            background: rgba(56,189,248,0.04);
         }
 
+        /* ── EMPTY STATE ── */
         .empty-state {
-            background-color: #545454;
-            border: 2px dashed rgba(255,255,255,0.3);
-            border-radius: 12px;
-            padding: 40px;
-            color: #ccc;
+            background-color: var(--bg-surface);
+            border: 1px dashed rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 48px;
+            color: var(--text-muted);
             text-align: center;
-            font-size: 15px;
+            font-size: 14px;
+            line-height: 1.6;
         }
 
-        /* ── View mode ──────────────────────────────── */
+        /* ── VIEW MODE ── */
         .qual-view-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
             margin-bottom: 12px;
         }
-        .view-field { display: flex; flex-direction: column; gap: 4px; }
-        .view-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; }
-        .view-value { font-size: 15px; color: white; font-weight: 500; }
-        .view-subjects { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+
+        .view-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .view-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .view-value {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .view-subjects {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-soft);
+        }
+
         .view-subject-row {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
+            padding: 5px 0;
             font-size: 13px;
-            color: #ccc;
-            border-bottom: 1px solid rgba(255,255,255,0.07);
+            color: var(--text-muted);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .view-subject-row:last-child { border-bottom: none; }
 
-        /* ── Card action buttons ─────────────────────── */
-        .btn-edit-qual {
-            background: transparent;
-            border: 1px solid white;
-            color: white;
-            border-radius: 6px;
-            padding: 5px 14px;
-            cursor: pointer;
+        /* ── HELP TEXT ── */
+        .add-qual-hint {
+            color: #f87171;
             font-size: 13px;
+            text-align: center;
             margin: 0;
+            display: none;
         }
-        .btn-edit-qual:hover { background: white; color: #444; }
-        .btn-cancel-edit {
-            background: transparent;
-            color: #ccc;
-            border: 1px solid rgba(255,255,255,0.35);
-            border-radius: 8px;
-            padding: 9px 20px;
-            font-size: 14px;
-            cursor: pointer;
-            margin: 0;
-        }
-        .btn-cancel-edit:hover { border-color: white; color: white; }
 
+        /* ── RESPONSIVE ── */
         @media (max-width: 600px) {
-            .qual-field-row { grid-template-columns: 1fr; }
+            .qual-field-row  { grid-template-columns: 1fr; }
             .qual-view-grid  { grid-template-columns: 1fr; }
             .subject-row     { grid-template-columns: 1fr auto; }
+            .dashboard-navbar { padding: 16px 20px; }
         }
     </style>
 </head>
 <body>
 <div class="page-wrapper">
 
-    <nav class="navbar">
-        <h1>SkillsConnect</h1>
-        <div class="navbar-right">
-            <button class="nav-link-btn" onclick="window.location.href='/applicant-home'">← Dashboard</button>
+    <!-- NAVBAR -->
+    <nav class="dashboard-navbar">
+        <img src="SkillsConnect Logo 2.PNG" alt="SkillsConnect Logo" class="navbar-logo">
+        <div class="navbar-actions">
+            <button class="btn-nav-back" onclick="window.location.href='/applicant-home'">← Dashboard</button>
         </div>
     </nav>
 
-    <div class="main-content">
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
 
         <div class="page-header">
             <h2>My Qualifications</h2>
-            <p>Add up to 8 qualifications. Click Edit on a saved qualification to change it.</p>
+            <p>Add up to 8 qualifications. Click Edit on a saved qualification to make changes.</p>
         </div>
 
         <div id="qual-list"></div>
 
         <button class="btn-add-qual" id="addQualBtn">+ Add Qualification</button>
-        <p id="addQualMsg" style="display:none;color:#f87171;font-size:13px;text-align:center;margin:0;"></p>
+        <p class="add-qual-hint" id="addQualMsg"></p>
 
-    </div>
+    </main>
 </div>
 
 <script type="module">
@@ -345,8 +481,8 @@
     // ── NQF helpers ───────────────────────────────────────────────────────────
     async function loadNQFLevels() {
         try {
-            const res  = await fetch('/nqf-levels');
-            nqfLevels  = (await res.json()).levels || [];
+            const res = await fetch('/nqf-levels');
+            nqfLevels = (await res.json()).levels || [];
         } catch {
             nqfLevels = Array.from({ length: 10 }, (_, i) => ({ level: i + 1, name: `NQF Level ${i + 1}` }));
         }
@@ -369,7 +505,7 @@
         return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    // ── Subjects (edit mode only) ─────────────────────────────────────────────
+    // ── Subjects ─────────────────────────────────────────────────────────────
     function renderSubjects(qi) {
         const container = document.getElementById(`ql-subj-${qi}`);
         if (!container) return;
@@ -402,8 +538,8 @@
         return `
             <div class="qual-card" id="ql-card-${i}">
                 <div class="qual-card-header">
-                    <span>Qualification ${i + 1}</span>
-                    <div style="display:flex;gap:8px;">
+                    <span class="qual-card-label">Qualification ${i + 1}</span>
+                    <div class="qual-card-actions">
                         <button class="btn-edit-qual" onclick="qlStartEdit(${i})">Edit</button>
                         <button class="btn-remove-qual" onclick="qlRemove(${i})">Remove</button>
                     </div>
@@ -435,7 +571,7 @@
         return `
             <div class="qual-card" id="ql-card-${i}">
                 <div class="qual-card-header">
-                    <span>Qualification ${i + 1}</span>
+                    <span class="qual-card-label">Qualification ${i + 1}</span>
                     <button class="btn-remove-qual" onclick="qlRemove(${i})">Remove</button>
                 </div>
                 <div class="qual-field-row">
@@ -483,11 +619,11 @@
             </div>`;
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
+    // ── Render ─────────────────────────────────────────────────────────────────
     function renderQuals() {
         const listEl = document.getElementById('qual-list');
         if (qualifications.length === 0) {
-            listEl.innerHTML = '<div class="empty-state">No qualifications added yet. Click the button below to add one.</div>';
+            listEl.innerHTML = '<div class="empty-state">No qualifications added yet.<br>Click the button below to add your first qualification.</div>';
             updateAddBtn();
             return;
         }
@@ -505,8 +641,8 @@
         const atMax      = qualifications.length >= MAX_QUALS;
         const hasUnsaved = qualifications.some(q => q._isNew || q._editing);
         const locked     = atMax || hasUnsaved;
-        btn.style.opacity      = locked ? '0.4' : '1';
-        btn.style.cursor       = locked ? 'not-allowed' : 'pointer';
+        btn.style.opacity       = locked ? '0.4' : '1';
+        btn.style.cursor        = locked ? 'not-allowed' : 'pointer';
         btn.style.pointerEvents = 'auto';
         if (msg) msg.style.display = 'none';
     }
@@ -545,7 +681,6 @@
 
     window.qlStartEdit = function(i) {
         const q = qualifications[i];
-        // Snapshot current values so Cancel can restore them
         q._snapshot = JSON.parse(JSON.stringify({
             institution: q.institution, name: q.name,
             nqfLevel: q.nqfLevel, dateObtained: q.dateObtained,

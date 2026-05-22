@@ -5,372 +5,362 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Post Opportunity | SkillsConnect</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <style>
-        /* ── PAGE SHELL ── */
-        .page-wrapper {
-            min-height: 100vh;
-            background-color: #666666;
-            display: flex;
-            flex-direction: column;
-        }
+        .page-wrapper { min-height: 100vh; display: flex; flex-direction: column; }
 
         /* ── NAVBAR ── */
-        .navbar {
-            background-color: #444444;
-            padding: 15px 30px;
+        .dashboard-navbar {
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-soft);
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid white;
         }
-        .navbar h1 { color: white; font-size: 20px; margin: 0; }
-        .navbar-right { display: flex; align-items: center; gap: 15px; }
+        .navbar-brand { display: flex; align-items: center; }
+        .navbar-logo { height: 70px; width: auto; object-fit: contain; display: block; }
+        .navbar-actions { display: flex; align-items: center; gap: 16px; }
 
-        .nav-link-btn {
-            background-color: transparent;
-            color: white;
-            border: 2px solid white;
+        .btn-nav-action {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-main);
+            border: 1px solid var(--border-soft);
             padding: 8px 16px;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 14px;
-            margin-top: 0;
-            text-transform: uppercase;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
         }
-        .nav-link-btn:hover { background-color: white; color: #444; }
+        .btn-nav-action:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
 
-        .logout-btn {
-            background-color: crimson;
-            color: white;
-            border: none;
+        .btn-nav-logout {
+            background: rgba(239,68,68,0.1);
+            color: #fca5a5;
+            border: 1px solid rgba(239,68,68,0.2);
             padding: 8px 16px;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 14px;
-            margin-top: 0;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
         }
-        .logout-btn:hover { opacity: 0.85; }
+        .btn-nav-logout:hover { background: #ef4444; color: #fff; }
 
-        /* ── MAIN CONTENT ── */
-        .main-content {
-            padding: 30px;
+        /* ── MAIN ── */
+        .dashboard-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 24px;
             display: flex;
             flex-direction: column;
             gap: 24px;
-            max-width: 860px;
-            margin: 0 auto;
             width: 100%;
+            box-sizing: border-box;
         }
 
-        /* ── PAGE HEADER ── */
-        .page-header {
-            background-color: #545454;
-            border: 2px solid white;
+        /* ── HERO ── */
+        .dashboard-hero {
+            background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(30,41,59,0.7) 100%);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            padding: 32px;
+        }
+        .dashboard-hero h2 { margin: 0 0 8px; font-size: 26px; font-weight: 700; color: var(--text-main); }
+        .dashboard-hero p  { margin: 0; color: var(--text-muted); font-size: 15px; line-height: 1.5; }
+
+        /* ── SUCCESS BANNER ── */
+        .success-banner {
+            background: rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.3);
             border-radius: 12px;
-            padding: 25px;
-            color: white;
+            padding: 16px 20px;
+            color: #4ade80;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            line-height: 1.5;
         }
-        .page-header h2 { margin: 0 0 6px; font-size: 24px; }
-        .page-header p  { margin: 0; color: #ccc; font-size: 14px; }
+        .success-banner.hidden { display: none; }
 
-        /* ── CARDS ── */
-        .form-card {
-            background-color: #545454;
-            border: 2px solid white;
-            border-radius: 12px;
-            padding: 28px;
-            color: white;
+        /* ── FORM SECTION CARD ── */
+        .form-section {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-soft);
+            border-radius: 16px;
+            padding: 28px 32px;
         }
 
-        .card-title {
-            font-size: 18px;
-            font-weight: bold;
+        .form-section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
             margin: 0 0 20px;
             padding-left: 12px;
-            border-left: 5px solid white;
+            border-left: 4px solid var(--accent-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            color: #0f172a;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .helper-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            line-height: 1.6;
         }
 
         /* ── TYPE SELECTOR ── */
-        .type-selector {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-        }
+        .type-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 
         .type-card {
-            background-color: #444;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 10px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-soft);
+            border-radius: 12px;
             padding: 20px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             text-align: center;
-            color: white;
         }
-        .type-card:hover { border-color: white; background-color: #4a4a4a; }
-        .type-card.active {
-            border-color: white;
-            background-color: #3a3a3a;
-            box-shadow: 0 0 0 2px rgba(255,255,255,0.15);
-        }
-        .type-icon { font-size: 28px; display: block; margin-bottom: 8px; }
-        .type-name { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
-        .type-desc { font-size: 12px; color: #bbb; line-height: 1.4; }
+        .type-card:hover { border-color: rgba(56,189,248,0.4); background: rgba(56,189,248,0.05); transform: translateY(-1px); }
+        .type-card.active { border-color: var(--accent-blue); background: rgba(56,189,248,0.08); box-shadow: 0 0 0 1px rgba(56,189,248,0.2); }
 
-        /* ── FORM ELEMENTS ── */
+        .type-icon { font-size: 26px; display: block; margin-bottom: 8px; }
+        .type-name { font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 4px; }
+        .type-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; margin: 0; }
+
+        /* ── FORM INPUTS ── */
         .form-group { margin-bottom: 20px; }
 
         .form-group label {
             display: block;
-            font-size: 13px;
-            color: #ccc;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin: 0 0 6px;
-            font-weight: bold;
+            margin: 0 0 8px;
         }
-
         .form-group label .req { color: #f87171; margin-left: 2px; }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            background-color: #444;
-            color: white;
-            border: 1.5px solid rgba(255,255,255,0.3);
+            box-sizing: border-box;
+            background-color: rgba(15,23,42,0.6);
+            border: 1px solid var(--border-soft);
+            color: var(--text-main);
             border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 15px;
-            margin: 0;
-            height: auto;
-            transition: border-color 0.2s;
+            padding: 11px 14px;
+            font-size: 14px;
+            font-family: inherit;
+            margin: 0; height: auto;
+            transition: all 0.2s ease;
         }
         .form-group input::placeholder,
-        .form-group textarea::placeholder { color: #888; }
+        .form-group textarea::placeholder { color: rgba(148,163,184,0.5); }
         .form-group input:focus,
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: white;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.12);
         }
-        .form-group select option { background-color: #444; color: white; }
-        .form-group textarea { resize: vertical; min-height: 100px; }
+        .form-group select option { background: #1e293b; color: var(--text-main); }
+        .form-group textarea { resize: vertical; min-height: 110px; }
 
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
-        .helper-text { font-size: 12px; color: #999; margin-top: 4px; font-style: italic; }
-
-        /* ── SKILLS CHIPS ── */
-        .skills-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-
-        .skill-chip {
-            padding: 6px 14px;
-            border: 1.5px solid rgba(255,255,255,0.3);
-            border-radius: 20px;
-            background: #444;
-            cursor: pointer;
-            font-size: 13px;
-            color: #ccc;
-            transition: all 0.2s;
-            margin: 0;
-            text-transform: none;
-        }
-        .skill-chip:hover { border-color: white; color: white; background-color: #4a4a4a; }
-        .skill-chip.selected {
-            background-color: white;
-            color: #333;
-            border-color: white;
-            font-weight: bold;
-        }
-
-        /* ── QUALIFICATION DROPDOWN ── */
+        /* ── QUAL DROPDOWN ── */
         .qual-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: #3a3a3a;
-            border: 1.5px solid rgba(255,255,255,0.4);
-            border-radius: 8px;
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: #1e293b;
+            border: 1px solid rgba(56,189,248,0.25);
+            border-radius: 10px;
             z-index: 100;
             max-height: 280px;
             overflow-y: auto;
             margin-top: 4px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.4);
         }
         .qual-dropdown-item {
             padding: 12px 16px;
             cursor: pointer;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid var(--border-soft);
             font-size: 14px;
-            color: white;
+            color: var(--text-main);
+            transition: background 0.15s;
         }
         .qual-dropdown-item:last-child { border-bottom: none; }
-        .qual-dropdown-item:hover { background: #4a4a4a; }
-        .qual-dropdown-item .qual-meta { font-size: 11px; color: #aaa; margin-top: 2px; }
-        .qual-dropdown-empty {
-            padding: 16px;
-            color: #888;
-            font-size: 14px;
-            text-align: center;
-            font-style: italic;
-        }
+        .qual-dropdown-item:hover { background: rgba(56,189,248,0.08); }
+        .qual-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .qual-dropdown-empty { padding: 14px 16px; color: var(--text-muted); font-size: 14px; text-align: center; font-style: italic; }
 
-        /* ── QUALIFICATION CONFIRMED CARD ── */
+        /* ── CONFIRMED QUAL CARD ── */
         .qual-confirmed-card {
-            background: #3a3a3a;
-            border: 2px solid white;
+            background: rgba(56,189,248,0.06);
+            border: 1px solid rgba(56,189,248,0.25);
             border-radius: 10px;
-            padding: 18px;
+            padding: 16px;
             margin-top: 4px;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 12px;
+            gap: 14px;
         }
         .qual-confirmed-card .qual-info { flex: 1; }
-        .qual-confirmed-card .qual-name { font-weight: bold; font-size: 15px; margin-bottom: 8px; }
-        .qual-confirmed-card .qual-details { font-size: 13px; color: #ccc; line-height: 1.9; }
-        .qual-confirmed-card .saqa-link { font-size: 12px; color: #aaa; margin-top: 6px; display: inline-block; }
-        .qual-confirmed-card .saqa-link:hover { color: white; }
+        .qual-name    { font-weight: 600; font-size: 14px; color: var(--text-main); margin-bottom: 6px; }
+        .qual-details { font-size: 13px; color: var(--text-muted); line-height: 1.8; }
+        .saqa-link    { font-size: 12px; color: var(--accent-blue); margin-top: 6px; display: inline-block; text-decoration: none; }
+        .saqa-link:hover { color: var(--accent-hover); text-decoration: underline; }
+
         .btn-change {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.4);
-            color: #ccc;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-soft);
+            color: var(--text-muted);
             border-radius: 6px;
             padding: 6px 14px;
             cursor: pointer;
             font-size: 12px;
+            font-weight: 500;
+            font-family: inherit;
             white-space: nowrap;
-            margin: 0;
+            transition: all 0.2s ease;
         }
-        .btn-change:hover { border-color: white; color: white; }
+        .btn-change:hover { border-color: rgba(255,255,255,0.2); color: var(--text-main); }
+
+        .accred-divider { border: none; border-top: 1px solid var(--border-soft); margin: 20px 0; }
 
         /* ── VERIFY BUTTON ── */
         .btn-verify {
-            background: white;
-            color: #333;
-            border: none;
+            background: rgba(56,189,248,0.1);
+            color: var(--accent-blue);
+            border: 1px solid rgba(56,189,248,0.2);
+            padding: 10px 22px;
             border-radius: 8px;
-            padding: 10px 24px;
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
-            text-transform: uppercase;
-            margin: 0;
+            font-family: inherit;
+            transition: all 0.2s ease;
         }
-        .btn-verify:hover { background: #ddd; }
-        .btn-verify:disabled { background: #888; color: #ccc; cursor: not-allowed; }
+        .btn-verify:hover { background: var(--accent-blue); color: #0f172a; }
+        .btn-verify:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* ── ACCREDITATION RESULT BANNERS ── */
-        .accred-banner {
-            border-radius: 10px;
-            padding: 16px 20px;
-            margin-top: 16px;
-            font-size: 14px;
-            line-height: 1.7;
-            color: white;
+        /* ── ACCREDITATION BANNERS ── */
+        .accred-banner { border-radius: 10px; padding: 14px 18px; margin-top: 14px; font-size: 14px; line-height: 1.7; }
+        .accred-banner.success { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); color: #4ade80; }
+        .accred-banner.warning { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); color: #fbbf24; }
+        .accred-banner.error   { background: rgba(239,68,68,0.08);  border: 1px solid rgba(239,68,68,0.25);  color: #fca5a5; }
+
+        /* ── SKILL / CHIP GRID ── */
+        .chips-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+        .skill-chip {
+            padding: 6px 14px;
+            border: 1px solid var(--border-soft);
+            border-radius: 9999px;
+            background: rgba(255,255,255,0.03);
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
         }
-        .accred-banner.success { background: #15803d; border: 2px solid #4ade80; }
-        .accred-banner.warning { background: #92400e; border: 2px solid #fbbf24; }
-        .accred-banner.error   { background: #7f1d1d; border: 2px solid #f87171; }
-
-        /* ── DIVIDER ── */
-        .divider { border: none; border-top: 1px solid rgba(255,255,255,0.15); margin: 20px 0; }
-
-        /* ── HIDDEN ── */
-        .hidden { display: none !important; }
+        .skill-chip:hover { border-color: rgba(56,189,248,0.4); color: var(--accent-blue); background: rgba(56,189,248,0.05); }
+        .skill-chip.selected { background: rgba(56,189,248,0.15); color: var(--accent-blue); border-color: rgba(56,189,248,0.4); font-weight: 600; }
 
         /* ── SUBMIT AREA ── */
-        .submit-area {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            padding-top: 8px;
-        }
+        .submit-area { display: flex; justify-content: flex-end; gap: 12px; padding-top: 4px; }
 
-        .btn-cancel {
+        .btn-cancel-form {
             background: transparent;
-            color: white;
-            border: 2px solid rgba(255,255,255,0.4);
+            color: var(--text-muted);
+            border: 1px solid var(--border-soft);
             border-radius: 8px;
-            padding: 12px 28px;
-            font-size: 15px;
+            padding: 11px 26px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            margin: 0;
-            text-transform: uppercase;
+            font-family: inherit;
+            transition: all 0.2s ease;
         }
-        .btn-cancel:hover { border-color: white; }
+        .btn-cancel-form:hover { background: rgba(255,255,255,0.05); color: var(--text-main); }
 
-        .btn-submit {
-            background-color: white;
-            color: #333;
+        .btn-submit-form {
+            background: var(--accent-blue);
+            color: #0f172a;
             border: none;
             border-radius: 8px;
-            padding: 12px 32px;
-            font-size: 15px;
-            font-weight: bold;
+            padding: 11px 30px;
+            font-size: 14px;
+            font-weight: 700;
             cursor: pointer;
-            margin: 0;
-            text-transform: uppercase;
+            font-family: inherit;
+            transition: all 0.2s ease;
         }
-        .btn-submit:hover { background-color: #ddd; }
-        .btn-submit:disabled { background-color: #888; cursor: not-allowed; }
+        .btn-submit-form:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-submit-form:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        /* ── SUCCESS BANNER ── */
-        .success-banner {
-            background-color: #15803d;
-            border: 2px solid #4ade80;
-            border-radius: 12px;
-            padding: 20px 24px;
-            color: white;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .success-banner.hidden { display: none; }
-
-        /* ── ERROR MSG ── */
+        /* ── FIELD ERROR ── */
         .field-error { color: #f87171; font-size: 12px; margin-top: 4px; display: none; }
         .field-error.visible { display: block; }
 
+        .hidden { display: none !important; }
+
         @media (max-width: 700px) {
-            .grid-2, .grid-3, .type-selector { grid-template-columns: 1fr; }
-            .qual-confirmed-card { flex-direction: column; }
+            .grid-2, .type-selector { grid-template-columns: 1fr; }
+            .qual-confirmed-card    { flex-direction: column; }
+            .dashboard-container    { padding: 24px 16px; }
         }
     </style>
 </head>
 <body>
 <div class="page-wrapper">
 
-    <!-- NAVBAR -->
-    <nav class="navbar">
-        <h1>SkillsConnect</h1>
-        <div class="navbar-right">
-            <button class="nav-link-btn" id="dashboardBtn">🏠 Dashboard</button>
-            <button class="logout-btn" id="logoutBtn">Logout</button>
+    <nav class="dashboard-navbar">
+        <div class="navbar-brand">
+            <img src="SkillsConnect Logo 2.PNG" alt="SkillsConnect" class="navbar-logo">
+        </div>
+        <div class="navbar-actions">
+            <button class="btn-nav-action" id="dashboardBtn">🏠 Dashboard</button>
+            <button class="btn-nav-logout" id="logoutBtn">Logout</button>
         </div>
     </nav>
 
-    <!-- MAIN CONTENT -->
-    <div class="main-content">
+    <main class="dashboard-container">
 
-        <!-- SUCCESS BANNER -->
         <div class="success-banner hidden" id="successBanner">
-            ✅ Opportunity submitted successfully! It will appear in listings after review.
+            ✅ Opportunity submitted successfully! It will appear in listings after admin review.
         </div>
 
-        <!-- PAGE HEADER -->
-        <div class="page-header">
+        <div class="dashboard-hero">
             <h2>Post an Opportunity</h2>
-            <p>Create a SETA-accredited learnership, apprenticeship or internship listing</p>
+            <p>Create a SETA-accredited learnership, apprenticeship or internship listing for applicants across South Africa.</p>
         </div>
 
-        <!-- STEP 1: TYPE SELECTOR -->
-        <div class="form-card">
-            <div class="card-title">1. Opportunity Type</div>
+        <!-- STEP 1: TYPE -->
+        <div class="form-section">
+            <div class="form-section-title"><span class="step-num">1</span> Opportunity Type</div>
             <div class="type-selector">
                 <div class="type-card active" data-type="learnership" onclick="selectType('learnership')">
                     <span class="type-icon">🎓</span>
@@ -390,20 +380,16 @@
             </div>
         </div>
 
-        <!-- STEP 2: QUALIFICATION VERIFICATION (learnership / apprenticeship only) -->
-        <div class="form-card" id="accreditation-section">
-            <div class="card-title">2. Program Accreditation</div>
-
-            <!-- 2a: Qualification search -->
+        <!-- STEP 2: ACCREDITATION -->
+        <div class="form-section" id="accreditation-section">
+            <div class="form-section-title"><span class="step-num">2</span> Programme Accreditation</div>
             <div id="qual-search-section">
-                <p class="helper-text" style="margin-bottom:16px;">Search for the SAQA-registered qualification this opportunity is linked to.</p>
+                <p class="helper-text">Search for the SAQA-registered qualification this opportunity is linked to.</p>
                 <div class="form-group" style="position:relative;">
                     <label>Qualification Title <span class="req">*</span></label>
                     <input type="text" id="qual-search-input" placeholder="e.g. National Certificate: Information Technology" autocomplete="off" oninput="onQualSearch(this.value)">
                     <div id="qual-dropdown" class="qual-dropdown hidden"></div>
                 </div>
-
-                <!-- Confirmed qualification card -->
                 <div id="qual-confirmed" class="qual-confirmed-card hidden">
                     <div class="qual-info">
                         <div class="qual-name" id="qual-title-display"></div>
@@ -417,41 +403,36 @@
                     <button type="button" class="btn-change" onclick="resetQualification()">Change</button>
                 </div>
             </div>
-
-            <!-- 2b: Provider accreditation check (shown after qualification selected) -->
-            <div id="accred-check-section" class="hidden" style="margin-top:24px; padding-top:24px; border-top:1px solid rgba(255,255,255,0.15);">
-                <p style="font-size:14px; color:#ccc; margin:0 0 16px;">Now verify your organisation's accreditation for this qualification.</p>
+            <div id="accred-check-section" class="hidden">
+                <hr class="accred-divider">
+                <p class="helper-text">Verify your organisation's accreditation for this qualification.</p>
                 <div class="form-group">
-                    <label>Your organisation name (as registered with SETA) <span class="req">*</span></label>
+                    <label>Organisation name (as registered with SETA) <span class="req">*</span></label>
                     <input type="text" id="provider-name-input" placeholder="e.g. SkillsConnect Academy (Pty) Ltd">
                 </div>
                 <button type="button" class="btn-verify" id="verify-btn" onclick="verifyAccreditation()">Verify Accreditation</button>
-
                 <div id="accred-success" class="accred-banner success hidden"></div>
                 <div id="accred-warning" class="accred-banner warning hidden"></div>
-                <div id="accred-error"   class="accred-banner error hidden"></div>
+                <div id="accred-error"   class="accred-banner error   hidden"></div>
             </div>
         </div>
 
-        <!-- STEPS 3–6 + SUBMIT (hidden until verification passes or skipped) -->
+        <!-- STEPS 3–6 + SUBMIT -->
         <div id="form-body" class="hidden">
 
-            <!-- STEP 3: OPPORTUNITY DETAILS -->
-            <div class="form-card">
-                <div class="card-title">3. Opportunity Details</div>
-
+            <!-- STEP 3: DETAILS -->
+            <div class="form-section">
+                <div class="form-section-title"><span class="step-num">3</span> Opportunity Details</div>
                 <div class="form-group">
                     <label>Opportunity Title <span class="req">*</span></label>
                     <input type="text" id="title" placeholder="e.g. Software Engineering Learnership">
                     <span class="field-error" id="err-title">Please enter a title.</span>
                 </div>
-
                 <div class="form-group">
                     <label>Description <span class="req">*</span></label>
                     <textarea id="description" rows="5" placeholder="Describe learning outcomes, duties, and what candidates will gain..."></textarea>
                     <span class="field-error" id="err-description">Please add a description.</span>
                 </div>
-
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Location <span class="req">*</span></label>
@@ -463,7 +444,6 @@
                         <input type="number" id="stipend" min="0" placeholder="e.g. 5000">
                     </div>
                 </div>
-
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Duration (Months) <span class="req">*</span></label>
@@ -477,7 +457,6 @@
                     </div>
                     <select id="min-nqf" style="display:none;"></select>
                 </div>
-
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Target Age — Minimum</label>
@@ -491,10 +470,10 @@
             </div>
 
             <!-- STEP 4: SKILLS -->
-            <div class="form-card">
-                <div class="card-title">4. Required Skills &amp; Licences</div>
-                <p class="helper-text" style="margin-bottom:14px;">Click to toggle. Selected skills will be highlighted.</p>
-                <div class="skills-grid" id="skills-grid">
+            <div class="form-section">
+                <div class="form-section-title"><span class="step-num">4</span> Required Skills &amp; Licences</div>
+                <p class="helper-text">Click to toggle. Selected skills will be highlighted.</p>
+                <div class="chips-grid" id="skills-grid">
                     <div class="skill-chip" onclick="toggleSkill(this)">Communication</div>
                     <div class="skill-chip" onclick="toggleSkill(this)">Problem Solving</div>
                     <div class="skill-chip" onclick="toggleSkill(this)">Technical Writing</div>
@@ -510,11 +489,11 @@
                 </div>
             </div>
 
-            <!-- STEP 5: TARGET DISCIPLINES -->
-            <div class="form-card">
-                <div class="card-title">5. Target Applicant Disciplines</div>
-                <p class="helper-text" style="margin-bottom:14px;">Select the fields of study or backgrounds you are looking for. Click to toggle.</p>
-                <div class="skills-grid" id="disciplines-grid">
+            <!-- STEP 5: DISCIPLINES -->
+            <div class="form-section">
+                <div class="form-section-title"><span class="step-num">5</span> Target Applicant Disciplines</div>
+                <p class="helper-text">Select the fields of study or backgrounds you are looking for.</p>
+                <div class="chips-grid" id="disciplines-grid">
                     <div class="skill-chip" onclick="toggleSkill(this)">Information Technology</div>
                     <div class="skill-chip" onclick="toggleSkill(this)">Cloud Computing</div>
                     <div class="skill-chip" onclick="toggleSkill(this)">Cybersecurity</div>
@@ -538,11 +517,11 @@
                 </div>
             </div>
 
-            <!-- STEP 6: PROVIDER INDUSTRY -->
-            <div class="form-card">
-                <div class="card-title">6. Your Industry</div>
-                <p class="helper-text" style="margin-bottom:14px;">Select the industry your organisation operates in.</p>
-                <div class="skills-grid" id="industry-grid">
+            <!-- STEP 6: INDUSTRY -->
+            <div class="form-section">
+                <div class="form-section-title"><span class="step-num">6</span> Your Industry</div>
+                <p class="helper-text">Select the industry your organisation operates in. Only one selection allowed.</p>
+                <div class="chips-grid" id="industry-grid">
                     <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Technology &amp; ICT</div>
                     <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Finance &amp; Banking</div>
                     <div class="skill-chip industry-chip" onclick="selectIndustry(this)">Healthcare &amp; Pharmaceuticals</div>
@@ -563,13 +542,13 @@
 
             <!-- SUBMIT -->
             <div class="submit-area">
-                <button class="btn-cancel" onclick="goBack()">Cancel</button>
-                <button class="btn-submit" id="submitBtn" onclick="submitOpportunity()">Submit for Review</button>
+                <button class="btn-cancel-form" onclick="goBack()">Cancel</button>
+                <button class="btn-submit-form" id="submitBtn" onclick="submitOpportunity()">Submit for Review</button>
             </div>
 
-        </div><!-- /#form-body -->
+        </div>
 
-    </div>
+    </main>
 </div>
 
 <script type="module">
@@ -580,14 +559,9 @@
         orderBy, startAt, endAt, getDocs, limit
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // ── Verification state ────────────────────────────────────────────────────
-    let selectedSaqaId    = null;
-    let verificationStatus = null; // "verified" | "unverified" | "skipped"
-    let qualSearchTimer   = null;
+    let selectedSaqaId = null, verificationStatus = null, qualSearchTimer = null;
 
-    // ── Auth guard ────────────────────────────────────────────────────────────
-    const token = localStorage.getItem("token");
-    if (!token) { window.location.href = "/"; }
+    if (!localStorage.getItem("token")) { window.location.href = "/"; }
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
         try { await signOut(auth); } catch (e) { console.error(e); }
@@ -597,33 +571,26 @@
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) { window.location.href = "/"; return; }
-
         const idTokenResult = await user.getIdTokenResult();
         const role = idTokenResult.claims.role;
-
-        if (role && role !== "provider" && role !== "admin") {
-            alert("Only providers can post opportunities.");
-            window.location.href = "/";
-            return;
-        }
-
+        if (role && role !== "provider" && role !== "admin") { alert("Only providers can post opportunities."); window.location.href = "/"; return; }
         const freshToken = await user.getIdToken();
         localStorage.setItem("token", freshToken);
-
         document.getElementById("dashboardBtn").addEventListener("click", () => {
-            if (role === "admin") window.location.href = "/admin-dashboard";
-            else                  window.location.href = "/provider-home";
+            window.location.href = role === "admin" ? "/admin-dashboard" : "/provider-home";
         });
     });
 
-    // ── Qualification search (debounced) ──────────────────────────────────────
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+        try { await auth.signOut(); } catch (e) {}
+        localStorage.clear(); window.location.href = "/";
+    });
+
     window.onQualSearch = function(value) {
         clearTimeout(qualSearchTimer);
         const raw = value.trim();
         if (!raw) { hideDropdown(); return; }
-        const term = raw.split(" ").map(function(w) {
-            return w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : "";
-        }).join(" ");
+        const term = raw.split(" ").map(w => w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : "").join(" ");
         qualSearchTimer = setTimeout(() => searchQualifications(term), 300);
     };
 
@@ -631,165 +598,91 @@
         const dropdown = document.getElementById("qual-dropdown");
         dropdown.innerHTML = '<div class="qual-dropdown-empty">Searching…</div>';
         dropdown.classList.remove("hidden");
-
         try {
-            const q = query(
-                collection(db, "qualifications"),
-                orderBy("title"),
-                startAt(term),
-                endAt(term + ""),
-                limit(8)
-            );
+            const q = query(collection(db, "qualifications"), orderBy("title"), startAt(term), endAt(term + ""), limit(8));
             const snap = await getDocs(q);
-
-            if (snap.empty) {
-                dropdown.innerHTML = '<div class="qual-dropdown-empty">No qualifications found.</div>';
-                return;
-            }
-
+            if (snap.empty) { dropdown.innerHTML = '<div class="qual-dropdown-empty">No qualifications found.</div>'; return; }
             dropdown.innerHTML = "";
             const seen = new Set();
             snap.forEach(doc => {
                 const normId = String(doc.data().saqa_id || doc.id).replace(/.0$/, "");
-                if (seen.has(normId)) return;
-                seen.add(normId);
-                const d    = doc.data();
+                if (seen.has(normId)) return; seen.add(normId);
+                const d = doc.data();
                 const item = document.createElement("div");
                 item.className = "qual-dropdown-item";
-                item.innerHTML = `
-                    <div>${d.title}</div>
-                    <div class="qual-meta">NQF ${d.nqf_level} · ${d.seta} · ${d.credits} credits</div>
-                `;
+                item.innerHTML = `<div>${d.title}</div><div class="qual-meta">NQF ${d.nqf_level} · ${d.seta} · ${d.credits} credits</div>`;
                 item.addEventListener("click", () => selectQualification(doc.id, d));
                 dropdown.appendChild(item);
             });
-        } catch (err) {
-            console.error("Qualification search error:", err);
-            dropdown.innerHTML = '<div class="qual-dropdown-empty">Search failed. Try again.</div>';
-        }
+        } catch (err) { console.error(err); dropdown.innerHTML = '<div class="qual-dropdown-empty">Search failed. Try again.</div>'; }
     }
 
     window.selectQualification = function(id, data) {
         selectedSaqaId = String(data.saqa_id || id).replace(/.0$/, "");
         hideDropdown();
-
-        // Auto-set NQF level from qualification (e.g. "NQF Level 4" → "4")
         const nqfMatch = (data.nqf_level || "").match(/\d+/);
-        if (nqfMatch) {
-            const sel = document.getElementById("min-nqf");
-            const opt = document.createElement("option");
-            opt.value = nqfMatch[0];
-            opt.selected = true;
-            sel.innerHTML = "";
-            sel.appendChild(opt);
-        }
-
+        if (nqfMatch) { const sel = document.getElementById("min-nqf"); const opt = document.createElement("option"); opt.value = nqfMatch[0]; opt.selected = true; sel.innerHTML = ""; sel.appendChild(opt); }
         document.getElementById("qual-search-input").classList.add("hidden");
         document.getElementById("qual-title-display").textContent   = data.title;
         document.getElementById("qual-nqf-display").textContent     = data.nqf_level ?? "—";
         document.getElementById("qual-seta-display").textContent    = data.seta      ?? "—";
         document.getElementById("qual-credits-display").textContent = data.credits   ?? "—";
-
         const link = document.getElementById("qual-saqa-link");
-        if (data.saqa_link) { link.href = data.saqa_link; link.style.display = "inline-block"; }
-        else                { link.style.display = "none"; }
-
+        if (data.saqa_link) { link.href = data.saqa_link; link.style.display = "inline-block"; } else { link.style.display = "none"; }
         document.getElementById("qual-confirmed").classList.remove("hidden");
         document.getElementById("accred-check-section").classList.remove("hidden");
     };
 
     window.resetQualification = function() {
-        selectedSaqaId    = null;
-        verificationStatus = null;
-
+        selectedSaqaId = null; verificationStatus = null;
         document.getElementById("qual-search-input").value = "";
         document.getElementById("qual-search-input").classList.remove("hidden");
         document.getElementById("qual-confirmed").classList.add("hidden");
         document.getElementById("accred-check-section").classList.add("hidden");
         document.getElementById("provider-name-input").value = "";
-        ["accred-success","accred-warning","accred-error"].forEach(id =>
-            document.getElementById(id).classList.add("hidden")
-        );
+        ["accred-success","accred-warning","accred-error"].forEach(id => document.getElementById(id).classList.add("hidden"));
         document.getElementById("form-body").classList.add("hidden");
     };
 
     window.verifyAccreditation = function() {
         const name = document.getElementById("provider-name-input").value.trim();
-        if (!name) {
-            document.getElementById("provider-name-input").focus();
-            return;
-        }
+        if (!name) { document.getElementById("provider-name-input").focus(); return; }
         runAccreditationCheck(name);
     };
 
     async function runAccreditationCheck(providerName) {
         const normalizedInput = providerName.toLowerCase();
         const btn = document.getElementById("verify-btn");
-        btn.disabled = true;
-        btn.textContent = "Verifying…";
-        ["accred-success","accred-warning","accred-error"].forEach(id =>
-            document.getElementById(id).classList.add("hidden")
-        );
-
+        btn.disabled = true; btn.textContent = "Verifying…";
+        ["accred-success","accred-warning","accred-error"].forEach(id => document.getElementById(id).classList.add("hidden"));
         const selectedType = document.querySelector(".type-card.active")?.dataset.type;
-
         try {
-            const q = query(
-                collection(db, "accredited_providers"),
-                where("qual_id",          "==", selectedSaqaId),
-                where("opportunity_type", "==", selectedType),
-                where("status",           "==", "Active"),
-                limit(50)
-            );
+            const q = query(collection(db, "accredited_providers"), where("qual_id","==",selectedSaqaId), where("opportunity_type","==",selectedType), where("status","==","Active"), limit(50));
             const snap = await getDocs(q);
-
-            // Case-insensitive match on provider_name
-            const matchDoc = snap.docs.find(doc =>
-                doc.data().provider_name.toLowerCase() === normalizedInput
-            );
-
+            const matchDoc = snap.docs.find(doc => doc.data().provider_name.toLowerCase() === normalizedInput);
             if (matchDoc) {
-                const d = matchDoc.data();
-                verificationStatus = "verified";
+                const d = matchDoc.data(); verificationStatus = "verified";
                 const banner = document.getElementById("accred-success");
-                banner.innerHTML = `
-                    ✅ <strong>Accreditation verified.</strong><br>
-                    Accreditation #: <strong>${d.accreditation_number ?? "—"}</strong> &nbsp;·&nbsp;
-                    SETA: <strong>${d.seta ?? "—"}</strong> &nbsp;·&nbsp;
-                    Province: <strong>${d.province ?? "—"}</strong>
-                `;
+                banner.innerHTML = `✅ <strong>Accreditation verified.</strong><br>Accreditation #: <strong>${d.accreditation_number ?? "—"}</strong> &nbsp;·&nbsp; SETA: <strong>${d.seta ?? "—"}</strong> &nbsp;·&nbsp; Province: <strong>${d.province ?? "—"}</strong>`;
                 banner.classList.remove("hidden");
             } else if (!snap.empty) {
-                // qual_id matched but provider name didn't — give a helpful message
                 verificationStatus = "unverified";
                 const banner = document.getElementById("accred-warning");
-                banner.innerHTML = `
-                    ⚠️ <strong>Organisation not found for this qualification.</strong><br>
-                    Check your organisation name matches exactly how it's registered with the SETA.
-                    Your listing will be submitted for admin review before going live. You may still proceed.
-                `;
+                banner.innerHTML = `⚠️ <strong>Organisation not found for this qualification.</strong><br>Check your name matches exactly how it's registered with the SETA. Your listing will be sent for admin review before going live. You may still proceed.`;
                 banner.classList.remove("hidden");
             } else {
                 verificationStatus = "unverified";
                 const banner = document.getElementById("accred-warning");
-                banner.innerHTML = `
-                    ⚠️ <strong>No accreditation record found.</strong><br>
-                    Your listing will be submitted for admin review before going live.
-                    You may still proceed.
-                `;
+                banner.innerHTML = `⚠️ <strong>No accreditation record found.</strong><br>Your listing will be sent for admin review before going live. You may still proceed.`;
                 banner.classList.remove("hidden");
             }
-
             revealForm();
         } catch (err) {
-            console.error("Accreditation check error:", err);
+            console.error(err);
             const banner = document.getElementById("accred-error");
             banner.textContent = "❌ Verification failed due to a server error. Please try again.";
             banner.classList.remove("hidden");
-        } finally {
-            btn.disabled = false;
-            btn.textContent = "Verify Accreditation";
-        }
+        } finally { btn.disabled = false; btn.textContent = "Verify Accreditation"; }
     }
 
     function revealForm() {
@@ -797,155 +690,81 @@
         document.getElementById("form-body").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    // ── Submit ────────────────────────────────────────────────────────────────
     window.submitOpportunity = submitOpportunity;
 
     async function submitOpportunity() {
         if (!validateForm()) return;
-
         const btn = document.getElementById("submitBtn");
-        btn.disabled = true;
-        btn.textContent = "Submitting...";
-
+        btn.disabled = true; btn.textContent = "Submitting...";
         const selectedType = document.querySelector(".type-card.active")?.dataset.type || "learnership";
-
-        const skills = [...document.querySelectorAll("#skills-grid .skill-chip.selected")]
-            .map(c => c.textContent.trim());
-
-        const disciplines = [...document.querySelectorAll("#disciplines-grid .skill-chip.selected")]
-            .map(c => c.textContent.trim());
-
-        const industry = document.querySelector(".industry-chip.selected")?.textContent.trim() || null;
-
+        const skills       = [...document.querySelectorAll("#skills-grid .skill-chip.selected")].map(c => c.textContent.trim());
+        const disciplines  = [...document.querySelectorAll("#disciplines-grid .skill-chip.selected")].map(c => c.textContent.trim());
+        const industry     = document.querySelector(".industry-chip.selected")?.textContent.trim() || null;
         const payload = {
-            type:               selectedType,
-            title:              document.getElementById("title").value.trim(),
-            description:        document.getElementById("description").value.trim(),
-            location:           document.getElementById("location").value.trim(),
-            stipend:            parseFloat(document.getElementById("stipend").value) || 0,
-            duration:           parseInt(document.getElementById("duration").value) || null,
-            closingDate:        document.getElementById("closing-date").value,
-            nqfLevel:           document.getElementById("min-nqf").value,
-            minAge:             parseInt(document.getElementById("min-age").value) || null,
-            maxAge:             parseInt(document.getElementById("max-age").value) || null,
-            skills,
-            disciplines,
-            industry,
-            saqaId:             selectedSaqaId,
-            verificationStatus: verificationStatus,
+            type: selectedType,
+            title: document.getElementById("title").value.trim(),
+            description: document.getElementById("description").value.trim(),
+            location: document.getElementById("location").value.trim(),
+            stipend: parseFloat(document.getElementById("stipend").value) || 0,
+            duration: parseInt(document.getElementById("duration").value) || null,
+            closingDate: document.getElementById("closing-date").value,
+            nqfLevel: document.getElementById("min-nqf").value,
+            minAge: parseInt(document.getElementById("min-age").value) || null,
+            maxAge: parseInt(document.getElementById("max-age").value) || null,
+            skills, disciplines, industry,
+            saqaId: selectedSaqaId, verificationStatus,
         };
-
         const freshToken = localStorage.getItem("token");
-
         try {
-            const res = await fetch("/api/opportunities/submit", {
-                method:  "POST",
-                headers: {
-                    "Content-Type":  "application/json",
-                    "Authorization": `Bearer ${freshToken}`
-                },
-                body: JSON.stringify(payload)
-            });
-
+            const res = await fetch("/api/opportunities/submit", { method:"POST", headers:{"Content-Type":"application/json","Authorization":`Bearer ${freshToken}`}, body: JSON.stringify(payload) });
             if (res.ok) {
-                const data   = await res.json();
-                const isLive = data.status === "auto_approved";
+                const data = await res.json(); const isLive = data.status === "auto_approved";
                 const banner = document.getElementById("successBanner");
-                banner.innerHTML = isLive
-                    ? "✅ Opportunity submitted and <strong>automatically approved</strong> — it is now live for applicants."
-                    : "✅ Opportunity submitted successfully! It has been sent to an admin for review before going live.";
-                banner.classList.remove("hidden");
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                banner.innerHTML = isLive ? "✅ Opportunity submitted and <strong>automatically approved</strong> — it is now live for applicants." : "✅ Opportunity submitted successfully! It has been sent to an admin for review before going live.";
+                banner.classList.remove("hidden"); window.scrollTo({ top:0, behavior:"smooth" });
                 document.getElementById("submitBtn").textContent = "Submitted ✓";
-                // Redirect to dashboard after 3 seconds
                 setTimeout(() => { window.location.href = "/provider-home"; }, 3000);
             } else {
                 const data = await res.json();
-                if (res.status === 409) {
-                    alert(data.error);
-                } else {
-                    alert("Submission failed: " + (data.error || res.status));
-                }
-                btn.disabled = false;
-                btn.textContent = "Submit for Review";
+                if (res.status === 409) { alert(data.error); } else { alert("Submission failed: " + (data.error || res.status)); }
+                btn.disabled = false; btn.textContent = "Submit for Review";
             }
-        } catch (err) {
-            console.error("Submit error:", err);
-            alert("Could not reach server. Is your backend running?");
-            btn.disabled = false;
-            btn.textContent = "Submit for Review";
-        }
+        } catch (err) { console.error(err); alert("Could not reach server."); btn.disabled = false; btn.textContent = "Submit for Review"; }
     }
 
-    function hideDropdown() {
-        document.getElementById("qual-dropdown").classList.add("hidden");
-    }
-
-    // Close dropdown when clicking outside
-    document.addEventListener("click", e => {
-        if (!e.target.closest("#qual-search-section")) hideDropdown();
-    });
+    function hideDropdown() { document.getElementById("qual-dropdown").classList.add("hidden"); }
+    document.addEventListener("click", e => { if (!e.target.closest("#qual-search-section")) hideDropdown(); });
 </script>
 
 <script>
-    // ── Non-module scripts (DOM helpers) ─────────────────────────────────────
-
-    // Load NQF levels
     async function loadNQFLevels() {
         try {
-            const res  = await fetch("/nqf-levels");
+            const res = await fetch("/nqf-levels");
             if (!res.ok) { populateFallbackNQF(); return; }
             const data = await res.json();
             const dropdown = document.getElementById("min-nqf");
             dropdown.innerHTML = '<option value="">Select NQF Level</option>';
-            data.levels.forEach(nqf => {
-                const opt  = document.createElement("option");
-                opt.value  = nqf.level;
-                opt.text   = `NQF ${nqf.level} — ${nqf.name}`;
-                dropdown.appendChild(opt);
-            });
-        } catch {
-            populateFallbackNQF();
-        }
+            data.levels.forEach(nqf => { const opt = document.createElement("option"); opt.value = nqf.level; opt.text = `NQF ${nqf.level} — ${nqf.name}`; dropdown.appendChild(opt); });
+        } catch { populateFallbackNQF(); }
     }
 
     function populateFallbackNQF() {
-        const levels = [
-            { level: 1,  name: "Grade 9" },
-            { level: 2,  name: "Grade 10" },
-            { level: 3,  name: "Grade 11" },
-            { level: 4,  name: "Grade 12 / Matric" },
-            { level: 5,  name: "Higher Certificate" },
-            { level: 6,  name: "Diploma / Advanced Certificate" },
-            { level: 7,  name: "Bachelor's Degree" },
-            { level: 8,  name: "Honours / Postgraduate Diploma" },
-            { level: 9,  name: "Master's Degree" },
-            { level: 10, name: "Doctoral Degree" },
-        ];
+        const levels = [{level:1,name:"Grade 9"},{level:2,name:"Grade 10"},{level:3,name:"Grade 11"},{level:4,name:"Grade 12 / Matric"},{level:5,name:"Higher Certificate"},{level:6,name:"Diploma / Advanced Certificate"},{level:7,name:"Bachelor's Degree"},{level:8,name:"Honours / Postgraduate Diploma"},{level:9,name:"Master's Degree"},{level:10,name:"Doctoral Degree"}];
         const dropdown = document.getElementById("min-nqf");
         dropdown.innerHTML = '<option value="">Select NQF Level</option>';
-        levels.forEach(n => {
-            const opt = document.createElement("option");
-            opt.value = n.level;
-            opt.text  = `NQF ${n.level} — ${n.name}`;
-            dropdown.appendChild(opt);
-        });
+        levels.forEach(n => { const opt = document.createElement("option"); opt.value = n.level; opt.text = `NQF ${n.level} — ${n.name}`; dropdown.appendChild(opt); });
     }
 
     window.onload = () => {
-        const today = new Date().toISOString().split("T")[0];
-        // closing-date is inside form-body — set min once it's visible
-        document.getElementById("closing-date").min = today;
+        document.getElementById("closing-date").min = new Date().toISOString().split("T")[0];
+        loadNQFLevels();
     };
 
-    // Type selection
     window.selectType = function(type) {
         document.querySelectorAll(".type-card").forEach(c => c.classList.remove("active"));
         document.querySelector(`[data-type="${type}"]`).classList.add("active");
-
         const accSection = document.getElementById("accreditation-section");
         const formBody   = document.getElementById("form-body");
-
         if (type === "internship") {
             accSection.classList.add("hidden");
             formBody.classList.remove("hidden");
@@ -971,69 +790,32 @@
         }
     };
 
-    // Skills toggle (multi-select)
-    window.toggleSkill = function(chip) { chip.classList.toggle("selected"); };
+    window.toggleSkill    = chip => chip.classList.toggle("selected");
+    window.selectIndustry = chip => { document.querySelectorAll(".industry-chip").forEach(c => c.classList.remove("selected")); chip.classList.add("selected"); };
 
-    // Industry select (single-select)
-    window.selectIndustry = function(chip) {
-        document.querySelectorAll(".industry-chip").forEach(c => c.classList.remove("selected"));
-        chip.classList.add("selected");
-    };
-
-    // Validation
-    function showErr(id, show) {
-        const el = document.getElementById("err-" + id);
-        if (el) el.classList.toggle("visible", show);
-    }
+    function showErr(id, show) { const el = document.getElementById("err-" + id); if (el) el.classList.toggle("visible", show); }
 
     window.validateForm = function() {
         let valid = true;
         const type = document.querySelector(".type-card.active")?.dataset.type;
-
-        // For learnership/apprenticeship, a qualification must have been selected
         if (type !== "internship") {
-            const hasSaqa = !!window._selectedSaqaId ||
-                            document.getElementById("qual-confirmed") &&
-                            !document.getElementById("qual-confirmed").classList.contains("hidden");
-            if (!hasSaqa) {
-                alert("Please search for and select a qualification before submitting.");
-                document.getElementById("qual-search-input").focus();
-                return false;
-            }
+            const hasSaqa = !!window._selectedSaqaId || (document.getElementById("qual-confirmed") && !document.getElementById("qual-confirmed").classList.contains("hidden"));
+            if (!hasSaqa) { alert("Please search for and select a qualification before submitting."); document.getElementById("qual-search-input").focus(); return false; }
         }
-
-        const title = document.getElementById("title").value.trim();
-        showErr("title", !title); if (!title) valid = false;
-
-        const desc = document.getElementById("description").value.trim();
-        showErr("description", !desc); if (!desc) valid = false;
-
-        const loc = document.getElementById("location").value.trim();
-        showErr("location", !loc); if (!loc) valid = false;
-
-        const dur = document.getElementById("duration").value;
-        const durValid = dur && parseInt(dur) >= 1 && parseInt(dur) <= 24;
-        showErr("duration", !durValid); if (!durValid) valid = false;
-
-        const closing = document.getElementById("closing-date").value;
-        showErr("closing", !closing); if (!closing) valid = false;
-
+        const title = document.getElementById("title").value.trim(); showErr("title", !title); if (!title) valid = false;
+        const desc  = document.getElementById("description").value.trim(); showErr("description", !desc); if (!desc) valid = false;
+        const loc   = document.getElementById("location").value.trim(); showErr("location", !loc); if (!loc) valid = false;
+        const dur   = document.getElementById("duration").value;
+        const durValid = dur && parseInt(dur) >= 1 && parseInt(dur) <= 24; showErr("duration", !durValid); if (!durValid) valid = false;
+        const closing = document.getElementById("closing-date").value; showErr("closing", !closing); if (!closing) valid = false;
         const industry = document.querySelector(".industry-chip.selected");
-        if (!industry) {
-            const grid = document.getElementById("industry-grid");
-            grid.style.outline = "2px solid #f87171";
-            grid.style.borderRadius = "8px";
-            grid.scrollIntoView({ behavior: "smooth", block: "center" });
-            valid = false;
-        } else {
-            document.getElementById("industry-grid").style.outline = "";
-        }
-
-        if (!valid) window.scrollTo({ top: 0, behavior: "smooth" });
+        if (!industry) { const grid = document.getElementById("industry-grid"); grid.style.outline = "2px solid #ef4444"; grid.style.borderRadius = "8px"; grid.scrollIntoView({ behavior:"smooth", block:"center" }); valid = false; }
+        else { document.getElementById("industry-grid").style.outline = ""; }
+        if (!valid) window.scrollTo({ top:0, behavior:"smooth" });
         return valid;
     };
 
-    window.goBack = function() { window.history.back(); };
+    window.goBack = () => window.history.back();
 </script>
 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDHRk3kDwXc6__TDZIuGkQlQsEwCsK8mDc&libraries=places&callback=initPlaces" async defer></script>
